@@ -1,4 +1,6 @@
 import { useState } from 'react';
+import { Input } from '../../../components/common/Input';
+import { Button } from '../../../components/common/Button';
 
 export const LoginForm = () => {
   const [showPassword, setShowPassword] = useState(false);
@@ -14,34 +16,26 @@ export const LoginForm = () => {
 
       <form className="flex flex-col gap-5" onSubmit={(e) => e.preventDefault()}>
         {/* Campo de Email o DNI */}
-        <div className="flex flex-col gap-1.5">
-          <label htmlFor="identifier" className="text-[15px] text-gray-800">
-            Email o DNI
-          </label>
-          <input
-            type="text"
-            id="identifier"
-            placeholder="estudiante@unsta.edu.ar o DNI"
-            className="w-full px-4 py-3.5 border border-gray-200 rounded-2xl outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all text-gray-700 placeholder-gray-400"
-          />
-        </div>
+        <Input
+          label="Email o DNI"
+          id="identifier"
+          type="text"
+          placeholder="estudiante@unsta.edu.ar o DNI"
+          className="placeholder-gray-400"
+        />
 
         {/* Campo de Contraseña */}
-        <div className="flex flex-col gap-1.5">
-          <label htmlFor="password" className="text-[15px] text-gray-800">
-            Contraseña
-          </label>
-          <div className="relative">
-            <input
-              type={showPassword ? "text" : "password"}
-              id="password"
-              placeholder="********"
-              className="w-full px-4 py-3.5 border border-gray-200 rounded-2xl outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all text-gray-700 placeholder-gray-300 pr-12 text-lg tracking-widest"
-            />
+        <Input
+          label="Contraseña"
+          id="password"
+          type={showPassword ? "text" : "password"}
+          placeholder="********"
+          className={showPassword ? "placeholder-gray-400" : "placeholder-gray-300 text-lg tracking-widest"}
+          suffix={
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-4 top-1/2 -translate-y-1/2 text-blue-600 hover:text-blue-700 focus:outline-none"
+              className="text-blue-600 hover:text-blue-700 focus:outline-none"
             >
               {showPassword ? (
                 <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -55,15 +49,15 @@ export const LoginForm = () => {
                 </svg>
               )}
             </button>
-          </div>
-        </div>
+          }
+        />
 
         {/* Recordarme */}
         <div className="flex items-center gap-2.5 mt-1">
           <input
             type="checkbox"
             id="remember"
-            className="w-5 h-5 rounded border-gray-300 text-gray-800 focus:ring-gray-800 accent-gray-800 cursor-pointer"
+            className="w-5 h-5 rounded-[4px] border-gray-300 text-gray-800 focus:ring-gray-800 accent-gray-800 cursor-pointer"
           />
           <label htmlFor="remember" className="text-[15px] text-gray-800 cursor-pointer select-none">
             Recordarme
@@ -78,16 +72,13 @@ export const LoginForm = () => {
         </div>
 
         {/* Botón de Iniciar Sesión */}
-        <button
-          type="submit"
-          className="w-full bg-[#4285F4] hover:bg-blue-600 text-white font-medium text-[16px] py-4 px-4 rounded-xl flex items-center justify-center gap-2 transition-all mt-2"
-        >
+        <Button type="submit" fullWidth className="mt-2">
           Iniciar Sesión
           <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
             <line x1="5" y1="12" x2="19" y2="12"></line>
             <polyline points="12 5 19 12 12 19"></polyline>
           </svg>
-        </button>
+        </Button>
 
         {/* Link de Registro */}
         <div className="text-center mt-4">
