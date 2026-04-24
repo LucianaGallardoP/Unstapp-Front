@@ -1,0 +1,93 @@
+import { useState } from 'react';
+import { Input } from '../../../components/common/Input';
+import { Button } from '../../../components/common/Button';
+
+export const LoginForm = () => {
+  const [showPassword, setShowPassword] = useState(false);
+
+  return (
+    <div className="w-full max-w-[400px] p-8 md:p-10 bg-white border border-gray-200 rounded-[2.5rem]">
+      <h1 className="text-[2.5rem] font-bold text-black leading-tight mb-2">
+        Bienvenido
+      </h1>
+      <p className="text-gray-500 text-[15px] mb-8 leading-snug pr-4">
+        Accede a tu comunidad académica y gestiona tu vida universitaria.
+      </p>
+
+      <form className="flex flex-col gap-5" onSubmit={(e) => e.preventDefault()}>
+        {/* Campo de Email o DNI */}
+        <Input
+          label="Email o DNI"
+          id="identifier"
+          type="text"
+          placeholder="estudiante@unsta.edu.ar o DNI"
+          className="placeholder-gray-400"
+        />
+
+        {/* Campo de Contraseña */}
+        <Input
+          label="Contraseña"
+          id="password"
+          type={showPassword ? "text" : "password"}
+          placeholder="********"
+          className={showPassword ? "placeholder-gray-400" : "placeholder-gray-300 text-lg tracking-widest"}
+          suffix={
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="text-blue-600 hover:text-blue-700 focus:outline-none"
+            >
+              {showPassword ? (
+                <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+                  <line x1="1" y1="1" x2="23" y2="23"></line>
+                </svg>
+              ) : (
+                <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path>
+                  <circle cx="12" cy="12" r="3"></circle>
+                </svg>
+              )}
+            </button>
+          }
+        />
+
+        {/* Recordarme */}
+        <div className="flex items-center gap-2.5 mt-1">
+          <input
+            type="checkbox"
+            id="remember"
+            className="w-5 h-5 rounded-[4px] border-gray-300 text-gray-800 focus:ring-gray-800 accent-gray-800 cursor-pointer"
+          />
+          <label htmlFor="remember" className="text-[15px] text-gray-800 cursor-pointer select-none">
+            Recordarme
+          </label>
+        </div>
+
+        {/* Olvidaste tu contraseña */}
+        <div className="text-center mt-2">
+          <a href="#" className="text-blue-500 font-medium text-[15px] hover:underline transition-all">
+            ¿Olvidaste tu contraseña?
+          </a>
+        </div>
+
+        {/* Botón de Iniciar Sesión */}
+        <Button type="submit" fullWidth className="mt-2">
+          Iniciar Sesión
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+            <polyline points="12 5 19 12 12 19"></polyline>
+          </svg>
+        </Button>
+
+        {/* Link de Registro */}
+        <div className="text-center mt-4">
+          <span className="text-gray-500 text-[15px]">¿No tienes cuenta? </span>
+          <a href="#" className="text-[#0056D2] font-bold text-[15px] hover:underline transition-all">
+            Regístrate
+          </a>
+        </div>
+      </form>
+    </div>
+  );
+};
