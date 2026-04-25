@@ -1,9 +1,9 @@
-import { LoginForm } from './features/auth/components/LoginForm';
+import { FeedPage } from './features/feed/components/FeedPage';
 
 function App() {
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-      <LoginForm />
+    <div className="w-full min-h-screen">
+      <FeedPage />
     </div>
   )
 }
