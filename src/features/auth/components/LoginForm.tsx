@@ -15,12 +15,17 @@ export const LoginForm = () => {
       </p>
 
       <form className="flex flex-col gap-5" onSubmit={(e) => e.preventDefault()}>
-        {/* Campo de Email o DNI */}
+        {/* Campo de DNI */}
         <Input
-          label="Email o DNI"
-          id="identifier"
+          label="DNI"
+          id="dni"
           type="text"
-          placeholder="estudiante@unsta.edu.ar o DNI"
+          inputMode="numeric"
+          pattern="[0-9]*"
+          onInput={(e) => {
+            e.currentTarget.value = e.currentTarget.value.replace(/\D/g, '');
+          }}
+          placeholder="Ingresa tu DNI"
           className="placeholder-gray-400"
         />
 
