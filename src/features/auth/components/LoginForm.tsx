@@ -20,6 +20,11 @@ export const LoginForm = () => {
           label="DNI"
           id="dni"
           type="text"
+          inputMode="numeric"
+          pattern="[0-9]*"
+          onInput={(e) => {
+            e.currentTarget.value = e.currentTarget.value.replace(/\D/g, '');
+          }}
           placeholder="Ingresa tu DNI"
           className="placeholder-gray-400"
         />
