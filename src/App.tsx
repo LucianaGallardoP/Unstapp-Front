@@ -1,10 +1,16 @@
-import { LoginForm } from './features/auth';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { LoginPage } from './features/auth';
+import { NotFoundPage } from './pages/NotFoundPage';
 
 function App() {
   return (
-    <div className="w-full min-h-screen flex items-center justify-center bg-gray-50">
-      <LoginForm />
-    </div>
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<Navigate to="/login" replace />} />
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="*" element={<NotFoundPage />} />
+      </Routes>
+    </BrowserRouter>
   );
 }
 

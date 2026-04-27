@@ -22,22 +22,23 @@ export const TopBar = () => {
           </h1>
         </div>
 
-        {/* Acciones rapidas */}
-        <div className="flex flex-1 justify-end gap-1">
-          <button
-            className="flex h-9 w-9 items-center justify-center text-[#526174] transition-colors hover:text-[#1F2937]"
-            aria-label="Cambiar tema"
-          >
-            <Moon size={16} />
-          </button>
-          <button
-            className="relative flex h-9 w-9 items-center justify-center text-[#526174] transition-colors hover:text-[#1F2937]"
-            aria-label="Notificaciones"
-          >
-            <Bell size={16} />
-            <span className="absolute right-2.5 top-2 h-1.5 w-1.5 rounded-full bg-red-500"></span>
-          </button>
-        </div>
+      {/* Right side: Actions */}
+      <div className="flex-1 flex justify-end gap-1">
+        <button 
+          className="p-2 text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white transition-colors"
+          aria-label="Cambiar tema"
+        >
+          <Moon size={22} />
+        </button>
+        <button 
+          className="p-2 text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white transition-colors relative"
+          aria-label="Notificaciones"
+        >
+          <Bell size={22} />
+          {/* Unread indicator */}
+          <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border border-white dark:border-[#0B1121]"></span>
+        </button>
+      </div>
       </div>
     </header>
   );
