@@ -1,6 +1,6 @@
 import { TopBar } from '../../../components/common/TopBar';
 import { LegalTermsFooter } from '../../../components/common/LegalTermsFooter';
-import { LoginForm } from './LoginForm'; // Importas tu componente actual
+import { LoginForm } from './LoginForm';
 
 export const LoginPage = () => {
   return (
