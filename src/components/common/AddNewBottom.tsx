@@ -8,10 +8,10 @@ export const AddNewBottom = ({ onClick }: AddNewBottomProps) => {
   return (
     <button
       onClick={onClick}
-      className="fixed bottom-24 right-4 z-50 flex items-center justify-center w-[60px] h-[60px] bg-[#2E4DBA] dark:bg-[#1E3278] hover:bg-[#25409E] dark:hover:bg-[#182860] text-white rounded-full shadow-[0_4px_12px_rgba(0,0,0,0.2)] dark:shadow-[0_4px_12px_rgba(0,0,0,0.4)] transition-all hover:scale-105 active:scale-95"
+      className="fixed bottom-14 right-3 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-[#243EA6] text-white shadow-[0_8px_20px_rgba(36,62,166,0.35)] transition-all hover:scale-105 active:scale-95 sm:right-[calc((100vw-560px)/2+20px)] md:bottom-16 md:right-[calc((100vw-672px)/2+20px)] lg:right-[calc((100vw-768px)/2+20px)]"
       aria-label="Crear nuevo"
     >
-      <Plus size={32} strokeWidth={2} />
+      <Plus size={30} strokeWidth={2} />
     </button>
   );
 };
