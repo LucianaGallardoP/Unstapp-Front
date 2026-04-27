@@ -1,4 +1,4 @@
-import { FeedPage } from './features/feed/components/FeedPage';
+import { FeedPage } from './features/feed';
 
 function App() {
   return (

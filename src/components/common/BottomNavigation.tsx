@@ -8,6 +8,7 @@ interface BottomNavigationProps {
 }
 
 export const BottomNavigation = ({ activeTab, onTabChange }: BottomNavigationProps) => {
+  // Secciones principales de la app.
   const tabs = [
     { id: 'feed', label: 'FEED', icon: LayoutGrid },
     { id: 'comunidad', label: 'COMUNIDAD', icon: Users },
@@ -17,6 +18,7 @@ export const BottomNavigation = ({ activeTab, onTabChange }: BottomNavigationPro
   ] as const;
 
   return (
+    // Navegacion inferior mobile.
     <nav className="fixed bottom-0 left-0 right-0 z-40 border-t border-gray-100 bg-white px-1 pb-1 pt-1">
       <ul className="mx-auto flex max-w-[430px] items-center justify-around sm:max-w-[560px] md:max-w-2xl lg:max-w-3xl">
         {tabs.map((tab) => {

@@ -2,18 +2,22 @@ import { useMemo, useState } from 'react';
 import { TopBar } from '../../../components/common/TopBar';
 import { BottomNavigation, type TabType } from '../../../components/common/BottomNavigation';
 import { AddNewBottom } from '../../../components/common/AddNewBottom';
-import { PostCard, type Post, type PostCategory } from './PostCard';
+import type { Post, PostCategory } from '../types/post.types';
+import { PostCard } from './PostCard';
 
 type FeedFilter = 'todo' | 'carrera' | 'administrativo';
 
+// Opciones del selector superior.
 const filters: { id: FeedFilter; label: string }[] = [
   { id: 'todo', label: 'Todo' },
   { id: 'carrera', label: 'Mi carrera' },
   { id: 'administrativo', label: 'Administrativo' },
 ];
 
+// Genera fechas relativas para los datos mock.
 const minutesAgo = (minutes: number) => new Date(Date.now() - minutes * 60000).toISOString();
 
+// Publicaciones de ejemplo hasta conectar backend.
 const posts: Post[] = [
   {
     id: 1,
@@ -31,7 +35,7 @@ const posts: Post[] = [
   {
     id: 2,
     author: {
-      name: 'Bar Universitario',
+      name: 'Bar UNSTA',
       role: 'Bar',
       verified: true,
     },
@@ -128,6 +132,7 @@ const posts: Post[] = [
   },
 ];
 
+// Categorias visibles por cada filtro.
 const visibleByFilter: Record<FeedFilter, PostCategory[]> = {
   todo: ['administrativo', 'bar', 'alumno', 'carrera'],
   carrera: ['carrera'],
@@ -138,6 +143,7 @@ export const FeedPage = () => {
   const [activeTab, setActiveTab] = useState<TabType>('feed');
   const [activeFilter, setActiveFilter] = useState<FeedFilter>('todo');
 
+  // Filtra publicaciones segun la pestaña elegida.
   const visiblePosts = useMemo(() => {
     const visibleCategories = visibleByFilter[activeFilter];
 
@@ -149,6 +155,7 @@ export const FeedPage = () => {
       <TopBar />
 
       <main className="mx-auto flex w-full max-w-[430px] flex-col gap-4 px-3 py-3 sm:max-w-[560px] sm:px-5 md:max-w-2xl md:gap-5 md:py-5 lg:max-w-3xl">
+        {/* Filtros del feed */}
         <section
           className="grid min-h-8 grid-cols-3 rounded-full border border-gray-200 bg-white p-1 shadow-[0_3px_12px_rgba(15,23,42,0.06)] sm:self-center sm:w-full sm:max-w-[430px] md:max-w-[520px]"
           aria-label="Filtros del feed"
@@ -171,6 +178,7 @@ export const FeedPage = () => {
           })}
         </section>
 
+        {/* Lista de publicaciones */}
         <section className="flex flex-col gap-4 lg:gap-5">
           {visiblePosts.map((post) => (
             <PostCard key={post.id} post={post} />
