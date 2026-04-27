@@ -1,2 +1,2 @@
-export * from './components/LoginForm';
+export * from './components/LoginPage';
 export *from './types/auth.dtos';
