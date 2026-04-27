@@ -8,6 +8,7 @@ interface BottomNavigationProps {
 }
 
 export const BottomNavigation = ({ activeTab, onTabChange }: BottomNavigationProps) => {
+  // Secciones principales de la app.
   const tabs = [
     { id: 'feed', label: 'FEED', icon: LayoutGrid },
     { id: 'comunidad', label: 'COMUNIDAD', icon: Users },
@@ -17,8 +18,9 @@ export const BottomNavigation = ({ activeTab, onTabChange }: BottomNavigationPro
   ] as const;
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 bg-[#F9FAFB] dark:bg-[#0B1121] border-t border-gray-200 dark:border-gray-800 px-2 pb-safe pt-2 z-40">
-      <ul className="flex justify-around items-center">
+    // Navegacion inferior mobile.
+    <nav className="fixed bottom-0 left-0 right-0 z-40 border-t border-gray-100 bg-white px-1 pb-1 pt-1">
+      <ul className="mx-auto flex max-w-[430px] items-center justify-around sm:max-w-[560px] md:max-w-2xl lg:max-w-3xl">
         {tabs.map((tab) => {
           const Icon = tab.icon;
           const isActive = activeTab === tab.id;
@@ -27,14 +29,14 @@ export const BottomNavigation = ({ activeTab, onTabChange }: BottomNavigationPro
             <li key={tab.id} className="flex-1">
               <button
                 onClick={() => onTabChange?.(tab.id)}
-                className={`w-full flex flex-col items-center justify-center gap-1 p-2 transition-colors ${
+                className={`flex h-12 w-full flex-col items-center justify-center gap-0.5 transition-colors md:h-14 ${
                   isActive 
-                    ? 'text-[#4285F4]' 
-                    : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'
+                    ? 'text-[#246BFE]' 
+                    : 'text-gray-400 hover:text-gray-600'
                 }`}
               >
-                <Icon size={24} strokeWidth={isActive ? 2.5 : 2} />
-                <span className="text-[10px] font-bold tracking-wide">
+                <Icon size={17} strokeWidth={isActive ? 2.5 : 2} />
+                <span className="text-[8px] font-black tracking-wide sm:text-[9px]">
                   {tab.label}
                 </span>
               </button>
