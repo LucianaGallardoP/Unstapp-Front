@@ -29,7 +29,8 @@ export const LoginForm = () => {
       navigate('/feed'); 
       
     } catch (err) {
-      // El error ya es capturado y gestionado visualmente por el hook [cite: 2048, 2072]
+      // Mostramos un alert al fallar el inicio de sesión
+      alert('Usuario o contraseña incorrectos');
     }
   };
 
@@ -123,8 +124,13 @@ export const LoginForm = () => {
           </a>
         </div>
 
-        {/* Botón dinámico: cambia texto y se bloquea durante la carga  */}
-        <Button type="submit" fullWidth className="mt-2" disabled={loading}> 
+        {/* Botón dinámico: cambia texto y se bloquea durante la carga o si faltan datos */}
+        <Button 
+          type="submit" 
+          fullWidth 
+          className="mt-2" 
+          disabled={loading || !formData.dni || !formData.password}
+        > 
           {loading ? (
             <span className="flex items-center gap-2">
               Iniciando sesión...
