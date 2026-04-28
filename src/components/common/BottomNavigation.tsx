@@ -1,4 +1,5 @@
 import { LayoutGrid, Users, Calendar, Clock, User } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 export type TabType = 'feed' | 'comunidad' | 'calendario' | 'horario' | 'perfil';
 
@@ -8,6 +9,7 @@ interface BottomNavigationProps {
 }
 
 export const BottomNavigation = ({ activeTab, onTabChange }: BottomNavigationProps) => {
+  const navigate = useNavigate();
   // Secciones principales de la app.
   const tabs = [
     { id: 'feed', label: 'FEED', icon: LayoutGrid },
@@ -16,6 +18,13 @@ export const BottomNavigation = ({ activeTab, onTabChange }: BottomNavigationPro
     { id: 'horario', label: 'HORARIO', icon: Clock },
     { id: 'perfil', label: 'PERFIL', icon: User },
   ] as const;
+
+  const handleTabClick = (tabId: TabType) => {
+    if (onTabChange) {
+      onTabChange(tabId);
+    }
+    navigate(`/${tabId}`);
+  };
 
   return (
     // Navegacion inferior mobile.
@@ -28,7 +37,7 @@ export const BottomNavigation = ({ activeTab, onTabChange }: BottomNavigationPro
           return (
             <li key={tab.id} className="flex-1">
               <button
-                onClick={() => onTabChange?.(tab.id)}
+                onClick={() => handleTabClick(tab.id)}
                 className={`flex h-12 w-full flex-col items-center justify-center gap-0.5 transition-colors md:h-14 ${
                   isActive 
                     ? 'text-[#246BFE]' 
