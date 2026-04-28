@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 
 export const TopBar = () => {
   const [isMoonIcon, setIsMoonIcon] = useState(true);
+  const [notificationCount, setNotificationCount] = useState(3);
   const navigate = useNavigate();
   return (
     // Barra superior fija.
@@ -41,10 +42,19 @@ export const TopBar = () => {
         <button 
           className="p-2 text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white transition-colors relative"
           aria-label="Notificaciones"
+          onClick={() => setNotificationCount(prev => prev + 1)}
+          onContextMenu={(e) => {
+            e.preventDefault();
+            setNotificationCount(prev => Math.max(0, prev - 1));
+          }}
         >
           <Bell size={22} />
           {/* Unread indicator */}
-          <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border border-white dark:border-[#0B1121]"></span>
+          {notificationCount > 0 && (
+            <span className="absolute top-1.5 right-1.5 flex min-w-[14px] h-[14px] items-center justify-center rounded-full bg-red-500 px-[3px] text-[9px] font-bold text-white border border-white dark:border-[#0B1121]">
+              {notificationCount > 99 ? '99+' : notificationCount}
+            </span>
+          )}
         </button>
       </div>
       </div>
