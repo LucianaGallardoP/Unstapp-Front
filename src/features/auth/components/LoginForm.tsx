@@ -111,7 +111,14 @@ export const LoginForm = () => {
         </div>
 
         <div className="text-center mt-2">
-          <a href="#" className="text-blue-500 font-medium text-[15px] hover:underline transition-all">
+          <a 
+            href="/forgot-password" 
+            onClick={(e) => {
+              e.preventDefault();
+              navigate('/forgot-password'); // Ruta que no existe, activará el 404
+            }}
+            className="text-blue-500 font-medium text-[15px] hover:underline transition-all"
+          >
             ¿Olvidaste tu contraseña?
           </a>
         </div>
