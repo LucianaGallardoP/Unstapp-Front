@@ -1,6 +1,8 @@
 import { Search, Moon, Bell } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 export const TopBar = () => {
+  const navigate = useNavigate();
   return (
     // Barra superior fija.
     <header className="sticky top-0 left-0 right-0 z-40 h-12 border-b border-gray-100 bg-white px-3 md:h-14">
@@ -16,11 +18,14 @@ export const TopBar = () => {
         </div>
 
         {/* Nombre de la app */}
-        <div className="flex flex-1 justify-center">
+        <button 
+          onClick={() => navigate('/feed')}
+          className="flex flex-1 justify-center bg-white border-none cursor-pointer"
+        >
           <h1 className="text-[14px] font-black text-[#123FA5] md:text-[15px]">
-            Unstapp
+            UNSTAPP
           </h1>
-        </div>
+        </button>
 
       {/* Right side: Actions */}
       <div className="flex-1 flex justify-end gap-1">
