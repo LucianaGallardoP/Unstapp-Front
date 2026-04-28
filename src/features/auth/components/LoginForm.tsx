@@ -1,9 +1,32 @@
 import { useState } from 'react';
 import { Input } from '../../../components/common/Input';
 import { Button } from '../../../components/common/Button';
+import { useLogin } from '../hooks/useLogin'; // Importamos el hook de la feature
 
 export const LoginForm = () => {
   const [showPassword, setShowPassword] = useState(false);
+  
+  // 1. Inicializamos el hook para obtener la lógica
+  const { login, loading, error } = useLogin(); 
+
+  // 2. Creamos el estado local para los campos del formulario
+  const [formData, setFormData] = useState({
+    dni: '',
+    password: ''
+  });
+
+  // 3. Manejador del envío del formulario
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      // Llamamos a la función login del hook con los datos actuales
+      await login(formData); 
+      console.log("¡Inicio de sesión exitoso!");
+      // Aquí podrías usar React Router para navegar al /feed
+    } catch (err) {
+      // El error ya es capturado y gestionado por el hook
+    }
+  };
 
   return (
     <div className="w-full max-w-[400px] p-8 md:p-10 bg-white border border-gray-200 rounded-[2.5rem]">
@@ -14,33 +37,46 @@ export const LoginForm = () => {
         Accede a tu comunidad académica y gestiona tu vida universitaria.
       </p>
 
-      <form className="flex flex-col gap-5" onSubmit={(e) => e.preventDefault()}>
-        {/* Campo de DNI */}
+      {/* 4. Conectamos el handleSubmit al formulario */}
+      <form className="flex flex-col gap-5" onSubmit={handleSubmit}>
+        
+        {/* 5. Mostramos el mensaje de error si la API de .NET falla */}
+        {error && (
+          <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
+            <p className="text-red-600 text-sm text-center font-medium">{error}</p>
+          </div>
+        )}
+
+        {/* Campo de DNI - Ahora controlado por el estado */}
         <Input
           label="DNI"
           id="dni"
           type="text"
           inputMode="numeric"
           pattern="[0-9]*"
-          onInput={(e) => {
-            e.currentTarget.value = e.currentTarget.value.replace(/\D/g, '');
-          }}
           placeholder="Ingresa tu DNI"
           className="placeholder-gray-400"
+          value={formData.dni} 
+          disabled={loading} 
+          onChange={(e: any) => setFormData({ ...formData, dni: e.target.value.replace(/\D/g, '') })}
         />
 
-        {/* Campo de Contraseña */}
+        {/* Campo de Contraseña - Ahora controlado por el estado */}
         <Input
           label="Contraseña"
           id="password"
           type={showPassword ? "text" : "password"}
           placeholder="********"
           className={showPassword ? "placeholder-gray-400" : "placeholder-gray-300 text-lg tracking-widest"}
+          value={formData.password} 
+          disabled={loading} 
+          onChange={(e: any) => setFormData({ ...formData, password: e.target.value })}
           suffix={
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
               className="text-blue-600 hover:text-blue-700 focus:outline-none"
+              disabled={loading}
             >
               {showPassword ? (
                 <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -57,35 +93,42 @@ export const LoginForm = () => {
           }
         />
 
-        {/* Recordarme */}
         <div className="flex items-center gap-2.5 mt-1">
           <input
             type="checkbox"
             id="remember"
             className="w-5 h-5 rounded-[4px] border-gray-300 text-gray-800 focus:ring-gray-800 accent-gray-800 cursor-pointer"
+            disabled={loading}
           />
           <label htmlFor="remember" className="text-[15px] text-gray-800 cursor-pointer select-none">
             Recordarme
           </label>
         </div>
 
-        {/* Olvidaste tu contraseña */}
         <div className="text-center mt-2">
           <a href="#" className="text-blue-500 font-medium text-[15px] hover:underline transition-all">
             ¿Olvidaste tu contraseña?
           </a>
         </div>
 
-        {/* Botón de Iniciar Sesión */}
-        <Button type="submit" fullWidth className="mt-2">
-          Iniciar Sesión
-          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-            <line x1="5" y1="12" x2="19" y2="12"></line>
-            <polyline points="12 5 19 12 12 19"></polyline>
-          </svg>
+        {/* 6. Botón dinámico: cambia texto y se bloquea durante la carga */}
+        <Button type="submit" fullWidth className="mt-2" disabled={loading}> 
+          {loading ? (
+            <span className="flex items-center gap-2">
+              Iniciando sesión...
+              <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+            </span>
+          ) : (
+            <span className="flex items-center gap-2">
+              Iniciar Sesión
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="5" y1="12" x2="19" y2="12"></line>
+                <polyline points="12 5 19 12 12 19"></polyline>
+              </svg>
+            </span>
+          )}
         </Button>
 
-        {/* Link de Registro */}
         <div className="text-center mt-4">
           <span className="text-gray-500 text-[15px]">¿No tienes cuenta? </span>
           <a href="#" className="text-[#0056D2] font-bold text-[15px] hover:underline transition-all">
