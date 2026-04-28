@@ -1,7 +1,9 @@
-import { Search, Moon, Bell } from 'lucide-react';
+import { useState } from 'react';
+import { Search, Moon, Sun, Bell } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 export const TopBar = () => {
+  const [isMoonIcon, setIsMoonIcon] = useState(true);
   const navigate = useNavigate();
   return (
     // Barra superior fija.
@@ -30,10 +32,11 @@ export const TopBar = () => {
       {/* Right side: Actions */}
       <div className="flex-1 flex justify-end gap-1">
         <button 
+          onClick={() => setIsMoonIcon(!isMoonIcon)}
           className="p-2 text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white transition-colors"
           aria-label="Cambiar tema"
         >
-          <Moon size={22} />
+          {isMoonIcon ? <Moon size={22} /> : <Sun size={22} />}
         </button>
         <button 
           className="p-2 text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white transition-colors relative"
