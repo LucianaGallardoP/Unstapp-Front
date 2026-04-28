@@ -60,12 +60,18 @@ export const CreatePostModal = ({ isOpen, onClose, onPublish }: CreatePostModalP
             <UserRound size={20} strokeWidth={2.3} />
           </div>
 
-          <textarea
-            value={content}
-            onChange={(event) => setContent(event.target.value)}
-            placeholder="Que esta pasando en el campus? Que queres compartir con la comunidad?"
-            className="min-h-36 flex-1 resize-none rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 text-[14px] leading-6 text-gray-800 outline-none transition-colors placeholder:text-gray-400 focus:border-[#5A55FF] focus:bg-white"
-          />
+          <div className="flex-1 relative">
+            <textarea
+              value={content}
+              onChange={(event) => setContent(event.target.value)}
+              maxLength={500}
+              placeholder="Que esta pasando en el campus? Que queres compartir con la comunidad?"
+              className="min-h-36 w-full resize-none rounded-2xl border border-gray-200 bg-gray-50 px-4 pt-3 pb-8 text-[14px] leading-6 text-gray-800 outline-none transition-colors placeholder:text-gray-400 focus:border-[#5A55FF] focus:bg-white"
+            />
+            <span className={`absolute bottom-3 right-4 text-[11px] font-medium ${content.length >= 500 ? 'text-red-500' : 'text-gray-400'}`}>
+              {content.length}/500
+            </span>
+          </div>
         </div>
 
         <footer className="mt-4 flex items-center justify-between border-t border-gray-100 pt-3">
