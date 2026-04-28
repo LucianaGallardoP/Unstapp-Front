@@ -1,30 +1,35 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom'; // 1. Importamos el hook de navegación [cite: 2083]
 import { Input } from '../../../components/common/Input';
 import { Button } from '../../../components/common/Button';
-import { useLogin } from '../hooks/useLogin'; // Importamos el hook de la feature
+import { useLogin } from '../hooks/useLogin'; 
 
 export const LoginForm = () => {
   const [showPassword, setShowPassword] = useState(false);
+  const navigate = useNavigate(); // 2. Inicializamos el navegador [cite: 2083]
   
-  // 1. Inicializamos el hook para obtener la lógica
+  // Inicializamos el hook para obtener la lógica de conexión con .NET [cite: 2048, 2049]
   const { login, loading, error } = useLogin(); 
 
-  // 2. Creamos el estado local para los campos del formulario
+  // Estado local para controlar los campos del formulario [cite: 2069, 2070]
   const [formData, setFormData] = useState({
     dni: '',
     password: ''
   });
 
-  // 3. Manejador del envío del formulario
+  // Manejador del envío del formulario [cite: 2069, 2073]
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      // Llamamos a la función login del hook con los datos actuales
+      // Llamamos a la función login del hook con los datos actuales [cite: 2069]
       await login(formData); 
-      console.log("¡Inicio de sesión exitoso!");
-      // Aquí podrías usar React Router para navegar al /feed
+      
+      // 3. ¡Redirección exitosa! Navegamos al feed [cite: 2084]
+      console.log("¡Inicio de sesión exitoso! Redirigiendo al feed...");
+      navigate('/feed'); 
+      
     } catch (err) {
-      // El error ya es capturado y gestionado por el hook
+      // El error ya es capturado y gestionado visualmente por el hook [cite: 2048, 2072]
     }
   };
 
@@ -37,17 +42,17 @@ export const LoginForm = () => {
         Accede a tu comunidad académica y gestiona tu vida universitaria.
       </p>
 
-      {/* 4. Conectamos el handleSubmit al formulario */}
+      {/* Conectamos el handleSubmit al formulario [cite: 2069] */}
       <form className="flex flex-col gap-5" onSubmit={handleSubmit}>
         
-        {/* 5. Mostramos el mensaje de error si la API de .NET falla */}
+        {/* Mostramos el mensaje de error si la API de .NET falla (ej: DNI no encontrado)  */}
         {error && (
           <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
             <p className="text-red-600 text-sm text-center font-medium">{error}</p>
           </div>
         )}
 
-        {/* Campo de DNI - Ahora controlado por el estado */}
+        {/* Campo de DNI controlado por el estado [cite: 2070] */}
         <Input
           label="DNI"
           id="dni"
@@ -57,11 +62,11 @@ export const LoginForm = () => {
           placeholder="Ingresa tu DNI"
           className="placeholder-gray-400"
           value={formData.dni} 
-          disabled={loading} 
+          disabled={loading} // Bloqueamos durante la carga 
           onChange={(e: any) => setFormData({ ...formData, dni: e.target.value.replace(/\D/g, '') })}
         />
 
-        {/* Campo de Contraseña - Ahora controlado por el estado */}
+        {/* Campo de Contraseña controlado por el estado [cite: 2070] */}
         <Input
           label="Contraseña"
           id="password"
@@ -111,7 +116,7 @@ export const LoginForm = () => {
           </a>
         </div>
 
-        {/* 6. Botón dinámico: cambia texto y se bloquea durante la carga */}
+        {/* Botón dinámico: cambia texto y se bloquea durante la carga  */}
         <Button type="submit" fullWidth className="mt-2" disabled={loading}> 
           {loading ? (
             <span className="flex items-center gap-2">
