@@ -3,6 +3,7 @@ import { TopBar } from '../../../components/common/TopBar';
 import { BottomNavigation, type TabType } from '../../../components/common/BottomNavigation';
 import { AddNewBottom } from '../../../components/common/AddNewBottom';
 import type { Post, PostCategory } from '../types/post.types';
+import { CreatePostModal } from './CreatePostModal';
 import { PostCard } from './PostCard';
 
 type FeedFilter = 'todo' | 'carrera' | 'administrativo';
@@ -18,7 +19,7 @@ const filters: { id: FeedFilter; label: string }[] = [
 const minutesAgo = (minutes: number) => new Date(Date.now() - minutes * 60000).toISOString();
 
 // Publicaciones de ejemplo hasta conectar backend.
-const posts: Post[] = [
+const initialPosts: Post[] = [
   {
     id: 1,
     author: {
@@ -142,13 +143,37 @@ const visibleByFilter: Record<FeedFilter, PostCategory[]> = {
 export const FeedPage = () => {
   const [activeTab, setActiveTab] = useState<TabType>('feed');
   const [activeFilter, setActiveFilter] = useState<FeedFilter>('todo');
+  const [posts, setPosts] = useState<Post[]>(initialPosts);
+  const [isCreatePostModalOpen, setIsCreatePostModalOpen] = useState(false);
 
   // Filtra publicaciones segun la pestaña elegida.
   const visiblePosts = useMemo(() => {
     const visibleCategories = visibleByFilter[activeFilter];
 
     return posts.filter((post) => visibleCategories.includes(post.category));
-  }, [activeFilter]);
+  }, [activeFilter, posts]);
+
+  // Simula el POST al backend y agrega la publicacion.
+  const handlePublishPost = async (content: string) => {
+    await new Promise((resolve) => {
+      window.setTimeout(resolve, 900);
+    });
+
+    const newPost: Post = {
+      id: Date.now(),
+      author: {
+        name: 'Vos',
+        role: 'Alumno',
+      },
+      category: 'alumno',
+      publishedAt: new Date().toISOString(),
+      content,
+      likes: 0,
+      comments: [],
+    };
+
+    setPosts((currentPosts) => [newPost, ...currentPosts]);
+  };
 
   return (
     <div className="min-h-screen bg-white pb-20 text-gray-900 md:bg-gray-50">
@@ -186,7 +211,13 @@ export const FeedPage = () => {
         </section>
       </main>
 
-      <AddNewBottom onClick={() => console.log('Nuevo contenido')} />
+      <AddNewBottom onClick={() => setIsCreatePostModalOpen(true)} />
+
+      <CreatePostModal
+        isOpen={isCreatePostModalOpen}
+        onClose={() => setIsCreatePostModalOpen(false)}
+        onPublish={handlePublishPost}
+      />
 
       <BottomNavigation activeTab={activeTab} onTabChange={setActiveTab} />
     </div>
