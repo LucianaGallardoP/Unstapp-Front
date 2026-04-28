@@ -1,10 +1,11 @@
 import { useState } from 'react';
-import { Search, Moon, Sun, Bell } from 'lucide-react';
+import { Search, Moon, Sun, Bell, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 export const TopBar = () => {
   const [isMoonIcon, setIsMoonIcon] = useState(true);
   const [notificationCount, setNotificationCount] = useState(3);
+  const [isSearchExpanded, setIsSearchExpanded] = useState(false);
   const navigate = useNavigate();
   return (
     // Barra superior fija.
@@ -12,12 +13,31 @@ export const TopBar = () => {
       <div className="mx-auto flex h-full w-full max-w-[430px] items-center justify-between sm:max-w-[560px] md:max-w-2xl lg:max-w-3xl">
         {/* Accion de busqueda */}
         <div className="flex flex-1 justify-start">
-          <button
-            className="flex h-9 w-9 items-center justify-center text-[#526174] transition-colors hover:text-[#1F2937]"
-            aria-label="Buscar"
-          >
-            <Search size={17} />
-          </button>
+          {isSearchExpanded ? (
+            <div className="flex items-center bg-gray-100 rounded-full px-2 h-9 w-full max-w-[150px] md:max-w-[200px] transition-all shadow-inner">
+              <Search size={14} className="text-gray-500 ml-1 mr-1 flex-shrink-0" />
+              <input 
+                type="text" 
+                placeholder="Buscar..." 
+                className="bg-transparent border-none outline-none text-[13px] w-full text-gray-700"
+                autoFocus
+              />
+              <button 
+                onClick={() => setIsSearchExpanded(false)}
+                className="text-gray-400 hover:text-gray-600 ml-1 p-1 rounded-full flex-shrink-0"
+              >
+                <X size={14} />
+              </button>
+            </div>
+          ) : (
+            <button
+              onClick={() => setIsSearchExpanded(true)}
+              className="flex h-9 w-9 items-center justify-center text-[#526174] transition-colors hover:text-[#1F2937]"
+              aria-label="Buscar"
+            >
+              <Search size={17} />
+            </button>
+          )}
         </div>
 
         {/* Nombre de la app */}
