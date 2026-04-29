@@ -81,6 +81,7 @@ export const PostCard = ({ post }: PostCardProps) => {
   }).format(new Date(post.publishedAt));
   const relativeTime = formatRelativeTime(post.publishedAt, currentDate);
   const AuthorIcon = categoryIcons[post.category];
+  const commentsCount = comments.length || post.commentsCount || 0;
 
   return (
     <article className="w-full rounded-[22px] border border-gray-100 bg-white px-4 py-4 shadow-[0_10px_30px_rgba(15,23,42,0.08)] sm:px-5 sm:py-5 md:h-full">
@@ -173,7 +174,7 @@ export const PostCard = ({ post }: PostCardProps) => {
             aria-expanded={commentsOpen}
           >
             <MessageCircle size={16} />
-            <span>{comments.length}</span>
+            <span>{commentsCount}</span>
           </button>
         </div>
 

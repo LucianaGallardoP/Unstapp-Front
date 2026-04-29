@@ -2,6 +2,25 @@ import { useState } from 'react';
 import { authService } from '../services/authService';
 import type { LoginRequest, LoginResponse } from '../types/auth.dtos';
 
+const getLoginErrorMessage = (error: unknown) => {
+  if (
+    error &&
+    typeof error === 'object' &&
+    'response' in error &&
+    error.response &&
+    typeof error.response === 'object' &&
+    'data' in error.response
+  ) {
+    const data = error.response.data;
+
+    if (data && typeof data === 'object' && 'message' in data && typeof data.message === 'string') {
+      return data.message;
+    }
+  }
+
+  return 'Error al iniciar sesion';
+};
+
 export const useLogin = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -10,14 +29,17 @@ export const useLogin = () => {
   const login = async (credentials: LoginRequest) => {
     setLoading(true);
     setError(null);
+
     try {
       const response = await authService.login(credentials);
       setData(response);
-      // Aquí podrías guardar el token en localStorage en el futuro
+      localStorage.setItem('unstapp_token', response.token);
+      localStorage.setItem('unstapp_user_name', response.fullName);
+      localStorage.setItem('unstapp_user_roles', JSON.stringify(response.roles));
+
       return response;
-    } catch (err: any) {
-      // Capturamos el error de la API (ej: "DNI o contraseña incorrectos")
-      const errorMessage = err.response?.data?.message || 'Error al iniciar sesión';
+    } catch (err) {
+      const errorMessage = getLoginErrorMessage(err);
       setError(errorMessage);
       throw err;
     } finally {

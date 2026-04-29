@@ -10,6 +10,7 @@ interface CreatePostModalProps {
 export const CreatePostModal = ({ isOpen, onClose, onPublish }: CreatePostModalProps) => {
   const [content, setContent] = useState('');
   const [isPublishing, setIsPublishing] = useState(false);
+  const [publishError, setPublishError] = useState<string | null>(null);
   const trimmedContent = content.trim();
 
   if (!isOpen) {
@@ -22,11 +23,17 @@ export const CreatePostModal = ({ isOpen, onClose, onPublish }: CreatePostModalP
       return;
     }
 
-    setIsPublishing(true);
-    await onPublish(trimmedContent);
-    setIsPublishing(false);
-    setContent('');
-    onClose();
+    try {
+      setIsPublishing(true);
+      setPublishError(null);
+      await onPublish(trimmedContent);
+      setContent('');
+      onClose();
+    } catch {
+      setPublishError('No se pudo publicar. Intentalo nuevamente.');
+    } finally {
+      setIsPublishing(false);
+    }
   };
 
   return (
@@ -94,6 +101,12 @@ export const CreatePostModal = ({ isOpen, onClose, onPublish }: CreatePostModalP
             {isPublishing ? 'Publicando' : 'Publicar'}
           </button>
         </footer>
+
+        {publishError && (
+          <p className="mt-3 rounded-2xl bg-red-50 px-4 py-3 text-center text-[13px] font-semibold text-red-500">
+            {publishError}
+          </p>
+        )}
       </section>
     </div>
   );
