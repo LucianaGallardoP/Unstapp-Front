@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import { TopBar } from '../../../components/common/TopBar';
 import { BottomNavigation, type TabType } from '../../../components/common/BottomNavigation';
 import { AddNewBottom } from '../../../components/common/AddNewBottom';
+import { usePosts } from '../hooks/usePosts';
 import type { Post, PostCategory } from '../types/post.types';
 import { CreatePostModal } from './CreatePostModal';
 import { PostCard } from './PostCard';
@@ -19,7 +20,7 @@ const filters: { id: FeedFilter; label: string }[] = [
 const minutesAgo = (minutes: number) => new Date(Date.now() - minutes * 60000).toISOString();
 
 // Publicaciones de ejemplo hasta conectar backend.
-const initialPosts: Post[] = [
+const getInitialPosts = (): Post[] => [
   {
     id: 1,
     author: {
@@ -143,8 +144,9 @@ const visibleByFilter: Record<FeedFilter, PostCategory[]> = {
 export const FeedPage = () => {
   const [activeTab, setActiveTab] = useState<TabType>('feed');
   const [activeFilter, setActiveFilter] = useState<FeedFilter>('todo');
-  const [posts, setPosts] = useState<Post[]>(initialPosts);
   const [isCreatePostModalOpen, setIsCreatePostModalOpen] = useState(false);
+  const fallbackPosts = useMemo(() => getInitialPosts(), []);
+  const { posts, loading, error, createPost } = usePosts({ fallbackPosts });
 
   // Filtra publicaciones segun la pestaña elegida.
   const visiblePosts = useMemo(() => {
@@ -153,55 +155,47 @@ export const FeedPage = () => {
     return posts.filter((post) => visibleCategories.includes(post.category));
   }, [activeFilter, posts]);
 
-  // Simula el POST al backend y agrega la publicacion.
-  const handlePublishPost = async (content: string) => {
-    await new Promise((resolve) => {
-      window.setTimeout(resolve, 900);
-    });
-
-    const newPost: Post = {
-      id: Date.now(),
-      author: {
-        name: 'Vos',
-        role: 'Alumno',
-      },
-      category: 'alumno',
-      publishedAt: new Date().toISOString(),
-      content,
-      likes: 0,
-      comments: [],
-    };
-
-    setPosts((currentPosts) => [newPost, ...currentPosts]);
-  };
-
   return (
     <div className="min-h-screen bg-white pb-20 text-gray-900 md:bg-gray-50">
       <TopBar />
 
       <main className="mx-auto flex w-full max-w-[430px] flex-col gap-4 px-3 py-3 sm:max-w-[560px] sm:px-5 md:max-w-2xl md:gap-5 md:py-5 lg:max-w-3xl">
         {/* Filtros del feed */}
-        <section
-          className="grid min-h-8 grid-cols-3 rounded-full border border-gray-200 bg-white p-1 shadow-[0_3px_12px_rgba(15,23,42,0.06)] sm:self-center sm:w-full sm:max-w-[430px] md:max-w-[520px]"
-          aria-label="Filtros del feed"
-        >
-          {filters.map((filter) => {
-            const isActive = activeFilter === filter.id;
+        <div className="sticky top-12 z-30 -mx-3 bg-white/95 px-3 py-2 backdrop-blur md:top-14 md:bg-gray-50/95">
+          <section
+            className="mx-auto grid min-h-8 grid-cols-3 rounded-full border border-gray-200 bg-white p-1 shadow-[0_3px_12px_rgba(15,23,42,0.06)] sm:w-full sm:max-w-[430px] md:max-w-[520px]"
+            aria-label="Filtros del feed"
+          >
+            {filters.map((filter) => {
+              const isActive = activeFilter === filter.id;
 
-            return (
-              <button
-                key={filter.id}
-                type="button"
-                onClick={() => setActiveFilter(filter.id)}
-                className={`min-w-0 rounded-full px-2 py-1 text-[10px] font-bold transition-colors min-[360px]:text-[11px] sm:text-[12px] ${
-                  isActive ? 'bg-[#5A55FF] text-white' : 'text-[#4B5563] hover:bg-gray-50'
-                }`}
-              >
-                {filter.label}
-              </button>
-            );
-          })}
-        </section>
+              return (
+                <button
+                  key={filter.id}
+                  type="button"
+                  onClick={() => setActiveFilter(filter.id)}
+                  className={`min-w-0 rounded-full px-2 py-1 text-[10px] font-bold transition-colors min-[360px]:text-[11px] sm:text-[12px] ${
+                    isActive ? 'bg-[#5A55FF] text-white' : 'text-[#4B5563] hover:bg-gray-50'
+                  }`}
+                >
+                  {filter.label}
+                </button>
+              );
+            })}
+          </section>
+        </div>
+
+        {loading && (
+          <p className="rounded-2xl bg-white px-4 py-3 text-center text-[13px] font-semibold text-gray-400">
+            Cargando publicaciones...
+          </p>
+        )}
+
+        {error && (
+          <p className="rounded-2xl border border-red-100 bg-red-50 px-4 py-3 text-center text-[13px] font-semibold text-red-500">
+            {error}
+          </p>
+        )}
 
         {/* Lista de publicaciones */}
         <section className="flex flex-col gap-4 lg:gap-5">
@@ -216,7 +210,7 @@ export const FeedPage = () => {
       <CreatePostModal
         isOpen={isCreatePostModalOpen}
         onClose={() => setIsCreatePostModalOpen(false)}
-        onPublish={handlePublishPost}
+        onPublish={createPost}
       />
 
       <BottomNavigation activeTab={activeTab} onTabChange={setActiveTab} />

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, type ChangeEvent } from 'react';
 import { useNavigate } from 'react-router-dom'; // 1. Importamos el hook de navegación [cite: 2083]
 import { Input } from '../../../components/common/Input';
 import { Button } from '../../../components/common/Button';
@@ -28,7 +28,7 @@ export const LoginForm = () => {
       console.log("¡Inicio de sesión exitoso! Redirigiendo al feed...");
       navigate('/feed'); 
       
-    } catch (err) {
+    } catch {
       // Mostramos un alert al fallar el inicio de sesión
       alert('Usuario o contraseña incorrectos');
     }
@@ -64,7 +64,7 @@ export const LoginForm = () => {
           className="placeholder-gray-400"
           value={formData.dni} 
           disabled={loading} // Bloqueamos durante la carga 
-          onChange={(e: any) => setFormData({ ...formData, dni: e.target.value.replace(/\D/g, '') })}
+          onChange={(e: ChangeEvent<HTMLInputElement>) => setFormData({ ...formData, dni: e.target.value.replace(/\D/g, '') })}
         />
 
         {/* Campo de Contraseña controlado por el estado [cite: 2070] */}
@@ -76,7 +76,7 @@ export const LoginForm = () => {
           className={showPassword ? "placeholder-gray-400" : "placeholder-gray-300 text-lg tracking-widest"}
           value={formData.password} 
           disabled={loading} 
-          onChange={(e: any) => setFormData({ ...formData, password: e.target.value })}
+          onChange={(e: ChangeEvent<HTMLInputElement>) => setFormData({ ...formData, password: e.target.value })}
           suffix={
             <button
               type="button"

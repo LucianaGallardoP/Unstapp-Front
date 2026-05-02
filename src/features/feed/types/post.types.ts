@@ -18,7 +18,7 @@ export interface PostMedia {
 
 // Datos de cada comentario.
 export interface PostComment {
-  id: number;
+  id: number | string;
   author: PostAuthor;
   publishedAt: string;
   content: string;
@@ -26,12 +26,13 @@ export interface PostComment {
 
 // Estructura completa de una publicacion.
 export interface Post {
-  id: number;
+  id: number | string;
   author: PostAuthor;
   category: PostCategory;
   publishedAt: string;
   content: string;
   media?: PostMedia;
   likes: number;
+  commentsCount?: number;
   comments: PostComment[];
 }
