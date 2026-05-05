@@ -49,6 +49,8 @@ const mapCommentFromApi = (apiComment: unknown, fallbackContent: string): PostCo
     id:
       typeof comment.id === 'number' || typeof comment.id === 'string'
         ? comment.id
+        : typeof comment.commentId === 'number' || typeof comment.commentId === 'string'
+          ? comment.commentId
         : Date.now(),
     author: {
       name:
@@ -76,6 +78,19 @@ const mapCommentFromApi = (apiComment: unknown, fallbackContent: string): PostCo
 export const commentService = {
   // Recupera comentarios mock guardados para una publicacion.
   getByPostId: (postId: number | string) => readComments()[String(postId)] ?? [],
+
+  // Trae comentarios reales de una publicacion.
+  getByPostIdFromApi: async (postId: number | string) => {
+    const response = await apiClient.get<unknown>(`/posts/${postId}/comments`, {
+      headers: getAuthHeaders(),
+    });
+    const data = response.data;
+    const comments = Array.isArray(data) ? data : asRecord(data).items ?? asRecord(data).data;
+
+    return Array.isArray(comments)
+      ? comments.map((comment) => mapCommentFromApi(comment, ''))
+      : [];
+  },
 
   // Guarda un nuevo comentario en backend y mantiene respaldo mock.
   create: async (postId: number | string, content: string) => {

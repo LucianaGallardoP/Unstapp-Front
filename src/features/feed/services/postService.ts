@@ -1,4 +1,5 @@
 import { apiClient } from '../../../services/apiClient';
+import { commentService } from './commentService';
 import { likeService } from './likeService';
 import type { Post, PostAuthorRole, PostCategory } from '../types/post.types';
 
@@ -29,6 +30,12 @@ const asString = (value: unknown, fallback = '') =>
 const asNumber = (value: unknown, fallback = 0) =>
   typeof value === 'number' ? value : fallback;
 
+const asOptionalNumber = (value: unknown) =>
+  typeof value === 'number' ? value : undefined;
+
+const asOptionalBoolean = (value: unknown) =>
+  typeof value === 'boolean' ? value : undefined;
+
 const normalizeRole = (value: unknown): PostAuthorRole => {
   const role = asString(value).toLowerCase();
 
@@ -53,7 +60,14 @@ const mapPostFromApi = (apiPost: unknown, fallbackContent = ''): Post => {
   const role = normalizeRole(author.role ?? post.role);
   const id = post.id ?? post.postId ?? crypto.randomUUID();
   const storedLikes = likeService.getStoredLikeCount(id as number | string);
-  const apiLikes = asNumber(post.likes) || asNumber(post.likesCount);
+  const apiLikes = asOptionalNumber(post.likes) ?? asOptionalNumber(post.likesCount);
+  const apiLiked =
+    asOptionalBoolean(post.likedByCurrentUser) ??
+    asOptionalBoolean(post.hasLiked) ??
+    asOptionalBoolean(post.userLiked) ??
+    asOptionalBoolean(post.isLikedByMe) ??
+    asOptionalBoolean(post.liked) ??
+    asOptionalBoolean(post.isLiked);
 
   return {
     id: typeof id === 'number' || typeof id === 'string' ? id : crypto.randomUUID(),
@@ -82,16 +96,8 @@ const mapPostFromApi = (apiPost: unknown, fallbackContent = ''): Post => {
           alt: 'Contenido multimedia de la publicacion',
         }
       : undefined,
-    likes: storedLikes ?? apiLikes,
-    likedByCurrentUser:
-      Boolean(
-        post.likedByCurrentUser ??
-          post.hasLiked ??
-          post.userLiked ??
-          post.isLikedByMe ??
-          post.liked ??
-          post.isLiked,
-      ) || likeService.isLikedByCurrentUser(id as number | string),
+    likes: apiLikes ?? storedLikes ?? 0,
+    likedByCurrentUser: apiLiked ?? likeService.isLikedByCurrentUser(id as number | string),
     commentsCount: asNumber(post.commentsCount),
     comments: [],
   };
@@ -105,7 +111,31 @@ export const postService = {
     const data = response.data;
     const posts = Array.isArray(data) ? data : asRecord(data).items ?? asRecord(data).data;
 
-    return Array.isArray(posts) ? posts.map((post) => mapPostFromApi(post)) : [];
+    if (!Array.isArray(posts)) {
+      return [];
+    }
+
+    const mappedPosts = posts.map((post) => mapPostFromApi(post));
+
+    return Promise.all(
+      mappedPosts.map(async (post) => {
+        if (!post.commentsCount) {
+          return post;
+        }
+
+        try {
+          const comments = await commentService.getByPostIdFromApi(post.id);
+
+          return {
+            ...post,
+            comments,
+            commentsCount: comments.length || post.commentsCount,
+          };
+        } catch {
+          return post;
+        }
+      }),
+    );
   },
 
   create: async (content: string, mediaFile?: File): Promise<Post> => {
