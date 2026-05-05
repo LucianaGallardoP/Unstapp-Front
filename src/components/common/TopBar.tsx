@@ -150,9 +150,10 @@ export const TopBar = ({ simple = false }: TopBarProps) => {
               >
                 <Bell size={16} />
                 {notificationCount > 0 && (
-                  <span className="absolute right-1.5 top-1 flex h-3.5 min-w-3.5 items-center justify-center rounded-full border border-white bg-[#E7000B] px-[3px] text-[8px] font-bold leading-none text-white">
-                    {notificationCount > 99 ? '99+' : notificationCount}
-                  </span>
+                  <span
+                    className="absolute right-2 top-1.5 h-2.5 w-2.5 rounded-full border border-white bg-[#E7000B]"
+                    aria-label="Hay notificaciones nuevas"
+                  />
                 )}
               </button>
 
