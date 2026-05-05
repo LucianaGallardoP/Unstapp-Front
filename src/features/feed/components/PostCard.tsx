@@ -20,17 +20,17 @@ interface PostCardProps {
 }
 
 const categoryStyles: Record<PostCategory, string> = {
-  administrativo: 'bg-red-50 text-red-500',
-  carrera: 'bg-violet-50 text-violet-500',
-  bar: 'bg-blue-50 text-blue-500',
-  alumno: 'bg-orange-50 text-orange-500',
+  administrativo: 'bg-[#E7000B] text-white',
+  carrera: 'bg-[#9810FA] text-white',
+  bar: 'bg-[#155DFC] text-white',
+  alumno: 'bg-[#FF751F] text-white',
 };
 
 const authorIconStyles: Record<PostCategory, string> = {
-  administrativo: 'bg-red-50 text-red-500',
-  carrera: 'bg-violet-50 text-violet-500',
-  bar: 'bg-blue-50 text-blue-500',
-  alumno: 'bg-orange-50 text-orange-500',
+  administrativo: 'bg-[#E7000B]/10 text-[#E7000B]',
+  carrera: 'bg-[#9810FA]/10 text-[#9810FA]',
+  bar: 'bg-[#155DFC]/10 text-[#155DFC]',
+  alumno: 'bg-[#FF751F]/10 text-[#FF751F]',
 };
 
 const categoryLabels: Record<PostCategory, string> = {
@@ -52,15 +52,22 @@ export const PostCard = ({ post }: PostCardProps) => {
   const {
     liked,
     likesCount,
+    likeLoading,
+    likeError,
+    isAuthenticated,
     commentsOpen,
     comments,
     newComment,
+    commentLoading,
+    commentError,
     setNewComment,
     handleLike,
     handleAddComment,
     toggleComments,
   } = usePostInteractions({
+    postId: post.id,
     initialLikes: post.likes,
+    initialLiked: Boolean(post.likedByCurrentUser),
     initialComments: post.comments,
   });
   const [currentDate, setCurrentDate] = useState(() => new Date());
@@ -82,6 +89,7 @@ export const PostCard = ({ post }: PostCardProps) => {
   const relativeTime = formatRelativeTime(post.publishedAt, currentDate);
   const AuthorIcon = categoryIcons[post.category];
   const commentsCount = comments.length || post.commentsCount || 0;
+  const canSendComment = isAuthenticated && newComment.trim().length > 0 && !commentLoading;
 
   return (
     <article className="w-full rounded-[22px] border border-gray-100 bg-white px-4 py-4 shadow-[0_10px_30px_rgba(15,23,42,0.08)] sm:px-5 sm:py-5 md:h-full">
@@ -104,7 +112,7 @@ export const PostCard = ({ post }: PostCardProps) => {
                 {post.author.verified && (
                   <CheckCircle2
                     size={13}
-                    className="shrink-0 text-[#1E7BFF]"
+                    className="shrink-0 text-[#155DFC]"
                     aria-label="Usuario verificado"
                   />
                 )}
@@ -147,7 +155,7 @@ export const PostCard = ({ post }: PostCardProps) => {
           href={post.media.url}
           className="mt-3 flex items-center gap-2 rounded-2xl border border-gray-100 bg-gray-50 px-3 py-2 text-[12px] font-semibold text-gray-600 sm:text-[13px]"
         >
-          <FileText size={16} className="shrink-0 text-[#4967FF]" />
+          <FileText size={16} className="shrink-0 text-[#155DFC]" />
           <span className="truncate">{post.media.fileName ?? 'Archivo adjunto'}</span>
         </a>
       )}
@@ -158,10 +166,12 @@ export const PostCard = ({ post }: PostCardProps) => {
           <button
             type="button"
             onClick={handleLike}
+            disabled={likeLoading}
             className={`flex h-7 items-center gap-1.5 text-[11px] transition-colors sm:text-[12px] ${
-              liked ? 'text-red-500' : 'text-gray-400 hover:text-red-500'
-            }`}
+              liked ? 'text-[#E7000B]' : 'text-gray-400 hover:text-[#E7000B]'
+            } disabled:cursor-wait disabled:opacity-70`}
             aria-pressed={liked}
+            aria-busy={likeLoading}
           >
             <Heart size={16} fill={liked ? 'currentColor' : 'none'} />
             <span>{likesCount}</span>
@@ -170,7 +180,7 @@ export const PostCard = ({ post }: PostCardProps) => {
           <button
             type="button"
             onClick={toggleComments}
-            className="flex h-7 items-center gap-1.5 text-[11px] text-gray-400 transition-colors hover:text-[#4967FF] sm:text-[12px]"
+            className="flex h-7 items-center gap-1.5 text-[11px] text-gray-400 transition-colors hover:text-[#155DFC] sm:text-[12px]"
             aria-expanded={commentsOpen}
           >
             <MessageCircle size={16} />
@@ -178,10 +188,14 @@ export const PostCard = ({ post }: PostCardProps) => {
           </button>
         </div>
 
+        {likeError && (
+          <p className="mt-2 text-[11px] font-semibold text-[#E7000B]">{likeError}</p>
+        )}
+
         {/* Hilo de comentarios */}
         {commentsOpen && (
           <section className="mt-3 rounded-2xl bg-gray-50 p-3">
-            <div className="flex flex-col gap-3">
+            <div className="flex max-h-56 flex-col gap-3 overflow-y-auto pr-1">
               {comments.map((comment) => (
                 <CommentItem
                   key={comment.id}
@@ -196,22 +210,31 @@ export const PostCard = ({ post }: PostCardProps) => {
                 value={newComment}
                 onChange={(event) => setNewComment(event.target.value)}
                 onKeyDown={(event) => {
-                  if (event.key === 'Enter') {
+                  if (event.key === 'Enter' && canSendComment) {
+                    event.preventDefault();
                     handleAddComment();
                   }
                 }}
-                placeholder="Escribir comentario"
-                className="min-w-0 flex-1 rounded-xl border border-gray-200 bg-white px-3 py-2 text-[12px] text-gray-800 outline-none focus:border-[#4967FF]"
+                placeholder={
+                  isAuthenticated ? 'Escribir comentario' : 'Inicia sesion para comentar'
+                }
+                disabled={!isAuthenticated || commentLoading}
+                className="min-w-0 flex-1 rounded-xl border border-gray-200 bg-white px-3 py-2 text-[12px] text-gray-800 outline-none focus:border-[#1E4E9D] disabled:cursor-not-allowed disabled:bg-gray-100 disabled:text-gray-400"
               />
               <button
                 type="button"
                 onClick={handleAddComment}
-                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#243EA6] text-white"
+                disabled={!canSendComment}
+                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#1E4E9D] text-white transition-colors hover:bg-[#155DFC] disabled:cursor-not-allowed disabled:bg-gray-200 disabled:text-gray-400"
                 aria-label="Enviar comentario"
               >
                 <Send size={15} />
               </button>
             </div>
+
+            {commentError && (
+              <p className="mt-2 text-[11px] font-semibold text-[#E7000B]">{commentError}</p>
+            )}
           </section>
         )}
       </footer>

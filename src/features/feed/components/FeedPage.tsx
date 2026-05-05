@@ -3,7 +3,7 @@ import { TopBar } from '../../../components/common/TopBar';
 import { BottomNavigation, type TabType } from '../../../components/common/BottomNavigation';
 import { AddNewBottom } from '../../../components/common/AddNewBottom';
 import { usePosts } from '../hooks/usePosts';
-import type { Post, PostCategory } from '../types/post.types';
+import type { PostCategory } from '../types/post.types';
 import { CreatePostModal } from './CreatePostModal';
 import { PostCard } from './PostCard';
 
@@ -14,124 +14,6 @@ const filters: { id: FeedFilter; label: string }[] = [
   { id: 'todo', label: 'Todo' },
   { id: 'carrera', label: 'Mi carrera' },
   { id: 'administrativo', label: 'Administrativo' },
-];
-
-// Genera fechas relativas para los datos mock.
-const minutesAgo = (minutes: number) => new Date(Date.now() - minutes * 60000).toISOString();
-
-// Publicaciones de ejemplo hasta conectar backend.
-const getInitialPosts = (): Post[] => [
-  {
-    id: 1,
-    author: {
-      name: 'Administracion UNSTA',
-      role: 'Administrativo',
-    },
-    category: 'administrativo',
-    publishedAt: minutesAgo(10),
-    content:
-      'AVISO IMPORTANTE: El profesor de Algebra II no asistira el dia de hoy. Por otro lado, la clase de Testeo Automatizado se dictara en el Laboratorio 1. Por favor, difundir.',
-    likes: 0,
-    comments: [],
-  },
-  {
-    id: 2,
-    author: {
-      name: 'Bar UNSTA',
-      role: 'Bar',
-      verified: true,
-    },
-    category: 'bar',
-    publishedAt: minutesAgo(60),
-    content:
-      'Hoy tenemos promocion especial! Cafe con medialunas a $1500. Valido hasta las 12hs. Los esperamos!',
-    likes: 45,
-    comments: [
-      {
-        id: 1,
-        author: {
-          name: 'Camila Perez',
-          role: 'Alumno',
-        },
-        publishedAt: minutesAgo(42),
-        content: 'Paso antes de cursar.',
-      },
-      {
-        id: 2,
-        author: {
-          name: 'Mateo Ruiz',
-          role: 'Alumno',
-        },
-        publishedAt: minutesAgo(18),
-        content: 'Guardame dos medialunas.',
-      },
-    ],
-  },
-  {
-    id: 3,
-    author: {
-      name: 'Maria Gonzalez',
-      role: 'Alumno',
-    },
-    category: 'alumno',
-    publishedAt: minutesAgo(300),
-    content:
-      'Alguien tiene el apunte de Derecho Civil II del profesor Rodriguez? Lo necesito urgente para el parcial del viernes.',
-    likes: 12,
-    comments: [
-      {
-        id: 3,
-        author: {
-          name: 'Lucia Fernandez',
-          role: 'Alumno',
-        },
-        publishedAt: minutesAgo(190),
-        content: 'Te lo mando por privado.',
-      },
-      {
-        id: 4,
-        author: {
-          name: 'Tomas Acosta',
-          role: 'Alumno',
-        },
-        publishedAt: minutesAgo(75),
-        content: 'Creo que esta en el drive de la materia.',
-      },
-    ],
-  },
-  {
-    id: 4,
-    author: {
-      name: 'Facultad de Ingenieria',
-      role: 'Docente',
-      verified: true,
-    },
-    category: 'carrera',
-    publishedAt: minutesAgo(1440),
-    content:
-      'Recordatorio: Las inscripciones para las mesas de examenes finales de Ingenieria de Software cierran este viernes. No olviden anotarse!',
-    likes: 15,
-    comments: [
-      {
-        id: 5,
-        author: {
-          name: 'Camila Perez',
-          role: 'Alumno',
-        },
-        publishedAt: minutesAgo(830),
-        content: 'Gracias por recordar.',
-      },
-      {
-        id: 6,
-        author: {
-          name: 'Tomas Acosta',
-          role: 'Alumno',
-        },
-        publishedAt: minutesAgo(610),
-        content: 'Ya me anote.',
-      },
-    ],
-  },
 ];
 
 // Categorias visibles por cada filtro.
@@ -145,8 +27,12 @@ export const FeedPage = () => {
   const [activeTab, setActiveTab] = useState<TabType>('feed');
   const [activeFilter, setActiveFilter] = useState<FeedFilter>('todo');
   const [isCreatePostModalOpen, setIsCreatePostModalOpen] = useState(false);
-  const fallbackPosts = useMemo(() => getInitialPosts(), []);
-  const { posts, loading, error, createPost } = usePosts({ fallbackPosts });
+  const { posts, loading, error, createPost, refreshPosts } = usePosts();
+
+  const handleFilterClick = (filterId: FeedFilter) => {
+    setActiveFilter(filterId);
+    refreshPosts();
+  };
 
   // Filtra publicaciones segun la pestaña elegida.
   const visiblePosts = useMemo(() => {
@@ -173,10 +59,11 @@ export const FeedPage = () => {
                 <button
                   key={filter.id}
                   type="button"
-                  onClick={() => setActiveFilter(filter.id)}
+                  onClick={() => handleFilterClick(filter.id)}
+                  disabled={loading}
                   className={`min-w-0 rounded-full px-2 py-1 text-[10px] font-bold transition-colors min-[360px]:text-[11px] sm:text-[12px] ${
-                    isActive ? 'bg-[#5A55FF] text-white' : 'text-[#4B5563] hover:bg-gray-50'
-                  }`}
+                    isActive ? 'bg-[#1E4E9D] text-white' : 'text-[#808080] hover:bg-[#EFF6FF]'
+                  } disabled:cursor-wait disabled:opacity-80`}
                 >
                   {filter.label}
                 </button>
@@ -185,14 +72,20 @@ export const FeedPage = () => {
           </section>
         </div>
 
-        {loading && (
+        {loading && posts.length === 0 && (
           <p className="rounded-2xl bg-white px-4 py-3 text-center text-[13px] font-semibold text-gray-400">
             Cargando publicaciones...
           </p>
         )}
 
+        {loading && posts.length > 0 && (
+          <p className="rounded-2xl bg-white px-4 py-2 text-center text-[12px] font-semibold text-[#808080]">
+            Actualizando publicaciones...
+          </p>
+        )}
+
         {error && (
-          <p className="rounded-2xl border border-red-100 bg-red-50 px-4 py-3 text-center text-[13px] font-semibold text-red-500">
+          <p className="rounded-2xl border border-[#E7000B]/20 bg-[#E7000B]/10 px-4 py-3 text-center text-[13px] font-semibold text-[#E7000B]">
             {error}
           </p>
         )}
@@ -203,6 +96,12 @@ export const FeedPage = () => {
             <PostCard key={post.id} post={post} />
           ))}
         </section>
+
+        {!loading && !error && visiblePosts.length === 0 && (
+          <p className="rounded-2xl bg-white px-4 py-6 text-center text-[13px] font-semibold text-[#808080]">
+            No hay publicaciones recientes en esta categoría.
+          </p>
+        )}
       </main>
 
       <AddNewBottom onClick={() => setIsCreatePostModalOpen(true)} />

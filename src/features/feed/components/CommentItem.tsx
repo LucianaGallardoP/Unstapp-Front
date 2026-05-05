@@ -13,10 +13,10 @@ interface CommentItemProps {
 }
 
 const roleIconStyles: Record<PostAuthorRole, string> = {
-  Administrativo: 'bg-red-50 text-red-500',
-  Docente: 'bg-violet-50 text-violet-500',
-  Bar: 'bg-blue-50 text-blue-500',
-  Alumno: 'bg-orange-50 text-orange-500',
+  Administrativo: 'bg-[#E7000B]/10 text-[#E7000B]',
+  Docente: 'bg-[#1d8c57]/10 text-[#1d8c57]',
+  Bar: 'bg-[#155DFC]/10 text-[#155DFC]',
+  Alumno: 'bg-[#FF751F]/10 text-[#FF751F]',
 };
 
 const roleIcons = {

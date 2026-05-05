@@ -48,8 +48,8 @@ export const LoginForm = () => {
         
         {/* Mostramos el mensaje de error si la API de .NET falla (ej: DNI no encontrado)  */}
         {error && (
-          <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
-            <p className="text-red-600 text-sm text-center font-medium">{error}</p>
+          <div className="p-3 bg-[#E7000B]/10 border border-[#E7000B]/20 rounded-lg">
+            <p className="text-[#E7000B] text-sm text-center font-medium">{error}</p>
           </div>
         )}
 
@@ -81,7 +81,7 @@ export const LoginForm = () => {
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
-              className="text-blue-600 hover:text-blue-700 focus:outline-none"
+              className="text-[#1E4E9D] hover:text-[#155DFC] focus:outline-none"
               disabled={loading}
             >
               {showPassword ? (
@@ -118,7 +118,7 @@ export const LoginForm = () => {
               e.preventDefault();
               navigate('/forgot-password'); // Ruta que no existe, activará el 404
             }}
-            className="text-blue-500 font-medium text-[15px] hover:underline transition-all"
+            className="text-[#1E4E9D] font-medium text-[15px] hover:underline transition-all"
           >
             ¿Olvidaste tu contraseña?
           </a>
@@ -149,7 +149,7 @@ export const LoginForm = () => {
 
         <div className="text-center mt-4">
           <span className="text-gray-500 text-[15px]">¿No tienes cuenta? </span>
-          <a href="#" className="text-[#0056D2] font-bold text-[15px] hover:underline transition-all">
+          <a href="#" className="text-[#1E4E9D] font-bold text-[15px] hover:underline transition-all">
             Regístrate
           </a>
         </div>

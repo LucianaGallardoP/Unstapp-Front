@@ -33,6 +33,7 @@ export interface Post {
   content: string;
   media?: PostMedia;
   likes: number;
+  likedByCurrentUser?: boolean;
   commentsCount?: number;
   comments: PostComment[];
 }

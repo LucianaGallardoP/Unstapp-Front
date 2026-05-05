@@ -1,4 +1,5 @@
 import { apiClient } from '../../../services/apiClient';
+import { likeService } from './likeService';
 import type { Post, PostAuthorRole, PostCategory } from '../types/post.types';
 
 type ApiRecord = Record<string, unknown>;
@@ -9,6 +10,14 @@ const getAuthHeaders = () => {
   const token = getToken();
 
   return token ? { Authorization: `Bearer ${token}` } : undefined;
+};
+
+const getMultipartHeaders = () => {
+  const token = getToken();
+
+  return token
+    ? { Authorization: `Bearer ${token}`, 'Content-Type': 'multipart/form-data' }
+    : { 'Content-Type': 'multipart/form-data' };
 };
 
 const asRecord = (value: unknown): ApiRecord =>
@@ -43,6 +52,8 @@ const mapPostFromApi = (apiPost: unknown, fallbackContent = ''): Post => {
   const author = asRecord(post.author ?? post.user ?? post.createdBy);
   const role = normalizeRole(author.role ?? post.role);
   const id = post.id ?? post.postId ?? crypto.randomUUID();
+  const storedLikes = likeService.getStoredLikeCount(id as number | string);
+  const apiLikes = asNumber(post.likes) || asNumber(post.likesCount);
 
   return {
     id: typeof id === 'number' || typeof id === 'string' ? id : crypto.randomUUID(),
@@ -71,7 +82,16 @@ const mapPostFromApi = (apiPost: unknown, fallbackContent = ''): Post => {
           alt: 'Contenido multimedia de la publicacion',
         }
       : undefined,
-    likes: asNumber(post.likes) || asNumber(post.likesCount),
+    likes: storedLikes ?? apiLikes,
+    likedByCurrentUser:
+      Boolean(
+        post.likedByCurrentUser ??
+          post.hasLiked ??
+          post.userLiked ??
+          post.isLikedByMe ??
+          post.liked ??
+          post.isLiked,
+      ) || likeService.isLikedByCurrentUser(id as number | string),
     commentsCount: asNumber(post.commentsCount),
     comments: [],
   };
@@ -88,7 +108,19 @@ export const postService = {
     return Array.isArray(posts) ? posts.map((post) => mapPostFromApi(post)) : [];
   },
 
-  create: async (content: string): Promise<Post> => {
+  create: async (content: string, mediaFile?: File): Promise<Post> => {
+    if (mediaFile) {
+      const formData = new FormData();
+      formData.append('content', content);
+      formData.append('file', mediaFile);
+
+      const response = await apiClient.post<unknown>('/posts/create', formData, {
+        headers: getMultipartHeaders(),
+      });
+
+      return mapPostFromApi(response.data, content);
+    }
+
     const response = await apiClient.post<unknown>(
       '/posts/create',
       { content },

@@ -40,7 +40,7 @@ export const BottomNavigation = ({ activeTab, onTabChange }: BottomNavigationPro
                 onClick={() => handleTabClick(tab.id)}
                 className={`flex h-12 w-full flex-col items-center justify-center gap-0.5 transition-colors md:h-14 ${
                   isActive 
-                    ? 'text-[#246BFE]' 
+                    ? 'text-[#1E4E9D]' 
                     : 'text-gray-400 hover:text-gray-600'
                 }`}
               >

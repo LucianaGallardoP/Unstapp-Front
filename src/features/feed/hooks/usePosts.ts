@@ -1,37 +1,37 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
+import { AxiosError } from 'axios';
 import { postService } from '../services/postService';
 import type { Post } from '../types/post.types';
 
-interface UsePostsParams {
-  fallbackPosts: Post[];
-}
-
-export const usePosts = ({ fallbackPosts }: UsePostsParams) => {
-  const [posts, setPosts] = useState<Post[]>(fallbackPosts);
+export const usePosts = () => {
+  const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    const loadPosts = async () => {
-      setLoading(true);
-      setError(null);
+  const refreshPosts = useCallback(async () => {
+    setLoading(true);
+    setError(null);
 
-      try {
-        const apiPosts = await postService.getAll();
-        setPosts(apiPosts.length > 0 ? [...apiPosts, ...fallbackPosts] : fallbackPosts);
-      } catch {
+    try {
+      const apiPosts = await postService.getAll();
+      setPosts(apiPosts);
+    } catch (requestError) {
+      if (requestError instanceof AxiosError && requestError.response?.status === 401) {
+        setError('Tu sesion vencio. Volve a iniciar sesion para ver las publicaciones.');
+      } else {
         setError('No se pudieron cargar las publicaciones.');
-        setPosts(fallbackPosts);
-      } finally {
-        setLoading(false);
       }
-    };
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
-    loadPosts();
-  }, [fallbackPosts]);
+  useEffect(() => {
+    refreshPosts();
+  }, [refreshPosts]);
 
-  const createPost = async (content: string) => {
-    const createdPost = await postService.create(content);
+  const createPost = async (content: string, mediaFile?: File) => {
+    const createdPost = await postService.create(content, mediaFile);
     setPosts((currentPosts) => [createdPost, ...currentPosts]);
   };
 
@@ -40,5 +40,6 @@ export const usePosts = ({ fallbackPosts }: UsePostsParams) => {
     loading,
     error,
     createPost,
+    refreshPosts,
   };
 };

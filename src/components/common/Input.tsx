@@ -15,7 +15,7 @@ export const Input = ({ label, id, suffix, className = '', ...props }: InputProp
       <div className="relative w-full">
         <input
           id={id}
-          className={`w-full px-4 py-3.5 border border-gray-200 rounded-2xl outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all text-gray-700 ${
+          className={`w-full px-4 py-3.5 border border-gray-200 rounded-2xl outline-none focus:border-[#1E4E9D] focus:ring-1 focus:ring-[#1E4E9D] transition-all text-gray-700 ${
             suffix ? 'pr-12' : ''
           } ${className}`}
           {...props}

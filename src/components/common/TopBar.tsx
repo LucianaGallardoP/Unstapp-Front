@@ -1,18 +1,88 @@
 import { useState } from 'react';
-import { Search, Moon, Sun, Bell, X } from 'lucide-react';
+import { Search, Moon, Sun, Bell, X, Trash2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
-export const TopBar = () => {
+interface TopBarProps {
+  simple?: boolean;
+}
+
+type NotificationType = 'interaction' | 'followedPost' | 'institutional';
+
+interface AppNotification {
+  id: number;
+  type: NotificationType;
+  title: string;
+  detail: string;
+  read: boolean;
+}
+
+const initialNotifications: AppNotification[] = [
+  {
+    id: 1,
+    type: 'institutional',
+    title: 'Cambio de aula',
+    detail: 'La clase de Ingenieria de Software pasa al Laboratorio 1.',
+    read: false,
+  },
+  {
+    id: 2,
+    type: 'interaction',
+    title: 'Nuevo comentario',
+    detail: 'Juan Perez comento una publicacion tuya.',
+    read: false,
+  },
+  {
+    id: 3,
+    type: 'interaction',
+    title: 'Me gusta',
+    detail: 'Maria Gonzalez reacciono a tu publicacion.',
+    read: false,
+  },
+  {
+    id: 4,
+    type: 'followedPost',
+    title: 'Nueva publicacion',
+    detail: 'Facultad de Ingenieria publico un nuevo aviso.',
+    read: true,
+  },
+];
+
+const notificationTypeStyles: Record<NotificationType, string> = {
+  interaction: 'border-[#155DFC]/20 bg-[#EFF6FF]',
+  followedPost: 'border-[#1d8c57]/20 bg-[#1d8c57]/10',
+  institutional: 'border-[#E7000B]/25 bg-[#E7000B]/10',
+};
+
+export const TopBar = ({ simple = false }: TopBarProps) => {
   const [isMoonIcon, setIsMoonIcon] = useState(true);
-  const [notificationCount, setNotificationCount] = useState(3);
+  const [notifications, setNotifications] = useState(initialNotifications);
+  const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
+  const [isNotificationBadgeCleared, setIsNotificationBadgeCleared] = useState(false);
   const [isSearchExpanded, setIsSearchExpanded] = useState(false);
   const navigate = useNavigate();
+  const unreadNotifications = notifications.filter((notification) => !notification.read).length;
+  const notificationCount = isNotificationBadgeCleared ? 0 : unreadNotifications;
+
+  const openNotifications = () => {
+    setIsNotificationsOpen(true);
+    setIsNotificationBadgeCleared(true);
+  };
+
+  const removeNotification = (notificationId: number) => {
+    setNotifications((currentNotifications) =>
+      currentNotifications.filter((notification) => notification.id !== notificationId),
+    );
+  };
+
+  const clearNotifications = () => {
+    setNotifications([]);
+  };
 
   return (
     <header className="sticky top-0 left-0 right-0 z-40 h-12 border-b border-gray-100 bg-white px-3 md:h-14">
       <div className="mx-auto flex h-full w-full max-w-[430px] items-center justify-between sm:max-w-[560px] md:max-w-2xl lg:max-w-3xl">
         <div className="flex flex-1 justify-start">
-          {isSearchExpanded ? (
+          {!simple && isSearchExpanded ? (
             <div className="flex h-9 w-full max-w-[160px] items-center rounded-full bg-gray-100 px-2 shadow-inner transition-all sm:max-w-[220px]">
               <Search size={14} className="ml-1 mr-1 shrink-0 text-gray-500" />
               <input 
@@ -30,7 +100,7 @@ export const TopBar = () => {
                 <X size={14} />
               </button>
             </div>
-          ) : (
+          ) : !simple ? (
             <button
               onClick={() => setIsSearchExpanded(true)}
               className="flex h-9 w-9 items-center justify-center text-[#526174] transition-colors hover:text-[#1F2937]"
@@ -38,18 +108,26 @@ export const TopBar = () => {
             >
               <Search size={17} />
             </button>
-          )}
+          ) : null}
         </div>
 
-        <button 
-          type="button"
-          onClick={() => navigate('/feed')}
-          className="flex flex-1 cursor-pointer justify-center border-none bg-white"
-        >
-          <h1 className="text-[14px] font-black text-[#123FA5] md:text-[15px]">
-            Unstapp
-          </h1>
-        </button>
+        {simple ? (
+          <div className="flex flex-1 justify-center">
+            <h1 className="text-[14px] font-black text-[#1E4E9D] md:text-[15px]">
+              Unstapp
+            </h1>
+          </div>
+        ) : (
+          <button 
+            type="button"
+            onClick={() => navigate('/feed')}
+            className="flex flex-1 cursor-pointer justify-center border-none bg-white"
+          >
+            <h1 className="text-[14px] font-black text-[#1E4E9D] md:text-[15px]">
+              Unstapp
+            </h1>
+          </button>
+        )}
 
         <div className="flex flex-1 justify-end gap-1">
           <button 
@@ -60,23 +138,94 @@ export const TopBar = () => {
           >
             {isMoonIcon ? <Moon size={16} /> : <Sun size={16} />}
           </button>
-          <button 
-            type="button"
-            className="relative flex h-9 w-9 items-center justify-center text-[#526174] transition-colors hover:text-[#1F2937]"
-            aria-label="Notificaciones"
-            onClick={() => setNotificationCount((prev) => prev + 1)}
-            onContextMenu={(event) => {
-              event.preventDefault();
-              setNotificationCount((prev) => Math.max(0, prev - 1));
-            }}
-          >
-            <Bell size={16} />
-            {notificationCount > 0 && (
-              <span className="absolute right-1.5 top-1 flex h-3.5 min-w-3.5 items-center justify-center rounded-full border border-white bg-red-500 px-[3px] text-[8px] font-bold leading-none text-white">
-                {notificationCount > 99 ? '99+' : notificationCount}
-              </span>
-            )}
-          </button>
+
+          {!simple && (
+            <div className="relative">
+              <button 
+                type="button"
+                className="relative flex h-9 w-9 items-center justify-center text-[#526174] transition-colors hover:text-[#1F2937]"
+                aria-label="Notificaciones"
+                onClick={openNotifications}
+                aria-expanded={isNotificationsOpen}
+              >
+                <Bell size={16} />
+                {notificationCount > 0 && (
+                  <span className="absolute right-1.5 top-1 flex h-3.5 min-w-3.5 items-center justify-center rounded-full border border-white bg-[#E7000B] px-[3px] text-[8px] font-bold leading-none text-white">
+                    {notificationCount > 99 ? '99+' : notificationCount}
+                  </span>
+                )}
+              </button>
+
+              {isNotificationsOpen && (
+                <section
+                  className="fixed right-3 top-14 z-50 w-[calc(100vw-24px)] max-w-[315px] rounded-b-[14px] rounded-t-[22px] bg-white px-3 pb-3 pt-4 shadow-[0_14px_34px_rgba(15,23,42,0.28)] sm:right-[calc((100vw-560px)/2+12px)] sm:max-w-[390px] sm:px-4 md:right-[calc((100vw-672px)/2+12px)] md:top-16 md:max-w-[460px] lg:right-[calc((100vw-768px)/2+12px)]"
+                  aria-label="Notificaciones"
+                >
+                  <header className="flex items-start justify-between gap-3">
+                    <h2 className="text-[16px] font-black uppercase leading-5 text-black md:text-[18px]">
+                      Notificaciones
+                    </h2>
+                    <button
+                      type="button"
+                      onClick={() => setIsNotificationsOpen(false)}
+                      className="-mr-1 -mt-2 flex h-8 w-8 items-center justify-center text-black transition-colors hover:text-[#1E4E9D]"
+                      aria-label="Cerrar notificaciones"
+                    >
+                      <X size={18} strokeWidth={1.7} />
+                    </button>
+                  </header>
+
+                  <div className="mt-2 flex justify-end">
+                    <button
+                      type="button"
+                      onClick={clearNotifications}
+                      disabled={notifications.length === 0}
+                      className="text-[11px] font-black uppercase text-[#1E4E9D] transition-colors hover:text-[#155DFC] disabled:cursor-not-allowed disabled:text-gray-300"
+                    >
+                      Eliminar todas
+                    </button>
+                  </div>
+
+                  <div className="mt-2 flex max-h-[250px] flex-col gap-2 overflow-y-auto pr-1 md:max-h-[340px]">
+                    {notifications.map((notification) => (
+                      <article
+                        key={notification.id}
+                        className={`flex min-h-[50px] items-center justify-between gap-3 rounded-[8px] border px-3 py-2 shadow-[0_4px_10px_rgba(15,23,42,0.08)] ${
+                          notification.read
+                            ? 'border-transparent bg-[#EFF6FF]/55'
+                            : notificationTypeStyles[notification.type]
+                        }`}
+                      >
+                        <div className="min-w-0">
+                          <h3 className="truncate text-[12px] font-black text-[#1F2937] md:text-[13px]">
+                            {notification.title}
+                          </h3>
+                          <p className="mt-0.5 line-clamp-2 text-[11px] font-semibold leading-4 text-[#526174] md:text-[12px]">
+                            {notification.detail}
+                          </p>
+                        </div>
+
+                        <button
+                          type="button"
+                          onClick={() => removeNotification(notification.id)}
+                          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[#808080] transition-colors hover:bg-[#E7000B]/10 hover:text-[#E7000B]"
+                          aria-label="Eliminar notificacion"
+                        >
+                          <Trash2 size={15} />
+                        </button>
+                      </article>
+                    ))}
+
+                    {notifications.length === 0 && (
+                      <p className="rounded-[8px] bg-[#EFF6FF] px-3 py-5 text-center text-[12px] font-semibold text-[#808080]">
+                        No hay notificaciones pendientes.
+                      </p>
+                    )}
+                  </div>
+                </section>
+              )}
+            </div>
+          )}
         </div>
       </div>
     </header>
