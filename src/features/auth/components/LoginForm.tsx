@@ -37,13 +37,13 @@ export const LoginForm = () => {
 
   return (
     <div className="w-full max-w-[400px] p-8 md:p-10 bg-white border border-gray-200 rounded-[2.5rem]">
-      <div className="mb-6">
+      <div className="mb-6 flex justify-center">
         <img src={unstaLogo} alt="Logo UNSTA" className="w-20 h-20 object-contain" />
       </div>
-      <h1 className="text-[2.5rem] font-bold text-black leading-tight mb-2">
+      <h1 className="text-[2.5rem] font-bold text-black text-center leading-tight mb-2">
         Bienvenido
       </h1>
-      <p className="text-gray-500 text-[15px] mb-8 leading-snug pr-4">
+      <p className="text-gray-500 text-[15px] text-center mb-8 leading-snug">
         Accede a tu comunidad académica y gestiona tu vida universitaria.
       </p>
 
