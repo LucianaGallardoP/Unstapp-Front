@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'; // 1. Importamos el hook de nave
 import { Input } from '../../../components/common/Input';
 import { Button } from '../../../components/common/Button';
 import { useLogin } from '../hooks/useLogin'; 
+import unstaLogo from '../../assets/img/UNSTA-logo.png'; 
 
 export const LoginForm = () => {
   const [showPassword, setShowPassword] = useState(false);
@@ -37,7 +38,7 @@ export const LoginForm = () => {
   return (
     <div className="w-full max-w-[400px] p-8 md:p-10 bg-white border border-gray-200 rounded-[2.5rem]">
       <div className="mb-6">
-        <img src="/unsta-logo.png" alt="Logo UNSTA" className="w-20 h-20 object-contain" />
+        <img src={unstaLogo} alt="Logo UNSTA" className="w-20 h-20 object-contain" />
       </div>
       <h1 className="text-[2.5rem] font-bold text-black leading-tight mb-2">
         Bienvenido
