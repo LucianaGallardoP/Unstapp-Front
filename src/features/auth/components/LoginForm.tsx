@@ -99,17 +99,6 @@ export const LoginForm = () => {
           }
         />
 
-        <div className="flex items-center gap-2.5 mt-1">
-          <input
-            type="checkbox"
-            id="remember"
-            className="w-5 h-5 rounded-[4px] border-gray-300 text-gray-800 focus:ring-gray-800 accent-gray-800 cursor-pointer"
-            disabled={loading}
-          />
-          <label htmlFor="remember" className="text-[15px] text-gray-800 cursor-pointer select-none">
-            Recordarme
-          </label>
-        </div>
 
         <div className="text-center mt-2">
           <a 
