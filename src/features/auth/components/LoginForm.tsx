@@ -136,12 +136,7 @@ export const LoginForm = () => {
           )}
         </Button>
 
-        <div className="text-center mt-4">
-          <span className="text-gray-500 text-[15px]">¿No tienes cuenta? </span>
-          <a href="#" className="text-[#1E4E9D] font-bold text-[15px] hover:underline transition-all">
-            Regístrate
-          </a>
-        </div>
+
       </form>
     </div>
   );
