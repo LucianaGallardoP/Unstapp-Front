@@ -13,13 +13,7 @@ const getAuthHeaders = () => {
   return token ? { Authorization: `Bearer ${token}` } : undefined;
 };
 
-const getMultipartHeaders = () => {
-  const token = getToken();
 
-  return token
-    ? { Authorization: `Bearer ${token}`, 'Content-Type': 'multipart/form-data' }
-    : { 'Content-Type': 'multipart/form-data' };
-};
 
 const asRecord = (value: unknown): ApiRecord =>
   value && typeof value === 'object' ? (value as ApiRecord) : {};
@@ -139,21 +133,29 @@ export const postService = {
   },
 
   create: async (content: string, mediaFile?: File): Promise<Post> => {
+    // Si hay un archivo, usamos FormData para enviar datos binarios a .NET
     if (mediaFile) {
       const formData = new FormData();
-      formData.append('content', content);
-      formData.append('file', mediaFile);
+      
+      // IMPORTANTE: Usamos las claves exactas que te pasó tu compañero ("Content" y "MediaFile")
+      formData.append('Content', content);
+      formData.append('MediaFile', mediaFile);
 
       const response = await apiClient.post<unknown>('/posts/create', formData, {
-        headers: getMultipartHeaders(),
+        headers: {
+          ...getAuthHeaders(),
+          'Content-Type': 'multipart/form-data',
+        }, 
       });
 
+      // Mapeamos la respuesta del backend a nuestro modelo de Post del frontend
       return mapPostFromApi(response.data, content);
     }
 
+    // Si es solo texto, enviamos un JSON estándar
     const response = await apiClient.post<unknown>(
       '/posts/create',
-      { content },
+      { content }, // Clave simple para posts de texto
       { headers: getAuthHeaders() },
     );
 
