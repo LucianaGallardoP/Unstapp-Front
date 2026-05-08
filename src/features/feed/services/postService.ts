@@ -133,31 +133,22 @@ export const postService = {
   },
 
   create: async (content: string, mediaFile?: File): Promise<Post> => {
-    // Si hay un archivo, usamos FormData para enviar datos binarios a .NET
+    const formData = new FormData();
+    
+    // Siempre enviamos el contenido
+    formData.append('Content', content);
+
+    // Solo adjuntamos el archivo si existe
     if (mediaFile) {
-      const formData = new FormData();
-      
-      // IMPORTANTE: Usamos las claves exactas que te pasó tu compañero ("Content" y "MediaFile")
-      formData.append('Content', content);
       formData.append('MediaFile', mediaFile);
-
-      const response = await apiClient.post<unknown>('/posts/create', formData, {
-        headers: {
-          ...getAuthHeaders(),
-          'Content-Type': 'multipart/form-data',
-        }, 
-      });
-
-      // Mapeamos la respuesta del backend a nuestro modelo de Post del frontend
-      return mapPostFromApi(response.data, content);
     }
 
-    // Si es solo texto, enviamos un JSON estándar
-    const response = await apiClient.post<unknown>(
-      '/posts/create',
-      { content }, // Clave simple para posts de texto
-      { headers: getAuthHeaders() },
-    );
+    const response = await apiClient.post<unknown>('/posts/create', formData, {
+      headers: {
+        ...getAuthHeaders(),
+        'Content-Type': 'multipart/form-data',
+      }, 
+    });
 
     return mapPostFromApi(response.data, content);
   },
