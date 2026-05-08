@@ -27,7 +27,11 @@ export const usePosts = () => {
   }, []);
 
   useEffect(() => {
-    refreshPosts();
+    // Diferimos la ejecucion para evitar actualizar el estado de forma sincrona en el efecto
+    const timeoutId = setTimeout(() => {
+      refreshPosts();
+    }, 0);
+    return () => clearTimeout(timeoutId);
   }, [refreshPosts]);
 
   const createPost = async (content: string, mediaFile?: File) => {

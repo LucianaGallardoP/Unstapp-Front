@@ -19,16 +19,12 @@ export const CreatePostModal = ({ isOpen, onClose, onPublish }: CreatePostModalP
 
   // Libera la URL temporal de previsualizacion.
   useEffect(() => {
-    if (!selectedFile) {
-      setPreviewUrl(null);
-      return;
-    }
-
-    const nextPreviewUrl = URL.createObjectURL(selectedFile);
-    setPreviewUrl(nextPreviewUrl);
-
-    return () => URL.revokeObjectURL(nextPreviewUrl);
-  }, [selectedFile]);
+    return () => {
+      if (previewUrl) {
+        URL.revokeObjectURL(previewUrl);
+      }
+    };
+  }, [previewUrl]);
 
   if (!isOpen) {
     return null;
@@ -36,6 +32,7 @@ export const CreatePostModal = ({ isOpen, onClose, onPublish }: CreatePostModalP
 
   const clearSelectedFile = () => {
     setSelectedFile(null);
+    setPreviewUrl(null);
 
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
@@ -58,6 +55,7 @@ export const CreatePostModal = ({ isOpen, onClose, onPublish }: CreatePostModalP
     }
 
     setSelectedFile(file);
+    setPreviewUrl(URL.createObjectURL(file));
     setPublishError(null);
   };
 

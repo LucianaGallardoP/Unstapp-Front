@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { commentService } from '../services/commentService';
 import { likeService } from '../services/likeService';
 import type { PostComment } from '../types/post.types';
@@ -31,11 +31,18 @@ export const usePostInteractions = ({
   const [commentError, setCommentError] = useState<string | null>(null);
   const isAuthenticated = Boolean(localStorage.getItem('unstapp_token'));
 
-  // Sincroniza el estado cuando el feed refresca datos desde backend.
-  useEffect(() => {
+  // Sincroniza el estado cuando el feed refresca datos desde backend (evitando cascadas de renders).
+  const [prevPostId, setPrevPostId] = useState(postId);
+  const [prevInitialLiked, setPrevInitialLiked] = useState(initialLiked);
+  const [prevInitialLikes, setPrevInitialLikes] = useState(initialLikes);
+
+  if (postId !== prevPostId || initialLiked !== prevInitialLiked || initialLikes !== prevInitialLikes) {
+    setPrevPostId(postId);
+    setPrevInitialLiked(initialLiked);
+    setPrevInitialLikes(initialLikes);
     setLiked(initialLiked);
     setLikesCount(initialLikes);
-  }, [initialLiked, initialLikes, postId]);
+  }
 
   const handleLike = async () => {
     if (likeLoading) {
