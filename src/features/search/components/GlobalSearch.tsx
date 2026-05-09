@@ -52,17 +52,17 @@ export const GlobalSearch = () => {
 
       {/* Sugerencias en tiempo real [cite: 2512] */}
       {query.length >= 2 && (
-        <div className="absolute top-full mt-2 w-[260px] sm:w-[320px] bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl shadow-lg z-50 overflow-hidden">
+        <div className="absolute top-full mt-2 w-[260px] sm:w-[320px] bg-white border border-gray-200 rounded-xl shadow-lg z-50 overflow-hidden">
           {/* CRITERIO: Diferenciación visual [cite: 2513] */}
           {!isLoading && results.length > 0 && (
             <ul>
               {results.map((user) => (
-                <li key={user.id} className="flex items-center gap-3 p-3 hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer transition-colors">
+                <li key={user.id} className="flex items-center gap-3 p-3 hover:bg-gray-50 cursor-pointer transition-colors">
                   <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center font-bold text-blue-600">
                     {user.fullName[0]}
                   </div>
                   <div>
-                    <p className="text-sm font-medium dark:text-white">{user.fullName}</p>
+                    <p className="text-sm font-medium text-gray-900">{user.fullName}</p>
                     <p className="text-xs text-gray-500">{user.role}</p>
                   </div>
                 </li>
