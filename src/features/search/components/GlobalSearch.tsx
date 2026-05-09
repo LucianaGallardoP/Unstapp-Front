@@ -49,10 +49,8 @@ export const GlobalSearch = () => {
         </button>
       </div>
 
-      {/* Sugerencias en tiempo real [cite: 2512] */}
       {query.length >= 2 && (
         <div className="absolute top-full mt-2 w-[260px] sm:w-[320px] bg-white border border-gray-200 rounded-xl shadow-lg z-50 overflow-hidden">
-          {/* CRITERIO: Diferenciación visual [cite: 2513] */}
           {!isLoading && results.length > 0 && (
             <ul>
               {results.map((user) => (
@@ -69,10 +67,9 @@ export const GlobalSearch = () => {
             </ul>
           )}
 
-          {/* CRITERIO: Mensaje sin resultados [cite: 2515] */}
           {!isLoading && hasSearched && results.length === 0 && (
             <div className="p-4 text-center text-sm text-gray-500">
-              No se encontraron encontraron resultados <span className="font-bold">"{query}"</span>
+              No se encontraron resultados <span className="font-bold">"{query}"</span>
             </div>
           )}
         </div>
