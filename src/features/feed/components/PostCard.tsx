@@ -136,9 +136,11 @@ export const PostCard = ({ post }: PostCardProps) => {
       </header>
 
       {/* Texto principal del post */}
-      <p className="mt-4 whitespace-pre-line text-[12px] leading-5 text-[#374151] sm:text-[13px] sm:leading-6">
-        {post.content}
-      </p>
+      <div className="mt-4 w-full break-words">
+        <p className="whitespace-pre-line text-[12px] leading-5 text-[#374151] sm:text-[13px] sm:leading-6">
+          {post.content}
+        </p>
+      </div>
 
       {/* Imagen opcional */}
       {post.media?.type === 'image' && (
