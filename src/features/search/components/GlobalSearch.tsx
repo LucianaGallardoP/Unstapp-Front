@@ -12,11 +12,11 @@ export const GlobalSearch = () => {
           type="text"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder="Buscar en la comunidad..."
-          className="w-full bg-gray-100 dark:bg-gray-800 rounded-full py-2 pl-10 pr-4 focus:ring-2 focus:ring-blue-500 outline-none"
+          placeholder="Buscar..."
+          className="w-full bg-gray-100 shadow-inner rounded-full py-1.5 pl-9 pr-4 text-[13px] text-gray-700 focus:ring-1 focus:ring-blue-500 outline-none transition-all"
         />
-        <div className="absolute left-3 top-2.5 text-gray-400">
-          {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Search className="w-5 h-5" />}
+        <div className="absolute left-3 top-[7px] text-gray-500">
+          {isLoading ? <Loader2 className="w-[15px] h-[15px] animate-spin" /> : <Search className="w-[15px] h-[15px]" />}
         </div>
       </div>
 
