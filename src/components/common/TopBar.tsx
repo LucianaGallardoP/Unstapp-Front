@@ -82,11 +82,7 @@ export const TopBar = ({ simple = false }: TopBarProps) => {
     <header className="sticky top-0 left-0 right-0 z-40 h-12 border-b border-gray-100 bg-white px-3 md:h-14">
       <div className="mx-auto flex h-full w-full max-w-[430px] items-center justify-between sm:max-w-[560px] md:max-w-2xl lg:max-w-3xl">
         <div className="flex flex-1 justify-start items-center">
-          {!simple && (
-            <div className="w-full max-w-[160px] sm:max-w-[220px]">
-              <GlobalSearch />
-            </div>
-          )}
+          {!simple && <GlobalSearch />}
         </div>
 
         {simple ? (

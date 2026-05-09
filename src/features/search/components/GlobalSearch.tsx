@@ -1,28 +1,58 @@
 // src/features/search/components/GlobalSearch.tsx
+import { useState } from 'react';
 import { useSearch } from '../hooks/useSearch';
-import { Search, Loader2 } from 'lucide-react'; // Usando Lucide [cite: 1751]
+import { Search, Loader2, X } from 'lucide-react'; // Usando Lucide [cite: 1751]
 
 export const GlobalSearch = () => {
   const { query, setQuery, results, isLoading, hasSearched } = useSearch();
+  const [isExpanded, setIsExpanded] = useState(false);
+
+  const handleClose = () => {
+    setIsExpanded(false);
+    setQuery('');
+  };
+
+  if (!isExpanded) {
+    return (
+      <button
+        onClick={() => setIsExpanded(true)}
+        className="flex h-9 w-9 items-center justify-center text-[#526174] transition-colors hover:text-[#1F2937]"
+        aria-label="Buscar"
+      >
+        <Search size={17} />
+      </button>
+    );
+  }
 
   return (
-    <div className="relative w-full max-w-md">
-      <div className="relative">
+    <div className="relative w-full max-w-[160px] sm:max-w-[220px]">
+      <div className="flex h-9 w-full items-center rounded-full bg-gray-100 px-2 shadow-inner transition-all">
+        {isLoading ? (
+          <Loader2 className="ml-1 mr-1 shrink-0 text-gray-500 w-[14px] h-[14px] animate-spin" />
+        ) : (
+          <Search size={14} className="ml-1 mr-1 shrink-0 text-gray-500" />
+        )}
         <input
           type="text"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Buscar..."
-          className="w-full bg-gray-100 shadow-inner rounded-full py-1.5 pl-9 pr-4 text-[13px] text-gray-700 focus:ring-1 focus:ring-blue-500 outline-none transition-all"
+          className="w-full border-none bg-transparent text-[13px] text-gray-700 outline-none"
+          autoFocus
         />
-        <div className="absolute left-3 top-[7px] text-gray-500">
-          {isLoading ? <Loader2 className="w-[15px] h-[15px] animate-spin" /> : <Search className="w-[15px] h-[15px]" />}
-        </div>
+        <button 
+          type="button"
+          onClick={handleClose}
+          className="ml-1 shrink-0 rounded-full p-1 text-gray-400 hover:text-gray-600"
+          aria-label="Cerrar busqueda"
+        >
+          <X size={14} />
+        </button>
       </div>
 
       {/* Sugerencias en tiempo real [cite: 2512] */}
       {query.length >= 2 && (
-        <div className="absolute top-full mt-2 w-full bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl shadow-lg z-50 overflow-hidden">
+        <div className="absolute top-full mt-2 w-[260px] sm:w-[320px] bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl shadow-lg z-50 overflow-hidden">
           {/* CRITERIO: Diferenciación visual [cite: 2513] */}
           {!isLoading && results.length > 0 && (
             <ul>
