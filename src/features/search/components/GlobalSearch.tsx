@@ -1,7 +1,6 @@
-// src/features/search/components/GlobalSearch.tsx
 import { useState } from 'react';
 import { useSearch } from '../hooks/useSearch';
-import { Search, Loader2, X } from 'lucide-react'; // Usando Lucide [cite: 1751]
+import { Search, Loader2, X } from 'lucide-react';
 
 export const GlobalSearch = () => {
   const { query, setQuery, results, isLoading, hasSearched } = useSearch();
@@ -73,7 +72,7 @@ export const GlobalSearch = () => {
           {/* CRITERIO: Mensaje sin resultados [cite: 2515] */}
           {!isLoading && hasSearched && results.length === 0 && (
             <div className="p-4 text-center text-sm text-gray-500">
-              No se encontraron coincidencias para <span className="font-bold">"{query}"</span>
+              No se encontraron encontraron resultados <span className="font-bold">"{query}"</span>
             </div>
           )}
         </div>
