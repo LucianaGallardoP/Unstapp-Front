@@ -1,6 +1,7 @@
 import { useState } from 'react';
-import { Search, Moon, Sun, Bell, X, Trash2 } from 'lucide-react';
+import { Moon, Sun, Bell, X, Trash2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { GlobalSearch } from '../../features/search';
 
 interface TopBarProps {
   simple?: boolean;
@@ -58,7 +59,6 @@ export const TopBar = ({ simple = false }: TopBarProps) => {
   const [notifications, setNotifications] = useState(initialNotifications);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const [isNotificationBadgeCleared, setIsNotificationBadgeCleared] = useState(false);
-  const [isSearchExpanded, setIsSearchExpanded] = useState(false);
   const navigate = useNavigate();
   const unreadNotifications = notifications.filter((notification) => !notification.read).length;
   const notificationCount = isNotificationBadgeCleared ? 0 : unreadNotifications;
@@ -81,34 +81,8 @@ export const TopBar = ({ simple = false }: TopBarProps) => {
   return (
     <header className="sticky top-0 left-0 right-0 z-40 h-12 border-b border-gray-100 bg-white px-3 md:h-14">
       <div className="mx-auto flex h-full w-full max-w-[430px] items-center justify-between sm:max-w-[560px] md:max-w-2xl lg:max-w-3xl">
-        <div className="flex flex-1 justify-start">
-          {!simple && isSearchExpanded ? (
-            <div className="flex h-9 w-full max-w-[160px] items-center rounded-full bg-gray-100 px-2 shadow-inner transition-all sm:max-w-[220px]">
-              <Search size={14} className="ml-1 mr-1 shrink-0 text-gray-500" />
-              <input 
-                type="text" 
-                placeholder="Buscar..." 
-                className="w-full border-none bg-transparent text-[13px] text-gray-700 outline-none"
-                autoFocus
-              />
-              <button 
-                type="button"
-                onClick={() => setIsSearchExpanded(false)}
-                className="ml-1 shrink-0 rounded-full p-1 text-gray-400 hover:text-gray-600"
-                aria-label="Cerrar busqueda"
-              >
-                <X size={14} />
-              </button>
-            </div>
-          ) : !simple ? (
-            <button
-              onClick={() => setIsSearchExpanded(true)}
-              className="flex h-9 w-9 items-center justify-center text-[#526174] transition-colors hover:text-[#1F2937]"
-              aria-label="Buscar"
-            >
-              <Search size={17} />
-            </button>
-          ) : null}
+        <div className="flex flex-1 justify-start items-center">
+          {!simple && <GlobalSearch />}
         </div>
 
         {simple ? (
