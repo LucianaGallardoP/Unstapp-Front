@@ -46,9 +46,12 @@ export const TopBar = ({ simple = false }: TopBarProps) => {
     notifications,
     unreadCount,
     showUnreadIndicator,
+    loading: notificationsLoading,
     hideUnreadIndicator,
+    markNotificationAsRead,
     markAllAsRead,
     removeNotification,
+    removeAllNotifications,
   } = useNotifications();
 
   useEffect(() => {
@@ -137,17 +140,33 @@ export const TopBar = ({ simple = false }: TopBarProps) => {
                   </header>
 
                   <div className="mt-2 flex justify-end">
-                    <button
-                      type="button"
-                      onClick={markAllAsRead}
-                      disabled={unreadCount === 0}
-                      className="text-[11px] font-black uppercase text-[#1E4E9D] transition-colors hover:text-[#155DFC] disabled:cursor-not-allowed disabled:text-gray-300"
-                    >
-                      Marcar todas como leidas
-                    </button>
+                    <div className="flex items-center gap-3">
+                      <button
+                        type="button"
+                        onClick={markAllAsRead}
+                        disabled={unreadCount === 0}
+                        className="text-[11px] font-black uppercase text-[#1E4E9D] transition-colors hover:text-[#155DFC] disabled:cursor-not-allowed disabled:text-gray-300"
+                      >
+                        Marcar todas como leidas
+                      </button>
+                      <button
+                        type="button"
+                        onClick={removeAllNotifications}
+                        disabled={notifications.length === 0}
+                        className="text-[11px] font-black uppercase text-[#E7000B] transition-colors hover:text-[#b80009] disabled:cursor-not-allowed disabled:text-gray-300"
+                      >
+                        Eliminar todas
+                      </button>
+                    </div>
                   </div>
 
                   <div className="mt-2 flex max-h-[250px] flex-col gap-2 overflow-y-auto pr-1 md:max-h-[340px]">
+                    {notificationsLoading && (
+                      <p className="rounded-[8px] bg-[#EFF6FF] px-3 py-5 text-center text-[12px] font-semibold text-[#808080]">
+                        Cargando notificaciones...
+                      </p>
+                    )}
+
                     {notifications.map((notification) => {
                       const NotificationIcon =
                         notification.type === 'interaction' &&
@@ -158,11 +177,12 @@ export const TopBar = ({ simple = false }: TopBarProps) => {
                       return (
                         <article
                           key={notification.id}
+                          onClick={() => markNotificationAsRead(notification.id)}
                           className={`flex min-h-[58px] items-start justify-between gap-3 rounded-[8px] border px-3 py-2 shadow-[0_4px_10px_rgba(15,23,42,0.08)] ${
                             notification.read
                               ? 'border-transparent bg-[#EFF6FF]/55'
                               : notificationTypeStyles[notification.type]
-                          }`}
+                          } ${notification.postId ? 'cursor-pointer' : ''}`}
                         >
                           <div
                             className={`mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${notificationIconStyles[notification.type]}`}
@@ -189,7 +209,10 @@ export const TopBar = ({ simple = false }: TopBarProps) => {
 
                           <button
                             type="button"
-                            onClick={() => removeNotification(notification.id)}
+                            onClick={(event) => {
+                              event.stopPropagation();
+                              removeNotification(notification.id);
+                            }}
                             className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[#808080] transition-colors hover:bg-[#E7000B]/10 hover:text-[#E7000B]"
                             aria-label="Eliminar notificacion"
                           >
@@ -199,7 +222,7 @@ export const TopBar = ({ simple = false }: TopBarProps) => {
                       );
                     })}
 
-                    {notifications.length === 0 && (
+                    {!notificationsLoading && notifications.length === 0 && (
                       <p className="rounded-[8px] bg-[#EFF6FF] px-3 py-5 text-center text-[12px] font-semibold text-[#808080]">
                         No hay notificaciones pendientes.
                       </p>

@@ -1,13 +1,15 @@
-import { createContext, useContext, useMemo, useState, type ReactNode } from 'react';
+import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
+import { notificationService } from '../services/notificationService';
 
 export type NotificationType = 'interaction' | 'followedPost' | 'institutional';
 
 export interface AppNotification {
-  id: number;
+  id: number | string;
   type: NotificationType;
   actor: string;
   action: string;
   target: string;
+  postId?: number | string;
   createdAt: string;
   read: boolean;
 }
@@ -16,81 +18,131 @@ interface NotificationsContextValue {
   notifications: AppNotification[];
   unreadCount: number;
   showUnreadIndicator: boolean;
+  loading: boolean;
   hideUnreadIndicator: () => void;
-  markAllAsRead: () => void;
-  removeNotification: (notificationId: number) => void;
+  markNotificationAsRead: (notificationId: number | string) => Promise<void>;
+  markAllAsRead: () => Promise<void>;
+  removeNotification: (notificationId: number | string) => Promise<void>;
+  removeAllNotifications: () => Promise<void>;
+  refreshNotifications: () => Promise<void>;
 }
-
-const minutesAgo = (minutes: number) => new Date(Date.now() - minutes * 60000).toISOString();
-
-const initialNotifications: AppNotification[] = [
-  {
-    id: 1,
-    type: 'institutional',
-    actor: 'Administracion UNSTA',
-    action: 'informo un cambio de aula',
-    target: 'Ingenieria de Software pasa al Laboratorio 1.',
-    createdAt: minutesAgo(8),
-    read: false,
-  },
-  {
-    id: 2,
-    type: 'interaction',
-    actor: 'Juan Perez',
-    action: 'comento tu publicacion',
-    target: 'PRUEBA SPRINT 3 05/05/2026',
-    createdAt: minutesAgo(15),
-    read: false,
-  },
-  {
-    id: 3,
-    type: 'interaction',
-    actor: 'Maria Gonzalez',
-    action: 'le dio me gusta a tu publicacion',
-    target: 'Hola, este es mi primer post',
-    createdAt: minutesAgo(42),
-    read: false,
-  },
-  {
-    id: 4,
-    type: 'followedPost',
-    actor: 'Facultad de Ingenieria',
-    action: 'realizo una nueva publicacion',
-    target: 'Inscripciones a mesas finales.',
-    createdAt: minutesAgo(130),
-    read: true,
-  },
-];
 
 const NotificationsContext = createContext<NotificationsContextValue | null>(null);
 
 export const NotificationsProvider = ({ children }: { children: ReactNode }) => {
-  const [notifications, setNotifications] = useState(initialNotifications);
+  const [notifications, setNotifications] = useState<AppNotification[]>([]);
+  const [hasUnreadFromApi, setHasUnreadFromApi] = useState(false);
   const [isUnreadIndicatorHidden, setIsUnreadIndicatorHidden] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   const unreadCount = notifications.filter((notification) => !notification.read).length;
+  const showUnreadIndicator =
+    (hasUnreadFromApi || unreadCount > 0) && !isUnreadIndicatorHidden;
+
+  const refreshNotifications = useCallback(async () => {
+    setLoading(true);
+
+    try {
+      const [apiNotifications, hasUnread] = await Promise.all([
+        notificationService.getAll(),
+        notificationService.hasUnread(),
+      ]);
+
+      setNotifications(apiNotifications);
+      setHasUnreadFromApi(hasUnread);
+      setIsUnreadIndicatorHidden(false);
+    } catch {
+      setNotifications([]);
+      setHasUnreadFromApi(false);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    refreshNotifications();
+  }, [refreshNotifications]);
+
+  const markNotificationAsRead = useCallback(async (notificationId: number | string) => {
+    setNotifications((currentNotifications) =>
+      currentNotifications.map((notification) =>
+        notification.id === notificationId ? { ...notification, read: true } : notification,
+      ),
+    );
+
+    try {
+      await notificationService.markAsRead(notificationId);
+      setHasUnreadFromApi(await notificationService.hasUnread());
+    } catch {
+      refreshNotifications();
+    }
+  }, [refreshNotifications]);
+
+  const markAllAsRead = useCallback(async () => {
+    setNotifications((currentNotifications) =>
+      currentNotifications.map((notification) => ({ ...notification, read: true })),
+    );
+    setHasUnreadFromApi(false);
+    setIsUnreadIndicatorHidden(true);
+
+    try {
+      await notificationService.markAllAsRead();
+    } catch {
+      refreshNotifications();
+    }
+  }, [refreshNotifications]);
+
+  const removeNotification = useCallback(async (notificationId: number | string) => {
+    setNotifications((currentNotifications) =>
+      currentNotifications.filter((notification) => notification.id !== notificationId),
+    );
+
+    try {
+      await notificationService.remove(notificationId);
+      setHasUnreadFromApi(await notificationService.hasUnread());
+    } catch {
+      refreshNotifications();
+    }
+  }, [refreshNotifications]);
+
+  const removeAllNotifications = useCallback(async () => {
+    setNotifications([]);
+    setHasUnreadFromApi(false);
+    setIsUnreadIndicatorHidden(true);
+
+    try {
+      await notificationService.removeAll();
+    } catch {
+      refreshNotifications();
+    }
+  }, [refreshNotifications]);
 
   const value = useMemo<NotificationsContextValue>(
     () => ({
       notifications,
       unreadCount,
-      showUnreadIndicator: unreadCount > 0 && !isUnreadIndicatorHidden,
+      showUnreadIndicator,
+      loading,
       hideUnreadIndicator: () => {
         setIsUnreadIndicatorHidden(true);
       },
-      markAllAsRead: () => {
-        setNotifications((currentNotifications) =>
-          currentNotifications.map((notification) => ({ ...notification, read: true })),
-        );
-        setIsUnreadIndicatorHidden(true);
-      },
-      removeNotification: (notificationId: number) => {
-        setNotifications((currentNotifications) =>
-          currentNotifications.filter((notification) => notification.id !== notificationId),
-        );
-      },
+      markNotificationAsRead,
+      markAllAsRead,
+      removeNotification,
+      removeAllNotifications,
+      refreshNotifications,
     }),
-    [notifications, unreadCount, isUnreadIndicatorHidden],
+    [
+      notifications,
+      unreadCount,
+      showUnreadIndicator,
+      loading,
+      markNotificationAsRead,
+      markAllAsRead,
+      removeNotification,
+      removeAllNotifications,
+      refreshNotifications,
+    ],
   );
 
   return (
