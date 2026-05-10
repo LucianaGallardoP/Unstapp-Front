@@ -1,52 +1,23 @@
-import { useState } from 'react';
-import { Moon, Sun, Bell, X, Trash2 } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import {
+  Bell,
+  Heart,
+  Megaphone,
+  MessageCircle,
+  Moon,
+  Sun,
+  Trash2,
+  UserRound,
+  X,
+} from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { formatRelativeTime } from '../../features/feed/utils/formatRelativeTime';
 import { GlobalSearch } from '../../features/search';
+import { useNotifications, type NotificationType } from '../../store/notificationsContext';
 
 interface TopBarProps {
   simple?: boolean;
 }
-
-type NotificationType = 'interaction' | 'followedPost' | 'institutional';
-
-interface AppNotification {
-  id: number;
-  type: NotificationType;
-  title: string;
-  detail: string;
-  read: boolean;
-}
-
-const initialNotifications: AppNotification[] = [
-  {
-    id: 1,
-    type: 'institutional',
-    title: 'Cambio de aula',
-    detail: 'La clase de Ingenieria de Software pasa al Laboratorio 1.',
-    read: false,
-  },
-  {
-    id: 2,
-    type: 'interaction',
-    title: 'Nuevo comentario',
-    detail: 'Juan Perez comento una publicacion tuya.',
-    read: false,
-  },
-  {
-    id: 3,
-    type: 'interaction',
-    title: 'Me gusta',
-    detail: 'Maria Gonzalez reacciono a tu publicacion.',
-    read: false,
-  },
-  {
-    id: 4,
-    type: 'followedPost',
-    title: 'Nueva publicacion',
-    detail: 'Facultad de Ingenieria publico un nuevo aviso.',
-    read: true,
-  },
-];
 
 const notificationTypeStyles: Record<NotificationType, string> = {
   interaction: 'border-[#155DFC]/20 bg-[#EFF6FF]',
@@ -54,34 +25,49 @@ const notificationTypeStyles: Record<NotificationType, string> = {
   institutional: 'border-[#E7000B]/25 bg-[#E7000B]/10',
 };
 
+const notificationIconStyles: Record<NotificationType, string> = {
+  interaction: 'bg-[#155DFC]/10 text-[#155DFC]',
+  followedPost: 'bg-[#1d8c57]/10 text-[#1d8c57]',
+  institutional: 'bg-[#E7000B]/10 text-[#E7000B]',
+};
+
+const notificationIcons = {
+  interaction: MessageCircle,
+  followedPost: UserRound,
+  institutional: Megaphone,
+};
+
 export const TopBar = ({ simple = false }: TopBarProps) => {
   const [isMoonIcon, setIsMoonIcon] = useState(true);
-  const [notifications, setNotifications] = useState(initialNotifications);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
-  const [isNotificationBadgeCleared, setIsNotificationBadgeCleared] = useState(false);
+  const [currentDate, setCurrentDate] = useState(() => new Date());
   const navigate = useNavigate();
-  const unreadNotifications = notifications.filter((notification) => !notification.read).length;
-  const notificationCount = isNotificationBadgeCleared ? 0 : unreadNotifications;
+  const {
+    notifications,
+    unreadCount,
+    showUnreadIndicator,
+    hideUnreadIndicator,
+    markAllAsRead,
+    removeNotification,
+  } = useNotifications();
+
+  useEffect(() => {
+    const intervalId = window.setInterval(() => {
+      setCurrentDate(new Date());
+    }, 60000);
+
+    return () => window.clearInterval(intervalId);
+  }, []);
 
   const openNotifications = () => {
     setIsNotificationsOpen(true);
-    setIsNotificationBadgeCleared(true);
-  };
-
-  const removeNotification = (notificationId: number) => {
-    setNotifications((currentNotifications) =>
-      currentNotifications.filter((notification) => notification.id !== notificationId),
-    );
-  };
-
-  const clearNotifications = () => {
-    setNotifications([]);
+    hideUnreadIndicator();
   };
 
   return (
     <header className="sticky top-0 left-0 right-0 z-40 h-12 border-b border-gray-100 bg-white px-3 md:h-14">
       <div className="mx-auto flex h-full w-full max-w-[430px] items-center justify-between sm:max-w-[560px] md:max-w-2xl lg:max-w-3xl">
-        <div className="flex flex-1 justify-start items-center">
+        <div className="flex flex-1 items-center justify-start">
           {!simple && <GlobalSearch />}
         </div>
 
@@ -92,7 +78,7 @@ export const TopBar = ({ simple = false }: TopBarProps) => {
             </h1>
           </div>
         ) : (
-          <button 
+          <button
             type="button"
             onClick={() => navigate('/feed')}
             className="flex flex-1 cursor-pointer justify-center border-none bg-white"
@@ -104,7 +90,7 @@ export const TopBar = ({ simple = false }: TopBarProps) => {
         )}
 
         <div className="flex flex-1 justify-end gap-1">
-          <button 
+          <button
             type="button"
             onClick={() => setIsMoonIcon(!isMoonIcon)}
             className="flex h-9 w-9 items-center justify-center text-[#526174] transition-colors hover:text-[#1F2937]"
@@ -115,7 +101,7 @@ export const TopBar = ({ simple = false }: TopBarProps) => {
 
           {!simple && (
             <div className="relative">
-              <button 
+              <button
                 type="button"
                 className="relative flex h-9 w-9 items-center justify-center text-[#526174] transition-colors hover:text-[#1F2937]"
                 aria-label="Notificaciones"
@@ -123,7 +109,7 @@ export const TopBar = ({ simple = false }: TopBarProps) => {
                 aria-expanded={isNotificationsOpen}
               >
                 <Bell size={16} />
-                {notificationCount > 0 && (
+                {showUnreadIndicator && (
                   <span
                     className="absolute right-2 top-1.5 h-2.5 w-2.5 rounded-full border border-white bg-[#E7000B]"
                     aria-label="Hay notificaciones nuevas"
@@ -153,43 +139,65 @@ export const TopBar = ({ simple = false }: TopBarProps) => {
                   <div className="mt-2 flex justify-end">
                     <button
                       type="button"
-                      onClick={clearNotifications}
-                      disabled={notifications.length === 0}
+                      onClick={markAllAsRead}
+                      disabled={unreadCount === 0}
                       className="text-[11px] font-black uppercase text-[#1E4E9D] transition-colors hover:text-[#155DFC] disabled:cursor-not-allowed disabled:text-gray-300"
                     >
-                      Eliminar todas
+                      Marcar todas como leidas
                     </button>
                   </div>
 
                   <div className="mt-2 flex max-h-[250px] flex-col gap-2 overflow-y-auto pr-1 md:max-h-[340px]">
-                    {notifications.map((notification) => (
-                      <article
-                        key={notification.id}
-                        className={`flex min-h-[50px] items-center justify-between gap-3 rounded-[8px] border px-3 py-2 shadow-[0_4px_10px_rgba(15,23,42,0.08)] ${
-                          notification.read
-                            ? 'border-transparent bg-[#EFF6FF]/55'
-                            : notificationTypeStyles[notification.type]
-                        }`}
-                      >
-                        <div className="min-w-0">
-                          <h3 className="truncate text-[12px] font-black text-[#1F2937] md:text-[13px]">
-                            {notification.title}
-                          </h3>
-                          <p className="mt-0.5 line-clamp-2 text-[11px] font-semibold leading-4 text-[#526174] md:text-[12px]">
-                            {notification.detail}
-                          </p>
-                        </div>
+                    {notifications.map((notification) => {
+                      const NotificationIcon =
+                        notification.type === 'interaction' &&
+                        notification.action.includes('me gusta')
+                          ? Heart
+                          : notificationIcons[notification.type];
 
-                        <button
-                          type="button"
-                          onClick={() => removeNotification(notification.id)}
-                          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[#808080] transition-colors hover:bg-[#E7000B]/10 hover:text-[#E7000B]"
-                          aria-label="Eliminar notificacion"
+                      return (
+                        <article
+                          key={notification.id}
+                          className={`flex min-h-[58px] items-start justify-between gap-3 rounded-[8px] border px-3 py-2 shadow-[0_4px_10px_rgba(15,23,42,0.08)] ${
+                            notification.read
+                              ? 'border-transparent bg-[#EFF6FF]/55'
+                              : notificationTypeStyles[notification.type]
+                          }`}
                         >
-                          <Trash2 size={15} />
-                        </button>
-                      </article>
-                    ))}
+                          <div
+                            className={`mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${notificationIconStyles[notification.type]}`}
+                            aria-hidden="true"
+                          >
+                            <NotificationIcon size={17} />
+                          </div>
+
+                          <div className="min-w-0 flex-1">
+                            <h3 className="text-[12px] leading-4 text-[#1F2937] md:text-[13px]">
+                              <span className="font-black">{notification.actor}</span>
+                              <span className="font-semibold"> {notification.action}</span>
+                            </h3>
+                            <p className="mt-0.5 line-clamp-2 text-[11px] font-semibold leading-4 text-[#526174] md:text-[12px]">
+                              {notification.target}
+                            </p>
+                            <time
+                              dateTime={notification.createdAt}
+                              className="mt-1 block text-[10px] font-black uppercase leading-3 text-[#808080]"
+                            >
+                              {formatRelativeTime(notification.createdAt, currentDate)}
+                            </time>
+                          </div>
+
+                          <button
+                            type="button"
+                            onClick={() => removeNotification(notification.id)}
+                            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[#808080] transition-colors hover:bg-[#E7000B]/10 hover:text-[#E7000B]"
+                            aria-label="Eliminar notificacion"
+                          >
+                            <Trash2 size={15} />
+                          </button>
+                        </article>
+                      );
+                    })}
 
                     {notifications.length === 0 && (
                       <p className="rounded-[8px] bg-[#EFF6FF] px-3 py-5 text-center text-[12px] font-semibold text-[#808080]">
