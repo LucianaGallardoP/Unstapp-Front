@@ -121,114 +121,120 @@ export const TopBar = ({ simple = false }: TopBarProps) => {
               </button>
 
               {isNotificationsOpen && (
-                <section
-                  className="fixed right-3 top-14 z-50 w-[calc(100vw-24px)] max-w-[315px] rounded-b-[14px] rounded-t-[22px] bg-white px-3 pb-3 pt-4 shadow-[0_14px_34px_rgba(15,23,42,0.28)] sm:right-[calc((100vw-560px)/2+12px)] sm:max-w-[390px] sm:px-4 md:right-[calc((100vw-672px)/2+12px)] md:top-16 md:max-w-[460px] lg:right-[calc((100vw-768px)/2+12px)]"
-                  aria-label="Notificaciones"
+                <div
+                  className="fixed inset-0 z-50"
+                  onClick={() => setIsNotificationsOpen(false)}
                 >
-                  <header className="flex items-start justify-between gap-3">
-                    <h2 className="text-[16px] font-black uppercase leading-5 text-black md:text-[18px]">
-                      Notificaciones
-                    </h2>
-                    <button
-                      type="button"
-                      onClick={() => setIsNotificationsOpen(false)}
-                      className="-mr-1 -mt-2 flex h-8 w-8 items-center justify-center text-black transition-colors hover:text-[#1E4E9D]"
-                      aria-label="Cerrar notificaciones"
-                    >
-                      <X size={18} strokeWidth={1.7} />
-                    </button>
-                  </header>
-
-                  <div className="mt-2 flex justify-end">
-                    <div className="flex items-center gap-3">
+                  <section
+                    className="fixed right-3 top-14 w-[calc(100vw-24px)] max-w-[315px] rounded-b-[14px] rounded-t-[22px] bg-white px-3 pb-3 pt-4 shadow-[0_14px_34px_rgba(15,23,42,0.28)] sm:right-[calc((100vw-560px)/2+12px)] sm:max-w-[390px] sm:px-4 md:right-[calc((100vw-672px)/2+12px)] md:top-16 md:max-w-[460px] lg:right-[calc((100vw-768px)/2+12px)]"
+                    aria-label="Notificaciones"
+                    onClick={(event) => event.stopPropagation()}
+                  >
+                    <header className="flex items-start justify-between gap-3">
+                      <h2 className="text-[16px] font-black uppercase leading-5 text-black md:text-[18px]">
+                        Notificaciones
+                      </h2>
                       <button
                         type="button"
-                        onClick={markAllAsRead}
-                        disabled={unreadCount === 0}
-                        className="text-[11px] font-black uppercase text-[#1E4E9D] transition-colors hover:text-[#155DFC] disabled:cursor-not-allowed disabled:text-gray-300"
+                        onClick={() => setIsNotificationsOpen(false)}
+                        className="-mr-1 -mt-2 flex h-8 w-8 items-center justify-center text-black transition-colors hover:text-[#1E4E9D]"
+                        aria-label="Cerrar notificaciones"
                       >
-                        Marcar todas como leidas
+                        <X size={18} strokeWidth={1.7} />
                       </button>
-                      <button
-                        type="button"
-                        onClick={removeAllNotifications}
-                        disabled={notifications.length === 0}
-                        className="text-[11px] font-black uppercase text-[#E7000B] transition-colors hover:text-[#b80009] disabled:cursor-not-allowed disabled:text-gray-300"
-                      >
-                        Eliminar todas
-                      </button>
-                    </div>
-                  </div>
+                    </header>
 
-                  <div className="mt-2 flex max-h-[250px] flex-col gap-2 overflow-y-auto pr-1 md:max-h-[340px]">
-                    {notificationsLoading && (
-                      <p className="rounded-[8px] bg-[#EFF6FF] px-3 py-5 text-center text-[12px] font-semibold text-[#808080]">
-                        Cargando notificaciones...
-                      </p>
-                    )}
-
-                    {notifications.map((notification) => {
-                      const NotificationIcon =
-                        notification.type === 'interaction' &&
-                        notification.action.includes('me gusta')
-                          ? Heart
-                          : notificationIcons[notification.type];
-
-                      return (
-                        <article
-                          key={notification.id}
-                          onClick={() => markNotificationAsRead(notification.id)}
-                          className={`flex min-h-[58px] items-start justify-between gap-3 rounded-[8px] border px-3 py-2 shadow-[0_4px_10px_rgba(15,23,42,0.08)] ${
-                            notification.read
-                              ? 'border-transparent bg-[#EFF6FF]/55'
-                              : notificationTypeStyles[notification.type]
-                          } ${notification.postId ? 'cursor-pointer' : ''}`}
+                    <div className="mt-2 flex justify-end">
+                      <div className="flex items-center gap-3">
+                        <button
+                          type="button"
+                          onClick={markAllAsRead}
+                          disabled={unreadCount === 0}
+                          className="text-[11px] font-black uppercase text-[#1E4E9D] transition-colors hover:text-[#155DFC] disabled:cursor-not-allowed disabled:text-gray-300"
                         >
-                          <div
-                            className={`mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${notificationIconStyles[notification.type]}`}
-                            aria-hidden="true"
-                          >
-                            <NotificationIcon size={17} />
-                          </div>
+                          Marcar todas como leidas
+                        </button>
+                        <button
+                          type="button"
+                          onClick={removeAllNotifications}
+                          disabled={notifications.length === 0}
+                          className="text-[11px] font-black uppercase text-[#E7000B] transition-colors hover:text-[#b80009] disabled:cursor-not-allowed disabled:text-gray-300"
+                        >
+                          Eliminar todas
+                        </button>
+                      </div>
+                    </div>
 
-                          <div className="min-w-0 flex-1">
-                            <h3 className="text-[12px] leading-4 text-[#1F2937] md:text-[13px]">
-                              <span className="font-black">{notification.actor}</span>
-                              <span className="font-semibold"> {notification.action}</span>
-                            </h3>
-                            <p className="mt-0.5 line-clamp-2 text-[11px] font-semibold leading-4 text-[#526174] md:text-[12px]">
-                              {notification.target}
-                            </p>
-                            <time
-                              dateTime={notification.createdAt}
-                              className="mt-1 block text-[10px] font-black uppercase leading-3 text-[#808080]"
+                    <div className="mt-2 flex max-h-[250px] flex-col gap-2 overflow-y-auto pr-1 md:max-h-[340px]">
+                      {notificationsLoading && (
+                        <p className="rounded-[8px] bg-[#EFF6FF] px-3 py-5 text-center text-[12px] font-semibold text-[#808080]">
+                          Cargando notificaciones...
+                        </p>
+                      )}
+
+                      {notifications.map((notification) => {
+                        const NotificationIcon =
+                          notification.type === 'interaction' &&
+                          notification.action.includes('me gusta')
+                            ? Heart
+                            : notificationIcons[notification.type];
+
+                        return (
+                          <article
+                            key={notification.id}
+                            onClick={() => markNotificationAsRead(notification.id)}
+                            className={`flex min-h-[58px] items-start justify-between gap-3 rounded-[8px] border px-3 py-2 shadow-[0_4px_10px_rgba(15,23,42,0.08)] ${
+                              notification.read
+                                ? 'border-transparent bg-[#EFF6FF]/55'
+                                : notificationTypeStyles[notification.type]
+                            } ${notification.postId ? 'cursor-pointer' : ''}`}
+                          >
+                            <div
+                              className={`mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${notificationIconStyles[notification.type]}`}
+                              aria-hidden="true"
                             >
-                              {formatRelativeTime(notification.createdAt, currentDate)}
-                            </time>
-                          </div>
+                              <NotificationIcon size={17} />
+                            </div>
 
-                          <button
-                            type="button"
-                            onClick={(event) => {
-                              event.stopPropagation();
-                              removeNotification(notification.id);
-                            }}
-                            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[#808080] transition-colors hover:bg-[#E7000B]/10 hover:text-[#E7000B]"
-                            aria-label="Eliminar notificacion"
-                          >
-                            <Trash2 size={15} />
-                          </button>
-                        </article>
-                      );
-                    })}
+                            <div className="min-w-0 flex-1">
+                              <h3 className="text-[12px] leading-4 text-[#1F2937] md:text-[13px]">
+                                <span className="font-black">{notification.actor}</span>
+                                <span className="font-semibold"> {notification.action}</span>
+                              </h3>
+                              <p className="mt-0.5 line-clamp-2 text-[11px] font-semibold leading-4 text-[#526174] md:text-[12px]">
+                                {notification.target}
+                              </p>
+                              <time
+                                dateTime={notification.createdAt}
+                                className="mt-1 block text-[10px] font-black uppercase leading-3 text-[#808080]"
+                              >
+                                {formatRelativeTime(notification.createdAt, currentDate)}
+                              </time>
+                            </div>
 
-                    {!notificationsLoading && notifications.length === 0 && (
-                      <p className="rounded-[8px] bg-[#EFF6FF] px-3 py-5 text-center text-[12px] font-semibold text-[#808080]">
-                        No hay notificaciones pendientes.
-                      </p>
-                    )}
-                  </div>
-                </section>
+                            <button
+                              type="button"
+                              onClick={(event) => {
+                                event.stopPropagation();
+                                removeNotification(notification.id);
+                              }}
+                              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[#808080] transition-colors hover:bg-[#E7000B]/10 hover:text-[#E7000B]"
+                              aria-label="Eliminar notificacion"
+                            >
+                              <Trash2 size={15} />
+                            </button>
+                          </article>
+                        );
+                      })}
+
+                      {!notificationsLoading && notifications.length === 0 && (
+                        <p className="rounded-[8px] bg-[#EFF6FF] px-3 py-5 text-center text-[12px] font-semibold text-[#808080]">
+                          No hay notificaciones pendientes.
+                        </p>
+                      )}
+                    </div>
+                  </section>
+                </div>
               )}
             </div>
           )}
