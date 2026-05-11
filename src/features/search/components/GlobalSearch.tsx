@@ -51,27 +51,46 @@ export const GlobalSearch = () => {
 
       {query.length >= 2 && (
         <div className="absolute top-full mt-2 w-[260px] sm:w-[320px] bg-white border border-gray-200 rounded-xl shadow-lg z-50 overflow-hidden">
-          {!isLoading && results.length > 0 && (
-            <ul>
-              {results.map((user) => (
-                <li key={user.id} className="flex items-center gap-3 p-3 hover:bg-gray-50 cursor-pointer transition-colors">
-                  <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center font-bold text-blue-600">
-                    {user.fullName[0]}
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium text-gray-900">{user.fullName}</p>
-                    <p className="text-xs text-gray-500">{user.role}</p>
-                  </div>
-                </li>
-              ))}
-            </ul>
-          )}
+          <div className="max-h-96 overflow-y-auto">
+            
+            {/* SECCIÓN DE USUARIOS */}
+            {!isLoading && results.users.length > 0 && (
+              <div className="p-2">
+                <h3 className="text-xs font-bold text-gray-400 px-3 py-2 uppercase">Personas</h3>
+                {results.users.map((user) => (
+                  <li key={`user-${user.id}`} className="flex items-center gap-3 p-3 hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer rounded-lg transition-colors list-none">
+                    <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-white text-xs font-bold">
+                      {user.fullName[0]}
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium dark:text-white">{user.fullName}</p>
+                      <p className="text-xs text-gray-500">{user.role}</p>
+                    </div>
+                  </li>
+                ))}
+              </div>
+            )}
 
-          {!isLoading && hasSearched && results.length === 0 && (
-            <div className="p-4 text-center text-sm text-gray-500">
-              No se encontraron resultados <span className="font-bold">"{query}"</span>
-            </div>
-          )}
+            {/* SECCIÓN DE PUBLICACIONES */}
+            {!isLoading && results.posts.length > 0 && (
+              <div className="p-2 border-t border-gray-100 dark:border-gray-800">
+                <h3 className="text-xs font-bold text-gray-400 px-3 py-2 uppercase">Publicaciones</h3>
+                {results.posts.map((post) => (
+                  <li key={`post-${post.id}`} className="p-3 hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer rounded-lg transition-colors list-none">
+                    <p className="text-sm text-gray-800 dark:text-gray-200 line-clamp-2 italic">"{post.content}"</p>
+                    <p className="text-[10px] text-gray-500 mt-1">Por {post.authorName}</p>
+                  </li>
+                ))}
+              </div>
+            )}
+
+            {/* MENSAJE SIN RESULTADOS (Si ambos arrays están vacíos) */}
+            {!isLoading && hasSearched && results.users.length === 0 && results.posts.length === 0 && (
+              <div className="p-6 text-center text-sm text-gray-500">
+                No se encontraron coincidencias para <span className="font-bold">"{query}"</span>
+              </div>
+            )}
+          </div>
         </div>
       )}
     </div>
