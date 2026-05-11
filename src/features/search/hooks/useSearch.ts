@@ -19,7 +19,15 @@ export const useSearch = () => {
       setIsLoading(true);
       try {
         const data = await searchService.globalSearch(query);
-        setResults(data);
+        console.log("RESPUESTA API SEARCH:", JSON.stringify(data, null, 2));
+        if (Array.isArray(data)) {
+          setResults({ users: data, posts: [] });
+        } else {
+          setResults({
+            users: Array.isArray(data?.users) ? data.users : [],
+            posts: Array.isArray(data?.posts) ? data.posts : []
+          });
+        }
         setHasSearched(true);
       } catch (error) {
         console.error("Error en la búsqueda real:", error);

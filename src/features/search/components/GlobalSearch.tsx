@@ -57,28 +57,38 @@ export const GlobalSearch = () => {
             {!isLoading && results.users.length > 0 && (
               <div className="p-2">
                 <h3 className="text-xs font-bold text-gray-400 px-3 py-2 uppercase">Personas</h3>
-                {results.users.map((user) => (
-                  <li key={`user-${user.id}`} className="flex items-center gap-3 p-3 hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer rounded-lg transition-colors list-none">
-                    <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-white text-xs font-bold">
-                      {user.fullName[0]}
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium dark:text-white">{user.fullName}</p>
-                      <p className="text-xs text-gray-500">{user.role}</p>
-                    </div>
-                  </li>
-                ))}
+                {results.users.map((user, index) => {
+                  const rawName = user.fullName || (user as any).userName || (user as any).name || (user as any).username || (user as any).UserName || (user as any).FullName || '';
+                  const displayName = (typeof rawName === 'string' && rawName.trim().length > 0) 
+                    ? rawName.trim() 
+                    : `Debug: ${Object.keys(user || {}).join(', ')}`;
+                  const avatar = user.avatarUrl || (user as any).avatar || (user as any).profilePicture;
+                  return (
+                    <li key={`user-${user.id || (user as any).userId || index}`} className="flex items-center gap-3 p-3 hover:bg-gray-50 cursor-pointer rounded-lg transition-colors list-none">
+                      <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-white text-xs font-bold overflow-hidden shrink-0">
+                        {avatar ? (
+                          <img src={avatar} alt={displayName} className="w-full h-full object-cover" />
+                        ) : (
+                          displayName.charAt(0).toUpperCase()
+                        )}
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-gray-900">{displayName}</p>
+                      </div>
+                    </li>
+                  );
+                })}
               </div>
             )}
 
             {/* SECCIÓN DE PUBLICACIONES */}
             {!isLoading && results.posts.length > 0 && (
-              <div className="p-2 border-t border-gray-100 dark:border-gray-800">
+              <div className="p-2 border-t border-gray-100">
                 <h3 className="text-xs font-bold text-gray-400 px-3 py-2 uppercase">Publicaciones</h3>
-                {results.posts.map((post) => (
-                  <li key={`post-${post.id}`} className="p-3 hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer rounded-lg transition-colors list-none">
-                    <p className="text-sm text-gray-800 dark:text-gray-200 line-clamp-2 italic">"{post.content}"</p>
-                    <p className="text-[10px] text-gray-500 mt-1">Por {post.authorName}</p>
+                {results.posts.map((post, index) => (
+                  <li key={`post-${post.id || (post as any).postId || index}`} className="p-3 hover:bg-gray-50 cursor-pointer rounded-lg transition-colors list-none">
+                    <p className="text-sm text-gray-800 line-clamp-2 italic">"{post.content || 'Sin contenido'}"</p>
+                    <p className="text-[10px] text-gray-500 mt-1">Por {post.authorName || 'Desconocido'}</p>
                   </li>
                 ))}
               </div>

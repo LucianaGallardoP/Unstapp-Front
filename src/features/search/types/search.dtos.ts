@@ -1,8 +1,10 @@
 export interface SearchUserDTO {
-  id: number;
-  fullName: string;
-  avatarUrl?: string;
-  role: string;
+  id?: number;
+  userId?: number;
+  fullName?: string;
+  userName?: string;
+  avatarUrl?: string | null;
+  role?: string;
 }
 
 export interface SearchPostDTO {
