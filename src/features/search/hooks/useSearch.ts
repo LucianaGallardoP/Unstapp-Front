@@ -19,7 +19,6 @@ export const useSearch = () => {
       setIsLoading(true);
       try {
         const data = await searchService.globalSearch(query);
-        console.log("RESPUESTA API SEARCH:", JSON.stringify(data, null, 2));
         if (Array.isArray(data)) {
           setResults({ users: data, posts: [] });
         } else {

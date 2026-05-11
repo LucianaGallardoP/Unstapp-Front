@@ -8,10 +8,12 @@ export interface SearchUserDTO {
 }
 
 export interface SearchPostDTO {
-  id: number;
-  content: string;
-  authorName: string;
-  publishedAt: string;
+  id?: number;
+  postId?: number;
+  content?: string;
+  authorName?: string;
+  userName?: string;
+  publishedAt?: string;
 }
 
 export interface SearchResponseDTO {
