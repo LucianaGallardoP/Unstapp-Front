@@ -1,16 +1,16 @@
 import { useState, useEffect } from 'react';
 import { searchService } from '../services/searchService';
-import type { SearchUserDTO } from '../types/search.dtos';
+import type { SearchResponseDTO } from '../types/search.dtos';
 
 export const useSearch = () => {
   const [query, setQuery] = useState('');
-  const [results, setResults] = useState<SearchUserDTO[]>([]);
+  const [results, setResults] = useState<SearchResponseDTO>({ users: [], posts: [] });
   const [isLoading, setIsLoading] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
 
   useEffect(() => {
     if (query.trim().length < 2) {
-      setResults([]);
+      setResults({ users: [], posts: [] });
       setHasSearched(false);
       return;
     }
@@ -18,7 +18,7 @@ export const useSearch = () => {
     // Rebote de 400ms
     const handler = setTimeout(async () => {
       setIsLoading(true);
-      const data = await searchService.searchUsers(query);
+      const data = await searchService.globalSearch(query);
       setResults(data);
       setIsLoading(false);
       setHasSearched(true);

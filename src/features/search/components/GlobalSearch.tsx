@@ -39,7 +39,7 @@ export const GlobalSearch = () => {
           className="w-full border-none bg-transparent text-[13px] text-gray-700 outline-none"
           autoFocus
         />
-        <button 
+        <button
           type="button"
           onClick={handleClose}
           className="ml-1 shrink-0 rounded-full p-1 text-gray-400 hover:text-gray-600"
