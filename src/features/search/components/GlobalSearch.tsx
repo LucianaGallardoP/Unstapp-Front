@@ -58,13 +58,13 @@ export const GlobalSearch = () => {
               <div className="p-2">
                 <h3 className="text-xs font-bold text-gray-400 px-3 py-2 uppercase">Personas</h3>
                 {results.users.map((user, index) => {
-                  const rawName = user.fullName || (user as any).userName || (user as any).name || (user as any).username || (user as any).UserName || (user as any).FullName || '';
+                  const rawName = user.fullName || user.userName || user.name || user.username || user.UserName || user.FullName || '';
                   const displayName = (typeof rawName === 'string' && rawName.trim().length > 0) 
                     ? rawName.trim() 
                     : 'Usuario Desconocido';
-                  const avatar = user.avatarUrl || (user as any).avatar || (user as any).profilePicture;
+                  const avatar = user.avatarUrl || user.avatar || user.profilePicture;
                   return (
-                    <li key={`user-${user.id || (user as any).userId || index}`} className="flex items-center gap-3 p-3 hover:bg-gray-50 cursor-pointer rounded-lg transition-colors list-none">
+                    <li key={`user-${user.id || user.userId || index}`} className="flex items-center gap-3 p-3 hover:bg-gray-50 cursor-pointer rounded-lg transition-colors list-none">
                       <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-white text-xs font-bold overflow-hidden shrink-0">
                         {avatar ? (
                           <img src={avatar} alt={displayName} className="w-full h-full object-cover" />
@@ -86,12 +86,12 @@ export const GlobalSearch = () => {
               <div className="p-2 border-t border-gray-100">
                 <h3 className="text-xs font-bold text-gray-400 px-3 py-2 uppercase">Publicaciones</h3>
                 {results.posts.map((post, index) => {
-                  const rawAuthor = post.authorName || (post as any).userName || (post as any).author?.userName || (post as any).user?.userName || (post as any).author?.name || (post as any).user?.name || '';
+                  const rawAuthor = post.authorName || post.userName || post.author?.userName || post.user?.userName || post.author?.name || post.user?.name || '';
                   const authorName = (typeof rawAuthor === 'string' && rawAuthor.trim().length > 0) 
                     ? rawAuthor.trim() 
                     : 'Desconocido';
                   return (
-                    <li key={`post-${post.id || (post as any).postId || index}`} className="p-3 hover:bg-gray-50 cursor-pointer rounded-lg transition-colors list-none">
+                    <li key={`post-${post.id || post.postId || index}`} className="p-3 hover:bg-gray-50 cursor-pointer rounded-lg transition-colors list-none">
                       <p className="text-sm text-gray-800 line-clamp-2 italic">"{post.content || 'Sin contenido'}"</p>
                       <p className="text-[10px] text-gray-500 mt-1">Por {authorName}</p>
                     </li>

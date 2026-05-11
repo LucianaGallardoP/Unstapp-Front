@@ -3,7 +3,13 @@ export interface SearchUserDTO {
   userId?: number;
   fullName?: string;
   userName?: string;
+  name?: string;
+  username?: string;
+  UserName?: string;
+  FullName?: string;
   avatarUrl?: string | null;
+  avatar?: string | null;
+  profilePicture?: string | null;
   role?: string;
 }
 
@@ -13,6 +19,8 @@ export interface SearchPostDTO {
   content?: string;
   authorName?: string;
   userName?: string;
+  author?: { userName?: string; name?: string };
+  user?: { userName?: string; name?: string };
   publishedAt?: string;
 }
 

@@ -10,9 +10,11 @@ export const useSearch = () => {
 
   useEffect(() => {
     if (query.trim().length < 2) {
-      setResults({ users: [], posts: [] });
-      setHasSearched(false);
-      return;
+      const clearId = setTimeout(() => {
+        setResults({ users: [], posts: [] });
+        setHasSearched(false);
+      }, 0);
+      return () => clearTimeout(clearId);
     }
 
     const handler = setTimeout(async () => {
