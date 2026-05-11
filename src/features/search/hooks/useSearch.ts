@@ -15,13 +15,17 @@ export const useSearch = () => {
       return;
     }
 
-    // Rebote de 400ms
     const handler = setTimeout(async () => {
       setIsLoading(true);
-      const data = await searchService.globalSearch(query);
-      setResults(data);
-      setIsLoading(false);
-      setHasSearched(true);
+      try {
+        const data = await searchService.globalSearch(query);
+        setResults(data);
+        setHasSearched(true);
+      } catch (error) {
+        console.error("Error en la búsqueda real:", error);
+      } finally {
+        setIsLoading(false);
+      }
     }, 400);
 
     return () => clearTimeout(handler);
