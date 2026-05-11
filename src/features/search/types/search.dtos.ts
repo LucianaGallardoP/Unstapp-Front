@@ -1,6 +1,18 @@
 export interface SearchUserDTO {
-  id: string | number;
+  id: number;
   fullName: string;
   avatarUrl?: string;
-  role: 'Alumno' | 'Docente' | 'Administrativo' | 'Bar';
+  role: string;
+}
+
+export interface SearchPostDTO {
+  id: number;
+  content: string;
+  authorName: string;
+  publishedAt: string;
+}
+
+export interface SearchResponseDTO {
+  users: SearchUserDTO[];
+  posts: SearchPostDTO[];
 }
