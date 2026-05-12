@@ -22,10 +22,7 @@ export const usePostInteractions = ({
   const [likeLoading, setLikeLoading] = useState(false);
   const [likeError, setLikeError] = useState<string | null>(null);
   const [commentsOpen, setCommentsOpen] = useState(false);
-  const [comments, setComments] = useState(() => [
-    ...initialComments,
-    ...commentService.getByPostId(postId),
-  ]);
+  const [comments, setComments] = useState(initialComments);
   const [newComment, setNewComment] = useState('');
   const [commentLoading, setCommentLoading] = useState(false);
   const [commentError, setCommentError] = useState<string | null>(null);

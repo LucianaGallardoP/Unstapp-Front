@@ -42,7 +42,7 @@ const normalizeRole = (value: unknown): PostAuthorRole => {
 
 const normalizeCategoryFromApi = (value: unknown): PostCategory | null => {
   if (value === 0 || value === '0') return 'alumno';
-  if (value === 1 || value === '1') return 'carrera';
+  if (value === 1 || value === '1') return 'alumno';
   if (value === 2 || value === '2') return 'administrativo';
   if (value === 3 || value === '3') return 'bar';
 

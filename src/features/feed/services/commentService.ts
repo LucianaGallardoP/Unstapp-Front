@@ -1,32 +1,6 @@
 import { apiClient } from '../../../services/apiClient';
 import type { PostComment } from '../types/post.types';
 
-const COMMENTS_KEY = 'unstapp_mock_comments';
-
-type SavedComments = Record<string, PostComment[]>;
-
-const readComments = (): SavedComments => {
-  const savedComments = localStorage.getItem(COMMENTS_KEY);
-
-  if (!savedComments) {
-    return {};
-  }
-
-  try {
-    const parsedComments = JSON.parse(savedComments);
-
-    return parsedComments && typeof parsedComments === 'object'
-      ? (parsedComments as SavedComments)
-      : {};
-  } catch {
-    return {};
-  }
-};
-
-const saveComments = (comments: SavedComments) => {
-  localStorage.setItem(COMMENTS_KEY, JSON.stringify(comments));
-};
-
 const getToken = () => localStorage.getItem('unstapp_token');
 
 const getAuthHeaders = () => {
@@ -76,9 +50,6 @@ const mapCommentFromApi = (apiComment: unknown, fallbackContent: string): PostCo
 };
 
 export const commentService = {
-  // Recupera comentarios mock guardados para una publicacion.
-  getByPostId: (postId: number | string) => readComments()[String(postId)] ?? [],
-
   // Trae comentarios reales de una publicacion.
   getByPostIdFromApi: async (postId: number | string) => {
     const response = await apiClient.get<unknown>(`/posts/${postId}/comments`, {
@@ -99,13 +70,7 @@ export const commentService = {
       { content },
       { headers: getAuthHeaders() },
     );
-    const createdComment = mapCommentFromApi(response.data, content);
-    const comments = readComments();
-    const postComments = comments[String(postId)] ?? [];
 
-    comments[String(postId)] = [...postComments, createdComment];
-    saveComments(comments);
-
-    return createdComment;
+    return mapCommentFromApi(response.data, content);
   },
 };
