@@ -151,6 +151,16 @@ export const PostCard = ({ post }: PostCardProps) => {
         />
       )}
 
+      {/* Video opcional */}
+      {post.media?.type === 'video' && (
+        <video
+          src={post.media.url}
+          className="mt-3 max-h-80 w-full rounded-2xl bg-black object-contain"
+          controls
+          preload="metadata"
+        />
+      )}
+
       {/* Archivo opcional */}
       {post.media?.type === 'file' && (
         <a

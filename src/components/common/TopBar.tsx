@@ -132,7 +132,7 @@ export const TopBar = ({ simple = false }: TopBarProps) => {
                   onClick={() => setIsNotificationsOpen(false)}
                 >
                   <section
-                    className="fixed right-3 top-14 w-[calc(100vw-24px)] max-w-[315px] rounded-b-[14px] rounded-t-[22px] bg-white px-3 pb-3 pt-4 shadow-[0_14px_34px_rgba(15,23,42,0.28)] sm:right-[calc((100vw-560px)/2+12px)] sm:max-w-[390px] sm:px-4 md:right-[calc((100vw-672px)/2+12px)] md:top-16 md:max-w-[460px] lg:right-[calc((100vw-768px)/2+12px)]"
+                    className="fixed right-2 top-14 w-[calc(100vw-16px)] max-w-[360px] rounded-b-[14px] rounded-t-[22px] bg-white px-3 pb-3 pt-4 shadow-[0_14px_34px_rgba(15,23,42,0.28)] sm:right-[calc((100vw-560px)/2+12px)] sm:max-w-[390px] sm:px-4 md:right-[calc((100vw-672px)/2+12px)] md:top-16 md:max-w-[460px] lg:right-[calc((100vw-768px)/2+12px)]"
                     aria-label="Notificaciones"
                     onClick={(event) => event.stopPropagation()}
                   >
@@ -151,7 +151,7 @@ export const TopBar = ({ simple = false }: TopBarProps) => {
                     </header>
 
                     <div className="mt-2 flex justify-end">
-                      <div className="flex items-center gap-3">
+                      <div className="flex flex-wrap items-center justify-end gap-x-3 gap-y-1">
                         <button
                           type="button"
                           onClick={markAllAsRead}
@@ -171,7 +171,7 @@ export const TopBar = ({ simple = false }: TopBarProps) => {
                       </div>
                     </div>
 
-                    <div className="mt-2 flex max-h-[250px] flex-col gap-2 overflow-y-auto pr-1 md:max-h-[340px]">
+                    <div className="mt-2 flex max-h-[min(340px,calc(100vh-120px))] flex-col gap-2 overflow-y-auto pr-1 md:max-h-[340px]">
                       {notificationsLoading && (
                         <p className="rounded-[8px] bg-[#EFF6FF] px-3 py-5 text-center text-[12px] font-semibold text-[#808080]">
                           Cargando notificaciones...

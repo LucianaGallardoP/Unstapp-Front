@@ -1,7 +1,7 @@
 import { apiClient } from '../../../services/apiClient';
 import { commentService } from './commentService';
 import { likeService } from './likeService';
-import type { Post, PostAuthorRole, PostCategory } from '../types/post.types';
+import type { Post, PostAudience, PostAuthorRole, PostCategory } from '../types/post.types';
 
 type ApiRecord = Record<string, unknown>;
 
@@ -40,20 +40,16 @@ const normalizeRole = (value: unknown): PostAuthorRole => {
   return 'Alumno';
 };
 
-const normalizeCategoryFromApi = (value: unknown): PostCategory | null => {
-  if (value === 0 || value === '0') return 'alumno';
-  if (value === 1 || value === '1') return 'alumno';
+const normalizeAudienceFromApi = (value: unknown): PostAudience => {
+  if (value === 1 || value === '1') return 'carrera';
   if (value === 2 || value === '2') return 'administrativo';
-  if (value === 3 || value === '3') return 'bar';
 
   const category = asString(value).toLowerCase();
 
   if (category.includes('admin')) return 'administrativo';
   if (category.includes('carrera') || category.includes('facultad')) return 'carrera';
-  if (category.includes('bar')) return 'bar';
-  if (category.includes('alumno') || category.includes('social')) return 'alumno';
 
-  return null;
+  return 'general';
 };
 
 const normalizeCategory = (role: PostAuthorRole): PostCategory => {
@@ -64,18 +60,40 @@ const normalizeCategory = (role: PostAuthorRole): PostCategory => {
   return 'alumno';
 };
 
-const roleByCategory: Record<PostCategory, PostAuthorRole> = {
-  alumno: 'Alumno',
-  carrera: 'Docente',
-  administrativo: 'Administrativo',
-  bar: 'Bar',
+const getMediaType = (url: string) => {
+  const normalizedUrl = url.toLowerCase();
+
+  if (
+    normalizedUrl.includes('/video/upload/') ||
+    normalizedUrl.endsWith('.mp4') ||
+    normalizedUrl.endsWith('.webm') ||
+    normalizedUrl.endsWith('.mov')
+  ) {
+    return 'video';
+  }
+
+  if (
+    normalizedUrl.endsWith('.jpg') ||
+    normalizedUrl.endsWith('.jpeg') ||
+    normalizedUrl.endsWith('.png') ||
+    normalizedUrl.endsWith('.gif') ||
+    normalizedUrl.includes('/image/upload/')
+  ) {
+    return 'image';
+  }
+
+  return 'file';
 };
 
 const mapPostFromApi = (apiPost: unknown, fallbackContent = ''): Post => {
   const post = asRecord(apiPost);
   const author = asRecord(post.author ?? post.user ?? post.createdBy);
-  const category = normalizeCategoryFromApi(post.category);
-  const role = category ? roleByCategory[category] : normalizeRole(author.role ?? post.role);
+  const audience = normalizeAudienceFromApi(post.category);
+  const role =
+    audience === 'administrativo'
+      ? 'Administrativo'
+      : normalizeRole(author.role ?? post.role);
+  const visualCategory = normalizeCategory(role);
   const id = post.id ?? post.postId ?? crypto.randomUUID();
   const storedLikes = likeService.getStoredLikeCount(id as number | string);
   const apiLikes = asOptionalNumber(post.likes) ?? asOptionalNumber(post.likesCount);
@@ -99,7 +117,8 @@ const mapPostFromApi = (apiPost: unknown, fallbackContent = ''): Post => {
       role,
       verified: Boolean(author.verified ?? post.verified),
     },
-    category: category ?? normalizeCategory(role),
+    category: visualCategory,
+    audience,
     publishedAt:
       asString(post.publishedAt) ||
       asString(post.createdAt) ||
@@ -109,7 +128,7 @@ const mapPostFromApi = (apiPost: unknown, fallbackContent = ''): Post => {
     content: asString(post.content) || asString(post.text) || asString(post.body) || fallbackContent,
     media: asString(post.mediaUrl)
       ? {
-          type: 'image',
+          type: getMediaType(asString(post.mediaUrl)),
           url: asString(post.mediaUrl),
           alt: 'Contenido multimedia de la publicacion',
         }

@@ -1,5 +1,6 @@
 export type PostAuthorRole = 'Alumno' | 'Docente' | 'Administrativo' | 'Bar';
 export type PostCategory = 'alumno' | 'carrera' | 'administrativo' | 'bar';
+export type PostAudience = 'general' | 'carrera' | 'administrativo';
 
 // Datos basicos del autor.
 export interface PostAuthor {
@@ -10,7 +11,7 @@ export interface PostAuthor {
 
 // Multimedia opcional del post.
 export interface PostMedia {
-  type: 'image' | 'file';
+  type: 'image' | 'video' | 'file';
   url: string;
   alt?: string;
   fileName?: string;
@@ -29,6 +30,7 @@ export interface Post {
   id: number | string;
   author: PostAuthor;
   category: PostCategory;
+  audience: PostAudience;
   publishedAt: string;
   content: string;
   media?: PostMedia;

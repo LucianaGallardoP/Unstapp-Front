@@ -20,12 +20,7 @@ export const useSearch = () => {
     const handler = setTimeout(async () => {
       setIsLoading(true);
       try {
-        const normalizedQuery = query
-          .normalize("NFD")
-          .replace(/[\u0300-\u036f]/g, "")
-          .toLowerCase();
-        
-        const data = await searchService.globalSearch(normalizedQuery);
+        const data = await searchService.globalSearch(query.trim());
         if (Array.isArray(data)) {
           setResults({ users: data, posts: [] });
         } else {

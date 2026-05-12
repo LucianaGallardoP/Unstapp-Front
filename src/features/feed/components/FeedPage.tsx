@@ -3,7 +3,7 @@ import { TopBar } from '../../../components/common/TopBar';
 import { BottomNavigation, type TabType } from '../../../components/common/BottomNavigation';
 import { AddNewBottom } from '../../../components/common/AddNewBottom';
 import { usePosts } from '../hooks/usePosts';
-import type { PostCategory } from '../types/post.types';
+import type { PostAudience } from '../types/post.types';
 import { CreatePostModal } from './CreatePostModal';
 import { PostCard } from './PostCard';
 
@@ -17,8 +17,8 @@ const filters: { id: FeedFilter; label: string }[] = [
 ];
 
 // Categorias visibles por cada filtro.
-const visibleByFilter: Record<FeedFilter, PostCategory[]> = {
-  todo: ['administrativo', 'bar', 'alumno', 'carrera'],
+const visibleByFilter: Record<FeedFilter, PostAudience[]> = {
+  todo: ['general', 'carrera', 'administrativo'],
   carrera: ['carrera'],
   administrativo: ['administrativo'],
 };
@@ -38,7 +38,7 @@ export const FeedPage = () => {
   const visiblePosts = useMemo(() => {
     const visibleCategories = visibleByFilter[activeFilter];
 
-    return posts.filter((post) => visibleCategories.includes(post.category));
+    return posts.filter((post) => visibleCategories.includes(post.audience));
   }, [activeFilter, posts]);
 
   return (
