@@ -42,6 +42,11 @@ const mapNotificationFromApi = (apiNotification: unknown): AppNotification => {
     id: typeof id === 'number' || typeof id === 'string' ? id : crypto.randomUUID(),
     type: normalizeNotificationType(notification),
     actor: asString(notification.user) || asString(notification.actor, 'Unstapp'),
+    avatarUrl:
+      asString(notification.avatarUrl) ||
+      asString(notification.userAvatarUrl) ||
+      asString(notification.actorAvatarUrl) ||
+      undefined,
     action: asString(notification.action) || asString(notification.message, 'tiene una novedad'),
     target: asString(notification.message) || asString(notification.target, 'Nueva notificacion'),
     postId:

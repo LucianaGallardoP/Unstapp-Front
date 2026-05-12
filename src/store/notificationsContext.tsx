@@ -7,6 +7,7 @@ export interface AppNotification {
   id: number | string;
   type: NotificationType;
   actor: string;
+  avatarUrl?: string;
   action: string;
   target: string;
   postId?: number | string;

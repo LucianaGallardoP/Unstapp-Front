@@ -7,7 +7,6 @@ import {
   Moon,
   Sun,
   Trash2,
-  UserRound,
   X,
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
@@ -33,8 +32,15 @@ const notificationIconStyles: Record<NotificationType, string> = {
 
 const notificationIcons = {
   interaction: MessageCircle,
-  followedPost: UserRound,
+  followedPost: Megaphone,
   institutional: Megaphone,
+};
+
+const getInitials = (name: string) => {
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  const initials = parts.slice(0, 2).map((part) => part[0]).join('');
+
+  return initials.toUpperCase() || 'U';
 };
 
 export const TopBar = ({ simple = false }: TopBarProps) => {
@@ -189,12 +195,24 @@ export const TopBar = ({ simple = false }: TopBarProps) => {
                                 : notificationTypeStyles[notification.type]
                             } ${notification.postId ? 'cursor-pointer' : ''}`}
                           >
+                          {notification.avatarUrl ? (
+                            <img
+                              src={notification.avatarUrl}
+                              alt={`Foto de ${notification.actor}`}
+                              className="mt-0.5 h-9 w-9 shrink-0 rounded-full object-cover"
+                            />
+                          ) : (
                             <div
-                              className={`mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${notificationIconStyles[notification.type]}`}
-                              aria-hidden="true"
+                              className={`mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-[12px] font-black ${notificationIconStyles[notification.type]}`}
+                              aria-label={`Avatar de ${notification.actor}`}
                             >
-                              <NotificationIcon size={17} />
+                              {notification.type === 'institutional' ? (
+                                <NotificationIcon size={17} />
+                              ) : (
+                                getInitials(notification.actor)
+                              )}
                             </div>
+                          )}
 
                             <div className="min-w-0 flex-1">
                               <h3 className="text-[12px] leading-4 text-[#1F2937] md:text-[13px]">
