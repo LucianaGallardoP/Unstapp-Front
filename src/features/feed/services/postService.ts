@@ -40,6 +40,22 @@ const normalizeRole = (value: unknown): PostAuthorRole => {
   return 'Alumno';
 };
 
+const normalizeCategoryFromApi = (value: unknown): PostCategory | null => {
+  if (value === 0 || value === '0') return 'alumno';
+  if (value === 1 || value === '1') return 'carrera';
+  if (value === 2 || value === '2') return 'administrativo';
+  if (value === 3 || value === '3') return 'bar';
+
+  const category = asString(value).toLowerCase();
+
+  if (category.includes('admin')) return 'administrativo';
+  if (category.includes('carrera') || category.includes('facultad')) return 'carrera';
+  if (category.includes('bar')) return 'bar';
+  if (category.includes('alumno') || category.includes('social')) return 'alumno';
+
+  return null;
+};
+
 const normalizeCategory = (role: PostAuthorRole): PostCategory => {
   if (role === 'Docente') return 'carrera';
   if (role === 'Administrativo') return 'administrativo';
@@ -48,10 +64,18 @@ const normalizeCategory = (role: PostAuthorRole): PostCategory => {
   return 'alumno';
 };
 
+const roleByCategory: Record<PostCategory, PostAuthorRole> = {
+  alumno: 'Alumno',
+  carrera: 'Docente',
+  administrativo: 'Administrativo',
+  bar: 'Bar',
+};
+
 const mapPostFromApi = (apiPost: unknown, fallbackContent = ''): Post => {
   const post = asRecord(apiPost);
   const author = asRecord(post.author ?? post.user ?? post.createdBy);
-  const role = normalizeRole(author.role ?? post.role);
+  const category = normalizeCategoryFromApi(post.category);
+  const role = category ? roleByCategory[category] : normalizeRole(author.role ?? post.role);
   const id = post.id ?? post.postId ?? crypto.randomUUID();
   const storedLikes = likeService.getStoredLikeCount(id as number | string);
   const apiLikes = asOptionalNumber(post.likes) ?? asOptionalNumber(post.likesCount);
@@ -75,7 +99,7 @@ const mapPostFromApi = (apiPost: unknown, fallbackContent = ''): Post => {
       role,
       verified: Boolean(author.verified ?? post.verified),
     },
-    category: normalizeCategory(role),
+    category: category ?? normalizeCategory(role),
     publishedAt:
       asString(post.publishedAt) ||
       asString(post.createdAt) ||
