@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'; // 1. Importamos el hook de nave
 import { Input } from '../../../components/common/Input';
 import { Button } from '../../../components/common/Button';
 import { useLogin } from '../hooks/useLogin'; 
-import unstaLogo from '../../assets/img/UNSTA-logo.png'; 
+import unstaLogo from '../../../assets/img/UNSTA-logo.png'; 
 
 export const LoginForm = () => {
   const [showPassword, setShowPassword] = useState(false);
