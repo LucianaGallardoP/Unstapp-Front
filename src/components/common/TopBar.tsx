@@ -74,7 +74,7 @@ export const TopBar = ({ simple = false }: TopBarProps) => {
   };
 
   return (
-    <header className="sticky top-0 left-0 right-0 z-40 h-12 border-b border-gray-100 bg-white px-3 md:h-14">
+    <header className="sticky top-0 left-0 right-0 z-40 h-14 border-b border-gray-100 bg-white px-3 md:h-16">
       <div className="mx-auto flex h-full w-full max-w-[430px] items-center justify-between sm:max-w-[560px] md:max-w-2xl lg:max-w-3xl">
         <div className="flex flex-1 items-center justify-start">
           {!simple && <GlobalSearch />}
@@ -82,7 +82,7 @@ export const TopBar = ({ simple = false }: TopBarProps) => {
 
         {simple ? (
           <div className="flex flex-1 justify-center">
-            <h1 className="text-[14px] font-black text-[#1E4E9D] md:text-[15px]">
+            <h1 className="text-[16px] font-black text-[#1E4E9D] md:text-[18px]">
               Unstapp
             </h1>
           </div>
@@ -92,7 +92,7 @@ export const TopBar = ({ simple = false }: TopBarProps) => {
             onClick={() => navigate('/feed')}
             className="flex flex-1 cursor-pointer justify-center border-none bg-white"
           >
-            <h1 className="text-[14px] font-black text-[#1E4E9D] md:text-[15px]">
+            <h1 className="text-[16px] font-black text-[#1E4E9D] md:text-[18px]">
               Unstapp
             </h1>
           </button>
@@ -102,22 +102,22 @@ export const TopBar = ({ simple = false }: TopBarProps) => {
           <button
             type="button"
             onClick={() => setIsMoonIcon(!isMoonIcon)}
-            className="flex h-9 w-9 items-center justify-center text-[#526174] transition-colors hover:text-[#1F2937]"
+            className="flex h-10 w-10 items-center justify-center text-[#526174] transition-colors hover:text-[#1F2937]"
             aria-label="Cambiar tema"
           >
-            {isMoonIcon ? <Moon size={16} /> : <Sun size={16} />}
+            {isMoonIcon ? <Moon size={20} /> : <Sun size={20} />}
           </button>
 
           {!simple && (
             <div className="relative">
               <button
                 type="button"
-                className="relative flex h-9 w-9 items-center justify-center text-[#526174] transition-colors hover:text-[#1F2937]"
+                className="relative flex h-10 w-10 items-center justify-center text-[#526174] transition-colors hover:text-[#1F2937]"
                 aria-label="Notificaciones"
                 onClick={openNotifications}
                 aria-expanded={isNotificationsOpen}
               >
-                <Bell size={16} />
+                <Bell size={20} />
                 {showUnreadIndicator && (
                   <span
                     className="absolute right-2 top-1.5 h-2.5 w-2.5 rounded-full border border-white bg-[#E7000B]"

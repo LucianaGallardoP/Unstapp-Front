@@ -15,10 +15,10 @@ export const GlobalSearch = () => {
     return (
       <button
         onClick={() => setIsExpanded(true)}
-        className="flex h-9 w-9 items-center justify-center text-[#526174] transition-colors hover:text-[#1F2937]"
+        className="flex h-10 w-10 items-center justify-center text-[#526174] transition-colors hover:text-[#1F2937]"
         aria-label="Buscar"
       >
-        <Search size={17} />
+        <Search size={20} />
       </button>
     );
   }

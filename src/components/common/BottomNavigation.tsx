@@ -38,14 +38,14 @@ export const BottomNavigation = ({ activeTab, onTabChange }: BottomNavigationPro
             <li key={tab.id} className="flex-1">
               <button
                 onClick={() => handleTabClick(tab.id)}
-                className={`flex h-12 w-full flex-col items-center justify-center gap-0.5 transition-colors md:h-14 ${
+                className={`flex h-14 w-full flex-col items-center justify-center gap-0.5 transition-colors md:h-16 ${
                   isActive 
                     ? 'text-[#1E4E9D]' 
                     : 'text-gray-400 hover:text-gray-600'
                 }`}
               >
-                <Icon size={17} strokeWidth={isActive ? 2.5 : 2} />
-                <span className="text-[8px] font-black tracking-wide sm:text-[9px]">
+                <Icon size={20} strokeWidth={isActive ? 2.5 : 2} />
+                <span className="text-[10px] font-black tracking-wide sm:text-[11px]">
                   {tab.label}
                 </span>
               </button>
