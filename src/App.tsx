@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { LoginPage } from './features/auth';
 import { FeedPage } from './features/feed';
+import { ProfilePage } from './features/profile';
 import { NotFoundPage } from './pages/NotFoundPage';
 import { TestPage } from './pages/TestPage';
 import { NotificationsProvider } from './store/notificationsContext';
@@ -16,7 +17,7 @@ function App() {
           <Route path="/comunidad" element={<TestPage activeTab="comunidad" />} />
           <Route path="/calendario" element={<TestPage activeTab="calendario" />} />
           <Route path="/horario" element={<TestPage activeTab="horario" />} />
-          <Route path="/perfil" element={<TestPage activeTab="perfil" />} />
+          <Route path="/perfil" element={<ProfilePage />} />
           <Route path="*" element={<NotFoundPage />} />
         </Routes>
       </BrowserRouter>
