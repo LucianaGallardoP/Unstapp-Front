@@ -1,7 +1,10 @@
+import type { ProfileResponseDTO } from '../types/profile.dtos';
+
 interface ProfileCardProps {
-  userName?: string;
-  role?: string;
-  bio?: string;
+  // 1. Reemplazamos los datos sueltos por el DTO estricto
+  profile: ProfileResponseDTO;
+  
+  // 2. Mantenemos stats separado temporalmente hasta que el backend lo incluya
   stats?: {
     posts: string | number;
     followers: string | number;
@@ -10,9 +13,7 @@ interface ProfileCardProps {
 }
 
 export const ProfileCard = ({
-  userName = 'Luciana Gallardo',
-  role = 'ESTUDIANTE DE INGENIERÍA DE SOFTWARE',
-  bio = 'Apasionada por la tecnología y el desarrollo de software. Siempre buscando aprender algo nuevo y compartir conocimiento con la comunidad UNSTA. 🚀',
+  profile,
   stats = {
     posts: '124',
     followers: '1.2k',
@@ -21,38 +22,75 @@ export const ProfileCard = ({
 }: ProfileCardProps) => {
   return (
     <article className="relative mx-auto w-full max-w-[430px] overflow-hidden rounded-[16px] border border-gray-200 bg-white pb-6 shadow-[0_2px_8px_rgba(0,0,0,0.04)] sm:max-w-[560px] md:max-w-[600px]">
-      {/* Espacio para la foto de portada (vacio) */}
-      <div className="h-32 w-full bg-gray-200 sm:h-40"></div>
-
-      {/* Contenedor del Avatar y Botón de Editar */}
-      <div className="px-5 flex items-end justify-between -mt-10 mb-3 sm:-mt-12 sm:mb-4">
-        {/* Espacio para la foto de perfil (vacio) */}
-        <div className="relative h-[84px] w-[84px] shrink-0 rounded-[18px] border-[3px] border-white bg-gray-300 shadow-sm sm:h-[100px] sm:w-[100px]"></div>
-
-        {/* Botón Editar Perfil */}
-        <button 
-          type="button"
-          className="mb-1 h-8 rounded-lg bg-[#F0F2F5] px-4 text-[12px] font-bold text-gray-900 transition-colors hover:bg-[#E4E6E9] sm:h-9 sm:px-5 sm:text-[13px]"
-        >
-          Editar Perfil
-        </button>
+      
+      {/* 3. Foto de Portada (Renderizado condicional) */}
+      <div className="h-32 w-full bg-gray-200 sm:h-40">
+        {profile.coverUrl && (
+          <img 
+            src={profile.coverUrl} 
+            alt="Portada del perfil" 
+            className="h-full w-full object-cover" 
+          />
+        )}
       </div>
 
-      {/* Información del Perfil */}
+      {/* Contenedor del Avatar y Botones de Acción */}
+      <div className="px-5 flex items-end justify-between -mt-10 mb-3 sm:-mt-12 sm:mb-4">
+        
+        {/* 4. Foto de Perfil con fallback (letra inicial si no hay foto) */}
+        <div className="relative flex items-center justify-center h-[84px] w-[84px] shrink-0 rounded-[18px] border-[3px] border-white bg-gray-300 shadow-sm sm:h-[100px] sm:w-[100px] overflow-hidden">
+          {profile.avatarUrl ? (
+            <img 
+              src={profile.avatarUrl} 
+              alt={profile.fullName} 
+              className="h-full w-full object-cover" 
+            />
+          ) : (
+            <span className="text-3xl font-black text-gray-500">
+              {profile.fullName.charAt(0)}
+            </span>
+          )}
+        </div>
+
+        {/* 5. Lógica de Botones (Editar vs Seguir) */}
+        {profile.isOwnProfile ? (
+          <button 
+            type="button"
+            className="mb-1 h-8 rounded-lg bg-[#F0F2F5] px-4 text-[12px] font-bold text-gray-900 transition-colors hover:bg-[#E4E6E9] sm:h-9 sm:px-5 sm:text-[13px]"
+          >
+            Editar Perfil
+          </button>
+        ) : (
+          <button 
+            type="button"
+            className={`mb-1 h-8 rounded-lg px-4 text-[12px] font-bold transition-colors sm:h-9 sm:px-5 sm:text-[13px] ${
+              profile.isFollowing 
+                ? 'bg-[#F0F2F5] text-gray-900 hover:bg-[#E4E6E9]' 
+                : 'bg-[#155DFC] text-white hover:bg-blue-700'
+            }`}
+          >
+            {profile.isFollowing ? 'Siguiendo' : 'Seguir'}
+          </button>
+        )}
+      </div>
+
+      {/* 6. Información del Perfil mapeada desde el DTO */}
       <div className="px-5">
         <h2 className="text-[22px] font-black tracking-tight text-black sm:text-[24px]">
-          {userName}
+          {profile.fullName}
         </h2>
         <p className="mt-0.5 text-[11px] font-bold uppercase text-[#155DFC] sm:text-[12px]">
-          {role}
+          {profile.careers.join(', ')}
         </p>
 
-        <p className="mt-3 text-[13px] leading-snug text-gray-500 sm:text-[14px]">
-          {bio}
-        </p>
+        {profile.bio && (
+          <p className="mt-3 text-[13px] leading-snug text-gray-500 sm:text-[14px]">
+            {profile.bio}
+          </p>
+        )}
       </div>
 
-      {/* Estadísticas */}
+      {/* Estadísticas (Mantenidas como estaban originalmente) */}
       <div className="mt-6 flex justify-center gap-6 px-5 sm:gap-10">
         <div className="flex flex-col items-center">
           <span className="text-[18px] font-black leading-none text-black sm:text-[20px]">{stats.posts}</span>

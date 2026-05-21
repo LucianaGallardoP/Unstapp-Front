@@ -1,6 +1,7 @@
 import { TopBar } from '../../../components/common/TopBar';
 import { BottomNavigation } from '../../../components/common/BottomNavigation';
 import { ProfileCard } from './ProfileCard';
+import { MOCK_PROFILE_DETAILS } from '../services/profileService';
 
 export const ProfilePage = () => {
   return (
@@ -8,7 +9,7 @@ export const ProfilePage = () => {
       <TopBar />
 
       <main className="mx-auto flex w-full max-w-[430px] flex-col px-3 py-3 sm:max-w-[560px] sm:px-5 md:max-w-2xl md:py-5 lg:max-w-3xl">
-        <ProfileCard />
+        <ProfileCard profile={MOCK_PROFILE_DETAILS} />
       </main>
 
       <BottomNavigation activeTab="perfil" />
