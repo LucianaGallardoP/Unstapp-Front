@@ -13,6 +13,18 @@ export const MOCK_PROFILE_DETAILS: ProfileResponseDTO = {
   isFollowing: false
 };
 
+// Mock para representar un perfil publico visto por otro usuario.
+export const MOCK_PUBLIC_PROFILE_DETAILS: ProfileResponseDTO = {
+  userId: 2,
+  fullName: "Nicolas Zingale",
+  careers: ["ESTUDIANTE DE INGENIERIA DE SOFTWARE"],
+  bio: "Alumno de la comunidad UNSTA. Comparte consultas, avisos y recursos utiles para la carrera.",
+  avatarUrl: "https://i.pravatar.cc/150?img=12",
+  coverUrl: "https://images.unsplash.com/photo-1523240795612-9a054b0db644?q=80&w=1000&auto=format&fit=crop",
+  isOwnProfile: false,
+  isFollowing: false
+};
+
 // 2. Mock de las publicaciones del Perfil
 export const MOCK_PROFILE_POSTS: ProfilePostDTO[] = [
   {

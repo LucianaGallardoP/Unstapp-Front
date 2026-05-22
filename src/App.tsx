@@ -18,6 +18,7 @@ function App() {
           <Route path="/calendario" element={<TestPage activeTab="calendario" />} />
           <Route path="/horario" element={<TestPage activeTab="horario" />} />
           <Route path="/perfil" element={<ProfilePage />} />
+          <Route path="/perfil/:userId" element={<ProfilePage />} />
           <Route path="*" element={<NotFoundPage />} />
         </Routes>
       </BrowserRouter>
