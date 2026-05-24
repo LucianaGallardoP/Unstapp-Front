@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import type { ProfileResponseDTO } from '../types/profile.dtos';
+import { useEffect, useState } from 'react';
+import type { ProfileResponseDTO, ProfileStatsDTO } from '../types/profile.dtos';
 
 const formatCompactNumber = (value: string | number) => {
   const numericValue = typeof value === 'number' ? value : Number(value);
@@ -24,11 +24,8 @@ interface ProfileCardProps {
   profile: ProfileResponseDTO;
   
   // 2. Mantenemos stats separado temporalmente hasta que el backend lo incluya
-  stats?: {
-    posts: string | number;
-    followers: string | number;
-    following: string | number;
-  };
+  stats?: ProfileStatsDTO;
+  onFollowToggle?: (nextIsFollowing: boolean) => Promise<void>;
 }
 
 export const ProfileCard = ({
@@ -37,29 +34,53 @@ export const ProfileCard = ({
     posts: 124,
     followers: 1200,
     following: 850,
-  }
+  },
+  onFollowToggle,
 }: ProfileCardProps) => {
   // Controla el estado visual inmediato del seguimiento.
   const [isFollowing, setIsFollowing] = useState(profile.isFollowing);
   const [followersCount, setFollowersCount] = useState(stats.followers);
+  const [isFollowLoading, setIsFollowLoading] = useState(false);
+  const [followError, setFollowError] = useState<string | null>(null);
 
-  const handleFollowClick = () => {
-    setIsFollowing((currentValue) => {
-      const nextValue = !currentValue;
+  useEffect(() => {
+    setIsFollowing(profile.isFollowing);
+    setFollowersCount(stats.followers);
+  }, [profile.isFollowing, stats.followers]);
 
-      // Actualiza el contador de seguidores al instante.
-      setFollowersCount((currentCount) => {
-        const numericCount = typeof currentCount === 'number' ? currentCount : Number(currentCount);
+  const updateFollowersCount = (nextIsFollowing: boolean) => {
+    setFollowersCount((currentCount) => {
+      const numericCount = typeof currentCount === 'number' ? currentCount : Number(currentCount);
 
-        if (!Number.isFinite(numericCount)) {
-          return currentCount;
-        }
+      if (!Number.isFinite(numericCount)) {
+        return currentCount;
+      }
 
-        return nextValue ? numericCount + 1 : Math.max(numericCount - 1, 0);
-      });
-
-      return nextValue;
+      return nextIsFollowing ? numericCount + 1 : Math.max(numericCount - 1, 0);
     });
+  };
+
+  const handleFollowClick = async () => {
+    if (isFollowLoading) return;
+
+    const previousIsFollowing = isFollowing;
+    const previousFollowersCount = followersCount;
+    const nextIsFollowing = !previousIsFollowing;
+
+    setFollowError(null);
+    setIsFollowLoading(true);
+    setIsFollowing(nextIsFollowing);
+    updateFollowersCount(nextIsFollowing);
+
+    try {
+      await onFollowToggle?.(nextIsFollowing);
+    } catch {
+      setIsFollowing(previousIsFollowing);
+      setFollowersCount(previousFollowersCount);
+      setFollowError('No se pudo actualizar el seguimiento');
+    } finally {
+      setIsFollowLoading(false);
+    }
   };
 
   return (
@@ -107,6 +128,7 @@ export const ProfileCard = ({
             type="button"
             onClick={handleFollowClick}
             aria-pressed={isFollowing}
+            disabled={isFollowLoading}
             className={`mb-1 h-8 rounded-lg px-4 text-[12px] font-bold transition-colors sm:h-9 sm:px-5 sm:text-[13px] ${
               isFollowing 
                 ? 'bg-[#F0F2F5] text-gray-900 hover:bg-[#E4E6E9]' 
@@ -130,6 +152,12 @@ export const ProfileCard = ({
         {profile.bio && (
           <p className="mt-3 text-[13px] leading-snug text-gray-500 sm:text-[14px]">
             {profile.bio}
+          </p>
+        )}
+
+        {followError && (
+          <p className="mt-3 text-[12px] font-bold text-[#E7000B]">
+            {followError}
           </p>
         )}
       </div>

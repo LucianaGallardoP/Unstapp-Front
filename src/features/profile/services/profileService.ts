@@ -1,4 +1,65 @@
-import type { ProfileResponseDTO, ProfilePostDTO } from '../types/profile.dtos';
+import { apiClient } from '../../../services/apiClient';
+import type { ProfileResponseDTO, ProfilePostDTO, ProfileStatsDTO } from '../types/profile.dtos';
+
+type ApiRecord = Record<string, unknown>;
+
+export interface ProfileViewData {
+  profile: ProfileResponseDTO;
+  stats: ProfileStatsDTO;
+  posts: ProfilePostDTO[];
+}
+
+const getToken = () => localStorage.getItem('unstapp_token');
+
+const getAuthHeaders = () => {
+  const token = getToken();
+
+  return token ? { Authorization: `Bearer ${token}` } : undefined;
+};
+
+const asRecord = (value: unknown): ApiRecord =>
+  value && typeof value === 'object' ? (value as ApiRecord) : {};
+
+const asString = (value: unknown, fallback = '') =>
+  typeof value === 'string' ? value : fallback;
+
+const asNumber = (value: unknown, fallback = 0) =>
+  typeof value === 'number' ? value : fallback;
+
+const asBoolean = (value: unknown, fallback = false) =>
+  typeof value === 'boolean' ? value : fallback;
+
+const asStringList = (value: unknown) => {
+  if (Array.isArray(value)) {
+    return value.filter((item): item is string => typeof item === 'string');
+  }
+
+  if (typeof value === 'string' && value.trim()) {
+    return [value];
+  }
+
+  return [];
+};
+
+const getRelativeTime = (dateValue: unknown) => {
+  const dateText = asString(dateValue);
+  const date = dateText ? new Date(dateText) : null;
+
+  if (!date || Number.isNaN(date.getTime())) {
+    return 'AHORA';
+  }
+
+  const minutes = Math.max(0, Math.floor((Date.now() - date.getTime()) / 60000));
+
+  if (minutes < 1) return 'AHORA';
+  if (minutes < 60) return `HACE ${minutes} MIN`;
+
+  const hours = Math.floor(minutes / 60);
+
+  if (hours < 24) return `HACE ${hours}HS`;
+
+  return `HACE ${Math.floor(hours / 24)} DIAS`;
+};
 
 // 1. Mock de los detalles del Perfil (Basado en la imagen de tu diseño)
 export const MOCK_PROFILE_DETAILS: ProfileResponseDTO = {
@@ -25,6 +86,12 @@ export const MOCK_PUBLIC_PROFILE_DETAILS: ProfileResponseDTO = {
   isFollowing: false
 };
 
+export const MOCK_PROFILE_STATS: ProfileStatsDTO = {
+  posts: 124,
+  followers: 1200,
+  following: 850,
+};
+
 // 2. Mock de las publicaciones del Perfil
 export const MOCK_PROFILE_POSTS: ProfilePostDTO[] = [
   {
@@ -49,3 +116,82 @@ export const MOCK_PROFILE_POSTS: ProfilePostDTO[] = [
     commentsCount: 1,
   }
 ];
+
+const mapPostFromApi = (apiPost: unknown): ProfilePostDTO => {
+  const post = asRecord(apiPost);
+
+  return {
+    id: String(post.id ?? post.postId ?? crypto.randomUUID()),
+    timeAgo: getRelativeTime(post.publishedAt ?? post.createdAt ?? post.postDate ?? post.date),
+    content:
+      asString(post.content) ||
+      asString(post.text) ||
+      asString(post.body) ||
+      'Publicacion sin contenido',
+    likesCount: asNumber(post.likesCount ?? post.likes),
+    commentsCount: asNumber(post.commentsCount ?? post.comments),
+  };
+};
+
+const mapProfileFromApi = (
+  apiProfile: unknown,
+  fallbackProfile: ProfileResponseDTO,
+  isOwnProfile: boolean,
+): ProfileViewData => {
+  const root = asRecord(apiProfile);
+  const data = asRecord(root.data ?? root.value ?? root.profile ?? root);
+  const user = asRecord(data.user ?? data.profile ?? data.person ?? data);
+  const posts = data.posts ?? data.publications ?? data.userPosts;
+  const careers = [
+    ...asStringList(user.careers),
+    ...asStringList(user.career),
+    ...asStringList(user.carrera),
+  ];
+
+  return {
+    profile: {
+      userId: asNumber(user.userId ?? user.id, fallbackProfile.userId),
+      fullName:
+        asString(user.fullName) ||
+        asString(user.name) ||
+        asString(user.username) ||
+        fallbackProfile.fullName,
+      careers: careers.length ? careers : fallbackProfile.careers,
+      bio: asString(user.bio) || asString(user.description) || fallbackProfile.bio,
+      avatarUrl:
+        asString(user.avatarUrl) ||
+        asString(user.profileImageUrl) ||
+        asString(user.photoUrl) ||
+        fallbackProfile.avatarUrl,
+      coverUrl:
+        asString(user.coverUrl) ||
+        asString(user.coverImageUrl) ||
+        fallbackProfile.coverUrl,
+      isOwnProfile,
+      isFollowing: asBoolean(user.isFollowing ?? user.following ?? data.isFollowing, fallbackProfile.isFollowing),
+    },
+    stats: {
+      posts: asNumber(data.postsCount ?? user.postsCount ?? data.publicationsCount, Number(MOCK_PROFILE_STATS.posts)),
+      followers: asNumber(data.followersCount ?? user.followersCount ?? data.followers, Number(MOCK_PROFILE_STATS.followers)),
+      following: asNumber(data.followingCount ?? user.followingCount ?? data.following, Number(MOCK_PROFILE_STATS.following)),
+    },
+    posts: Array.isArray(posts) ? posts.map(mapPostFromApi) : MOCK_PROFILE_POSTS,
+  };
+};
+
+export const profileService = {
+  getById: async (profileId: number | string, isOwnProfile: boolean): Promise<ProfileViewData> => {
+    const response = await apiClient.get<unknown>(`/profile/${profileId}`, {
+      headers: getAuthHeaders(),
+    });
+    const fallbackProfile = isOwnProfile ? MOCK_PROFILE_DETAILS : MOCK_PUBLIC_PROFILE_DETAILS;
+
+    return mapProfileFromApi(response.data, fallbackProfile, isOwnProfile);
+  },
+
+  follow: async (profileId: number | string) => {
+    await apiClient.post(`/users/${profileId}/follow`, undefined, {
+      headers: getAuthHeaders(),
+    });
+  },
+};

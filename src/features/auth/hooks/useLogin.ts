@@ -34,6 +34,7 @@ export const useLogin = () => {
       const response = await authService.login(credentials);
       setData(response);
       localStorage.setItem('unstapp_token', response.token);
+      localStorage.setItem('unstapp_user_id', String(response.userId));
       localStorage.setItem('unstapp_user_name', response.fullName);
       localStorage.setItem('unstapp_user_roles', JSON.stringify(response.roles));
 
