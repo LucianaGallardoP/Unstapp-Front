@@ -4,6 +4,7 @@ import {
   GraduationCap,
   UserRound,
 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import type { PostAuthorRole, PostComment } from '../types/post.types';
 import { formatRelativeTime } from '../utils/formatRelativeTime';
 
@@ -27,22 +28,38 @@ const roleIcons = {
 };
 
 export const CommentItem = ({ comment, currentDate }: CommentItemProps) => {
+  const navigate = useNavigate();
   const CommentAuthorIcon = roleIcons[comment.author.role];
+  const canOpenAuthorProfile = Boolean(comment.author.id);
+
+  const handleOpenAuthorProfile = () => {
+    if (!comment.author.id) return;
+
+    navigate(`/perfil/${comment.author.id}`);
+  };
 
   return (
     <article className="flex gap-2 rounded-xl bg-white px-3 py-2">
-      <div
+      <button
+        type="button"
+        onClick={handleOpenAuthorProfile}
+        disabled={!canOpenAuthorProfile}
         className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${roleIconStyles[comment.author.role]}`}
-        aria-label={`Icono de ${comment.author.role}`}
+        aria-label={`Ver perfil de ${comment.author.name}`}
       >
         <CommentAuthorIcon size={15} strokeWidth={2.3} />
-      </div>
+      </button>
 
       <div className="min-w-0 flex-1">
         <div className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5">
-          <h3 className="text-[12px] font-bold leading-4 text-[#1F2937]">
+          <button
+            type="button"
+            onClick={handleOpenAuthorProfile}
+            disabled={!canOpenAuthorProfile}
+            className="text-left text-[12px] font-bold leading-4 text-[#1F2937] transition-colors hover:text-[#155DFC] disabled:cursor-default disabled:hover:text-[#1F2937]"
+          >
             {comment.author.name}
-          </h3>
+          </button>
           <span className="text-[10px] font-semibold leading-4 text-gray-400">
             {comment.author.role}
           </span>

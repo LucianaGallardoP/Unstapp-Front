@@ -30,6 +30,9 @@ const asOptionalNumber = (value: unknown) =>
 const asOptionalBoolean = (value: unknown) =>
   typeof value === 'boolean' ? value : undefined;
 
+const asOptionalId = (value: unknown) =>
+  typeof value === 'number' || typeof value === 'string' ? value : undefined;
+
 const normalizeRole = (value: unknown): PostAuthorRole => {
   const role = asString(value).toLowerCase();
 
@@ -108,6 +111,7 @@ const mapPostFromApi = (apiPost: unknown, fallbackContent = ''): Post => {
   return {
     id: typeof id === 'number' || typeof id === 'string' ? id : crypto.randomUUID(),
     author: {
+      id: asOptionalId(author.id ?? author.userId ?? post.userId ?? post.authorId ?? post.createdById),
       name:
         asString(author.name) ||
         asString(author.fullName) ||

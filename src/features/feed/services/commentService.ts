@@ -15,6 +15,9 @@ const asRecord = (value: unknown): Record<string, unknown> =>
 const asString = (value: unknown, fallback = '') =>
   typeof value === 'string' ? value : fallback;
 
+const asOptionalId = (value: unknown) =>
+  typeof value === 'number' || typeof value === 'string' ? value : undefined;
+
 const mapCommentFromApi = (apiComment: unknown, fallbackContent: string): PostComment => {
   const comment = asRecord(apiComment);
   const author = asRecord(comment.author ?? comment.user ?? comment.createdBy);
@@ -27,6 +30,7 @@ const mapCommentFromApi = (apiComment: unknown, fallbackContent: string): PostCo
           ? comment.commentId
         : Date.now(),
     author: {
+      id: asOptionalId(author.id ?? author.userId ?? comment.userId ?? comment.authorId ?? comment.createdById),
       name:
         asString(author.name) ||
         asString(author.fullName) ||

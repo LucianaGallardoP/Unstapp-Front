@@ -4,6 +4,7 @@ export type PostAudience = 'general' | 'carrera' | 'administrativo';
 
 // Datos basicos del autor.
 export interface PostAuthor {
+  id?: number | string;
   name: string;
   role: PostAuthorRole;
   verified?: boolean;

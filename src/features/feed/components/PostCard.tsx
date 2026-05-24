@@ -10,6 +10,7 @@ import {
   UserRound,
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { usePostInteractions } from '../hooks/usePostInteractions';
 import type { Post, PostCategory } from '../types/post.types';
 import { formatRelativeTime } from '../utils/formatRelativeTime';
@@ -48,6 +49,7 @@ const categoryIcons = {
 };
 
 export const PostCard = ({ post }: PostCardProps) => {
+  const navigate = useNavigate();
   // Estados de interaccion local.
   const {
     liked,
@@ -90,25 +92,40 @@ export const PostCard = ({ post }: PostCardProps) => {
   const AuthorIcon = categoryIcons[post.category];
   const commentsCount = comments.length || post.commentsCount || 0;
   const canSendComment = isAuthenticated && newComment.trim().length > 0 && !commentLoading;
+  const canOpenAuthorProfile = Boolean(post.author.id);
+
+  const handleOpenAuthorProfile = () => {
+    if (!post.author.id) return;
+
+    navigate(`/perfil/${post.author.id}`);
+  };
 
   return (
     <article className="w-full rounded-[22px] border border-gray-100 bg-white px-4 py-4 shadow-[0_10px_30px_rgba(15,23,42,0.08)] sm:px-5 sm:py-5 md:h-full">
       {/* Encabezado del autor */}
       <header className="flex items-start gap-3">
-        <div
+        <button
+          type="button"
+          onClick={handleOpenAuthorProfile}
+          disabled={!canOpenAuthorProfile}
           className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full sm:h-11 sm:w-11 ${authorIconStyles[post.category]}`}
-          aria-label={`Icono de ${post.author.role}`}
+          aria-label={`Ver perfil de ${post.author.name}`}
         >
           <AuthorIcon size={18} strokeWidth={2.3} />
-        </div>
+        </button>
 
         <div className="min-w-0 flex-1">
           <div className="flex items-start justify-between gap-2">
             <div className="min-w-0">
               <div className="flex items-center gap-1">
-                <h2 className="truncate text-[13px] font-bold leading-4 text-[#1F2937] sm:text-[14px]">
+                <button
+                  type="button"
+                  onClick={handleOpenAuthorProfile}
+                  disabled={!canOpenAuthorProfile}
+                  className="min-w-0 truncate text-left text-[13px] font-bold leading-4 text-[#1F2937] transition-colors hover:text-[#155DFC] disabled:cursor-default disabled:hover:text-[#1F2937] sm:text-[14px]"
+                >
                   {post.author.name}
-                </h2>
+                </button>
                 {post.author.verified && (
                   <CheckCircle2
                     size={13}
