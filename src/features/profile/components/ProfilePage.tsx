@@ -108,24 +108,9 @@ export const ProfilePage = () => {
           </h2>
           
           <div className="flex flex-col">
-            {profileData.posts.map((post) => {
-              const mappedPost: Post = {
-                id: post.id,
-                author: {
-                  id: profileData.profile.userId,
-                  name: profileData.profile.fullName,
-                  role: 'Alumno',
-                },
-                category: 'alumno',
-                audience: 'general',
-                publishedAt: new Date().toISOString(),
-                content: post.content,
-                likes: post.likesCount,
-                commentsCount: post.commentsCount,
-                comments: [],
-              };
-              return <PostCard key={post.id} post={mappedPost} />;
-            })}
+            {profileData.posts.map((post) => (
+              <PostCard key={post.id} post={post} />
+            ))}
           </div>
         </div>
       </main>

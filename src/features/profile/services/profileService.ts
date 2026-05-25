@@ -1,12 +1,13 @@
 import { apiClient } from '../../../services/apiClient';
-import type { ProfileResponseDTO, ProfilePostDTO, ProfileStatsDTO } from '../types/profile.dtos';
+import type { ProfileResponseDTO, ProfileStatsDTO } from '../types/profile.dtos';
+import type { Post } from '../../feed/types/post.types';
 
 type ApiRecord = Record<string, unknown>;
 
 export interface ProfileViewData {
   profile: ProfileResponseDTO;
   stats: ProfileStatsDTO;
-  posts: ProfilePostDTO[];
+  posts: Post[];
 }
 
 const getToken = () => localStorage.getItem('unstapp_token');
@@ -41,25 +42,6 @@ const asStringList = (value: unknown) => {
   return [];
 };
 
-const getRelativeTime = (dateValue: unknown) => {
-  const dateText = asString(dateValue);
-  const date = dateText ? new Date(dateText) : null;
-
-  if (!date || Number.isNaN(date.getTime())) {
-    return 'AHORA';
-  }
-
-  const minutes = Math.max(0, Math.floor((Date.now() - date.getTime()) / 60000));
-
-  if (minutes < 1) return 'AHORA';
-  if (minutes < 60) return `HACE ${minutes} MIN`;
-
-  const hours = Math.floor(minutes / 60);
-
-  if (hours < 24) return `HACE ${hours}HS`;
-
-  return `HACE ${Math.floor(hours / 24)} DIAS`;
-};
 
 // 1. Mock de los detalles del Perfil (Basado en la imagen de tu diseño)
 export const MOCK_PROFILE_DETAILS: ProfileResponseDTO = {
@@ -93,43 +75,63 @@ export const MOCK_PROFILE_STATS: ProfileStatsDTO = {
 };
 
 // 2. Mock de las publicaciones del Perfil
-export const MOCK_PROFILE_POSTS: ProfilePostDTO[] = [
+export const MOCK_PROFILE_POSTS: Post[] = [
   {
     id: '1',
-    timeAgo: 'AHORA',
+    author: { id: 1, name: 'María Gonzales', role: 'Alumno' },
+    category: 'alumno',
+    audience: 'general',
+    publishedAt: new Date().toISOString(),
     content: 'AVISO IMPORTANTE: El profesor de Álgebra II no asistirá el día de hoy. Por otro lado, la clase de Testeo Automatizado se dictará en el Laboratorio 1. Por favor, difundir.',
-    likesCount: 12,
+    likes: 12,
     commentsCount: 23,
+    comments: [],
   },
   {
     id: '2',
-    timeAgo: 'HACE 5 MIN',
+    author: { id: 1, name: 'María Gonzales', role: 'Alumno' },
+    category: 'alumno',
+    audience: 'general',
+    publishedAt: new Date(Date.now() - 5 * 60000).toISOString(),
     content: 'Recordatorio: Las inscripciones para las mesas de exámenes finales de Ingeniería de Software cierran este viernes. ¡No olviden anotarse!',
-    likesCount: 15,
+    likes: 15,
     commentsCount: 2,
+    comments: [],
   },
   {
     id: '3',
-    timeAgo: 'HACE 32 MIN',
+    author: { id: 1, name: 'María Gonzales', role: 'Alumno' },
+    category: 'alumno',
+    audience: 'general',
+    publishedAt: new Date(Date.now() - 32 * 60000).toISOString(),
     content: '¿Alguien tiene el apunte de Derecho Civil II del profesor Méndez?',
-    likesCount: 0,
+    likes: 0,
     commentsCount: 1,
+    comments: [],
   }
 ];
 
-const mapPostFromApi = (apiPost: unknown): ProfilePostDTO => {
+const mapPostFromApi = (apiPost: unknown, fallbackAuthor: { id: number; name: string }): Post => {
   const post = asRecord(apiPost);
 
   return {
     id: String(post.id ?? post.postId ?? crypto.randomUUID()),
-    timeAgo: getRelativeTime(post.publishedAt ?? post.createdAt ?? post.postDate ?? post.date),
+    author: {
+      id: fallbackAuthor.id,
+      name: fallbackAuthor.name,
+      role: 'Alumno',
+    },
+    category: 'alumno',
+    audience: 'general',
+    publishedAt: asString(post.publishedAt) || asString(post.createdAt) || asString(post.postDate) || asString(post.date) || new Date().toISOString(),
     content:
       asString(post.content) ||
       asString(post.text) ||
       asString(post.body) ||
       'Publicacion sin contenido',
-    likesCount: asNumber(post.likesCount ?? post.likes),
+    likes: asNumber(post.likesCount ?? post.likes),
     commentsCount: asNumber(post.commentsCount ?? post.comments),
+    comments: [],
   };
 };
 
@@ -175,7 +177,7 @@ const mapProfileFromApi = (
       followers: asNumber(data.followersCount ?? user.followersCount ?? data.followers, Number(MOCK_PROFILE_STATS.followers)),
       following: asNumber(data.followingCount ?? user.followingCount ?? data.following, Number(MOCK_PROFILE_STATS.following)),
     },
-    posts: Array.isArray(posts) ? posts.map(mapPostFromApi) : MOCK_PROFILE_POSTS,
+    posts: Array.isArray(posts) ? posts.map(p => mapPostFromApi(p, { id: fallbackProfile.userId, name: fallbackProfile.fullName })) : MOCK_PROFILE_POSTS,
   };
 };
 
