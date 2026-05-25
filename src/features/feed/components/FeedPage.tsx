@@ -5,7 +5,7 @@ import { AddNewBottom } from '../../../components/common/AddNewBottom';
 import { usePosts } from '../hooks/usePosts';
 import type { PostAudience } from '../types/post.types';
 import { CreatePostModal } from './CreatePostModal';
-import { PostCard } from './PostCard';
+import { PostCard } from '../../../components/common/PostCard';
 
 type FeedFilter = 'todo' | 'carrera' | 'administrativo';
 

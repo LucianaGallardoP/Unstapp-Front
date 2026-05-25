@@ -11,9 +11,9 @@ import {
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { usePostInteractions } from '../hooks/usePostInteractions';
-import type { Post, PostCategory } from '../types/post.types';
-import { formatRelativeTime } from '../utils/formatRelativeTime';
+import { usePostInteractions } from '../../features/feed/hooks/usePostInteractions';
+import type { Post, PostCategory } from '../../features/feed/types/post.types';
+import { formatRelativeTime } from '../../features/feed/utils/formatRelativeTime';
 import { CommentItem } from './CommentItem';
 
 interface PostCardProps {

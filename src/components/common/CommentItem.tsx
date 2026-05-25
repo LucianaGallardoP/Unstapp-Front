@@ -5,8 +5,8 @@ import {
   UserRound,
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import type { PostAuthorRole, PostComment } from '../types/post.types';
-import { formatRelativeTime } from '../utils/formatRelativeTime';
+import type { PostAuthorRole, PostComment } from '../../features/feed/types/post.types';
+import { formatRelativeTime } from '../../features/feed/utils/formatRelativeTime';
 
 interface CommentItemProps {
   comment: PostComment;
