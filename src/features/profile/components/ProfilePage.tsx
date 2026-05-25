@@ -1,7 +1,8 @@
 import { TopBar } from '../../../components/common/TopBar';
 import { BottomNavigation } from '../../../components/common/BottomNavigation';
 import { ProfileCard } from './ProfileCard';
-import { ProfilePostCard } from './ProfilePostCard';
+import { PostCard } from '../../../components/common/PostCard';
+import type { Post } from '../../feed/types/post.types';
 import {
   MOCK_PROFILE_DETAILS,
   MOCK_PROFILE_POSTS,
@@ -107,9 +108,24 @@ export const ProfilePage = () => {
           </h2>
           
           <div className="flex flex-col">
-            {profileData.posts.map((post) => (
-              <ProfilePostCard key={post.id} post={post} />
-            ))}
+            {profileData.posts.map((post) => {
+              const mappedPost: Post = {
+                id: post.id,
+                author: {
+                  id: profileData.profile.userId,
+                  name: profileData.profile.fullName,
+                  role: 'Alumno',
+                },
+                category: 'alumno',
+                audience: 'general',
+                publishedAt: new Date().toISOString(),
+                content: post.content,
+                likes: post.likesCount,
+                commentsCount: post.commentsCount,
+                comments: [],
+              };
+              return <PostCard key={post.id} post={mappedPost} />;
+            })}
           </div>
         </div>
       </main>
