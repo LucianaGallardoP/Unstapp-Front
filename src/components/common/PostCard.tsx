@@ -18,6 +18,7 @@ import { CommentItem } from './CommentItem';
 
 interface PostCardProps {
   post: Post;
+  hideAuthor?: boolean;
 }
 
 const categoryStyles: Record<PostCategory, string> = {
@@ -48,7 +49,7 @@ const categoryIcons = {
   alumno: UserRound,
 };
 
-export const PostCard = ({ post }: PostCardProps) => {
+export const PostCard = ({ post, hideAuthor = false }: PostCardProps) => {
   const navigate = useNavigate();
   // Estados de interaccion local.
   const {
@@ -103,54 +104,56 @@ export const PostCard = ({ post }: PostCardProps) => {
   return (
     <article className="w-full rounded-[22px] border border-gray-100 bg-white px-4 py-4 shadow-[0_10px_30px_rgba(15,23,42,0.08)] sm:px-5 sm:py-5 md:h-full">
       {/* Encabezado del autor */}
-      <header className="flex items-start gap-3">
-        <button
-          type="button"
-          onClick={handleOpenAuthorProfile}
-          disabled={!canOpenAuthorProfile}
-          className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full sm:h-11 sm:w-11 ${authorIconStyles[post.category]}`}
-          aria-label={`Ver perfil de ${post.author.name}`}
-        >
-          <AuthorIcon size={18} strokeWidth={2.3} />
-        </button>
+      {!hideAuthor && (
+        <header className="flex items-start gap-3">
+          <button
+            type="button"
+            onClick={handleOpenAuthorProfile}
+            disabled={!canOpenAuthorProfile}
+            className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full sm:h-11 sm:w-11 ${authorIconStyles[post.category]}`}
+            aria-label={`Ver perfil de ${post.author.name}`}
+          >
+            <AuthorIcon size={18} strokeWidth={2.3} />
+          </button>
 
-        <div className="min-w-0 flex-1">
-          <div className="flex items-start justify-between gap-2">
-            <div className="min-w-0">
-              <div className="flex items-center gap-1">
-                <button
-                  type="button"
-                  onClick={handleOpenAuthorProfile}
-                  disabled={!canOpenAuthorProfile}
-                  className="min-w-0 truncate text-left text-[13px] font-bold leading-4 text-[#1F2937] transition-colors hover:text-[#155DFC] disabled:cursor-default disabled:hover:text-[#1F2937] sm:text-[14px]"
+          <div className="min-w-0 flex-1">
+            <div className="flex items-start justify-between gap-2">
+              <div className="min-w-0">
+                <div className="flex items-center gap-1">
+                  <button
+                    type="button"
+                    onClick={handleOpenAuthorProfile}
+                    disabled={!canOpenAuthorProfile}
+                    className="min-w-0 truncate text-left text-[13px] font-bold leading-4 text-[#1F2937] transition-colors hover:text-[#155DFC] disabled:cursor-default disabled:hover:text-[#1F2937] sm:text-[14px]"
+                  >
+                    {post.author.name}
+                  </button>
+                  {post.author.verified && (
+                    <CheckCircle2
+                      size={13}
+                      className="shrink-0 text-[#155DFC]"
+                      aria-label="Usuario verificado"
+                    />
+                  )}
+                </div>
+                <time
+                  dateTime={post.publishedAt}
+                  title={formattedDate}
+                  className="mt-0.5 block text-[9px] font-bold uppercase leading-3 text-gray-400 sm:text-[10px]"
                 >
-                  {post.author.name}
-                </button>
-                {post.author.verified && (
-                  <CheckCircle2
-                    size={13}
-                    className="shrink-0 text-[#155DFC]"
-                    aria-label="Usuario verificado"
-                  />
-                )}
+                  {relativeTime}
+                </time>
               </div>
-              <time
-                dateTime={post.publishedAt}
-                title={formattedDate}
-                className="mt-0.5 block text-[9px] font-bold uppercase leading-3 text-gray-400 sm:text-[10px]"
-              >
-                {relativeTime}
-              </time>
-            </div>
 
-            <span
-              className={`shrink-0 rounded-full px-2 py-1 text-[8px] font-black tracking-wide sm:text-[9px] ${categoryStyles[post.category]}`}
-            >
-              {categoryLabels[post.category]}
-            </span>
+              <span
+                className={`shrink-0 rounded-full px-2 py-1 text-[8px] font-black tracking-wide sm:text-[9px] ${categoryStyles[post.category]}`}
+              >
+                {categoryLabels[post.category]}
+              </span>
+            </div>
           </div>
-        </div>
-      </header>
+        </header>
+      )}
 
       {/* Texto principal del post */}
       <div className="mt-4 w-full break-words">

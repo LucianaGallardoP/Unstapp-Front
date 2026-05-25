@@ -1,66 +1,98 @@
-import { useState, useEffect, useCallback } from 'react';
-import { profileService, type ProfileViewData } from '../services/profileService';
+import { useState, useEffect } from 'react';
+import {
+  profileService,
+  type ProfileViewData,
+  MOCK_PROFILE_DETAILS,
+  MOCK_PUBLIC_PROFILE_DETAILS,
+  MOCK_PROFILE_STATS,
+  MOCK_PROFILE_POSTS
+} from '../services/profileService';
 
-export const useProfile = (profileId: string | undefined, currentUserId: number | undefined) => {
-  const [profileData, setProfileData] = useState<ProfileViewData | null>(null);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
+export const useProfile = (userId: string | undefined) => {
+  const isPublicProfile = Boolean(userId);
+  const fallbackProfile = isPublicProfile ? MOCK_PUBLIC_PROFILE_DETAILS : MOCK_PROFILE_DETAILS;
+  
+  // Estado inicializado con mocks para evitar parpadeos visuales
+  const [profileData, setProfileData] = useState<ProfileViewData>({
+    profile: fallbackProfile,
+    stats: MOCK_PROFILE_STATS,
+    posts: MOCK_PROFILE_POSTS,
+  });
+  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Lógica de negocio: Si no hay ID en la URL, o si el ID coincide con el del usuario logueado, es su propio perfil.
-  const isOwnProfile = !profileId || String(profileId) === String(currentUserId);
-  
-  // Si no hay parámetro en la URL, asumimos que pide su propio perfil (usamos currentUserId)
-  const idToFetch = profileId || currentUserId;
-
-  const fetchProfile = useCallback(async () => {
-    if (!idToFetch) return;
-
-    setIsLoading(true);
-    setError(null);
-
-    try {
-      const data = await profileService.getById(idToFetch, isOwnProfile);
-      setProfileData(data);
-    } catch (err) {
-      console.error("Error al obtener el perfil:", err);
-      setError("No se pudo cargar la información del perfil.");
-    } finally {
-      setIsLoading(false);
-    }
-  }, [idToFetch, isOwnProfile]);
-
   useEffect(() => {
-    fetchProfile();
-  }, [fetchProfile]);
+    const profileId = userId ?? localStorage.getItem('unstapp_user_id');
 
-  // Manejo de la acción de seguir con "Optimistic Update" (actualización visual instantánea)
+    setProfileData({
+      profile: fallbackProfile,
+      stats: MOCK_PROFILE_STATS,
+      posts: MOCK_PROFILE_POSTS,
+    });
+
+    if (!profileId) return;
+
+    let isMounted = true;
+
+    const loadProfile = async () => {
+      setIsLoading(true);
+      setError(null);
+
+      try {
+        const response = await profileService.getById(profileId, !isPublicProfile);
+        if (isMounted) {
+          setProfileData(response);
+        }
+      } catch {
+        if (isMounted) {
+          setError('No se pudo cargar el perfil actualizado.');
+        }
+      } finally {
+        if (isMounted) {
+          setIsLoading(false);
+        }
+      }
+    };
+
+    loadProfile();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [userId, fallbackProfile, isPublicProfile]);
+
   const handleFollowToggle = async () => {
-    if (!profileData || isOwnProfile || !idToFetch) return;
+    if (!userId) return;
 
-    // 1. Actualizamos la UI inmediatamente para que el usuario no sienta lag
-    setProfileData((prev) => prev ? {
+    // Actualización visual instantánea (Optimistic Update)
+    setProfileData((prev) => ({
       ...prev,
       profile: {
         ...prev.profile,
         isFollowing: !prev.profile.isFollowing
       }
-    } : prev);
+    }));
 
-    // 2. Hacemos la petición real en segundo plano
     try {
-      await profileService.follow(idToFetch);
+      await profileService.follow(userId);
     } catch (err) {
-      console.error("Error al seguir al usuario:", err);
-      // Si la petición falla, revertimos el botón a su estado original
-      setProfileData((prev) => prev ? {
+      console.error("Error al seguir:", err);
+      // Revertimos en caso de error
+      setProfileData((prev) => ({
         ...prev,
         profile: {
           ...prev.profile,
           isFollowing: !prev.profile.isFollowing
         }
-      } : prev);
+      }));
     }
   };
 
-  return { profileData, isLoading, error, handleFollowToggle, refetch: fetchProfile };
+  return {
+    profileData,
+    isLoading,
+    error,
+    isPublicProfile,
+    handleFollowToggle
+  };
 };

@@ -2,82 +2,22 @@ import { TopBar } from '../../../components/common/TopBar';
 import { BottomNavigation } from '../../../components/common/BottomNavigation';
 import { ProfileCard } from './ProfileCard';
 import { PostCard } from '../../../components/common/PostCard';
-import type { Post } from '../../feed/types/post.types';
-import {
-  MOCK_PROFILE_DETAILS,
-  MOCK_PROFILE_POSTS,
-  MOCK_PROFILE_STATS,
-  MOCK_PUBLIC_PROFILE_DETAILS,
-  profileService,
-  type ProfileViewData,
-} from '../services/profileService';
 import { useParams } from 'react-router-dom';
-import { useEffect, useState } from 'react';
+import { useProfile } from '../hooks/useProfile';
 
 export const ProfilePage = () => {
-  const { userId } = useParams();
+  const { userId } = useParams<{ userId?: string }>();
+  
+  // Extraemos toda la lógica pesada a nuestro Hook
+  const { 
+    profileData, 
+    isLoading, 
+    error, 
+    isPublicProfile, 
+    handleFollowToggle 
+  } = useProfile(userId);
 
-  // Si hay id en la URL, se muestra como perfil publico de tercero.
-  const isPublicProfile = Boolean(userId);
-  const fallbackProfile = isPublicProfile ? MOCK_PUBLIC_PROFILE_DETAILS : MOCK_PROFILE_DETAILS;
-  const [profileData, setProfileData] = useState<ProfileViewData>({
-    profile: fallbackProfile,
-    stats: MOCK_PROFILE_STATS,
-    posts: MOCK_PROFILE_POSTS,
-  });
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const postsTitle = isPublicProfile ? 'Publicaciones' : 'Mis Publicaciones';
-
-  useEffect(() => {
-    const profileId = userId ?? localStorage.getItem('unstapp_user_id');
-
-    setProfileData({
-      profile: fallbackProfile,
-      stats: MOCK_PROFILE_STATS,
-      posts: MOCK_PROFILE_POSTS,
-    });
-
-    if (!profileId) {
-      return;
-    }
-
-    let isMounted = true;
-
-    // Trae el perfil real desde backend y conserva mock como respaldo visual.
-    const loadProfile = async () => {
-      setIsLoading(true);
-      setError(null);
-
-      try {
-        const response = await profileService.getById(profileId, !isPublicProfile);
-
-        if (isMounted) {
-          setProfileData(response);
-        }
-      } catch {
-        if (isMounted) {
-          setError('No se pudo cargar el perfil actualizado.');
-        }
-      } finally {
-        if (isMounted) {
-          setIsLoading(false);
-        }
-      }
-    };
-
-    loadProfile();
-
-    return () => {
-      isMounted = false;
-    };
-  }, [fallbackProfile, isPublicProfile, userId]);
-
-  const handleFollowToggle = async () => {
-    if (!userId) return;
-
-    await profileService.follow(userId);
-  };
 
   return (
     <div className="min-h-screen bg-white pb-20 text-gray-900 md:bg-gray-50">
@@ -109,7 +49,11 @@ export const ProfilePage = () => {
           
           <div className="flex flex-col">
             {profileData.posts.map((post) => (
-              <PostCard key={post.id} post={post} />
+              <PostCard 
+                key={post.id} 
+                post={post} 
+                hideAuthor={true} // <-- Corrección visual clave aplicada
+              />
             ))}
           </div>
         </div>
@@ -119,4 +63,3 @@ export const ProfilePage = () => {
     </div>
   );
 };
-
