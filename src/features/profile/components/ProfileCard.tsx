@@ -31,9 +31,9 @@ interface ProfileCardProps {
 export const ProfileCard = ({
   profile,
   stats = {
-    posts: 124,
-    followers: 1200,
-    following: 850,
+    posts: 0,
+    followers: 0,
+    following: 0,
   },
   onFollowToggle,
 }: ProfileCardProps) => {

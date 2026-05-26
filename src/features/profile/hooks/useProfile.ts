@@ -7,6 +7,49 @@ import {
   MOCK_PROFILE_STATS
 } from '../services/profileService';
 
+const decodeTokenPayload = (token: string) => {
+  try {
+    const payload = token.split('.')[1];
+
+    if (!payload) {
+      return {};
+    }
+
+    return JSON.parse(atob(payload.replace(/-/g, '+').replace(/_/g, '/'))) as Record<string, unknown>;
+  } catch {
+    return {};
+  }
+};
+
+const getCurrentUserId = () => {
+  const storedUserId = localStorage.getItem('unstapp_user_id');
+
+  if (storedUserId) {
+    return storedUserId;
+  }
+
+  const token = localStorage.getItem('unstapp_token');
+
+  if (!token) {
+    return null;
+  }
+
+  const payload = decodeTokenPayload(token);
+  const possibleUserId =
+    payload.userId ??
+    payload.id ??
+    payload.nameid ??
+    payload.sub ??
+    payload['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier'];
+
+  if (typeof possibleUserId === 'number' || typeof possibleUserId === 'string') {
+    localStorage.setItem('unstapp_user_id', String(possibleUserId));
+    return String(possibleUserId);
+  }
+
+  return null;
+};
+
 export const useProfile = (userId: string | undefined) => {
   const isPublicProfile = Boolean(userId);
   const fallbackProfile = isPublicProfile ? MOCK_PUBLIC_PROFILE_DETAILS : MOCK_PROFILE_DETAILS;
@@ -21,7 +64,7 @@ export const useProfile = (userId: string | undefined) => {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const profileId = userId ?? localStorage.getItem('unstapp_user_id');
+    const profileId = userId ?? getCurrentUserId();
 
     setProfileData({
       profile: fallbackProfile,
@@ -29,7 +72,10 @@ export const useProfile = (userId: string | undefined) => {
       posts: [],
     });
 
-    if (!profileId) return;
+    if (!profileId) {
+      setError('No se pudo identificar el usuario autenticado.');
+      return;
+    }
 
     let isMounted = true;
 

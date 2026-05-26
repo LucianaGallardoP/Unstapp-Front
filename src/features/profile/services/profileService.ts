@@ -70,9 +70,9 @@ export const MOCK_PUBLIC_PROFILE_DETAILS: ProfileResponseDTO = {
 };
 
 export const MOCK_PROFILE_STATS: ProfileStatsDTO = {
-  posts: 124,
-  followers: 1200,
-  following: 850,
+  posts: 0,
+  followers: 0,
+  following: 0,
 };
 
 
@@ -109,20 +109,30 @@ const mapProfileFromApi = (
   const root = asRecord(apiProfile);
   const data = asRecord(root.data ?? root.value ?? root.profile ?? root);
   const user = asRecord(data.user ?? data.profile ?? data.person ?? data);
+  const rootUser = asRecord(root.user ?? root.profile ?? root.person);
   const posts = data.posts ?? data.publications ?? data.userPosts;
   const careers = [
     ...asStringList(user.careers),
     ...asStringList(user.career),
     ...asStringList(user.carrera),
+    ...asStringList(rootUser.careers),
+    ...asStringList(rootUser.career),
+    ...asStringList(rootUser.carrera),
   ];
 
   return {
     profile: {
-      userId: asNumber(user.userId ?? user.id, fallbackProfile.userId),
+      userId: asNumber(user.userId ?? user.id ?? rootUser.userId ?? rootUser.id ?? root.userId ?? root.id, fallbackProfile.userId),
       fullName:
         asString(user.fullName) ||
         asString(user.name) ||
         asString(user.username) ||
+        asString(rootUser.fullName) ||
+        asString(rootUser.name) ||
+        asString(rootUser.username) ||
+        asString(root.fullName) ||
+        asString(root.name) ||
+        asString(root.username) ||
         fallbackProfile.fullName,
       careers: careers.length ? careers : fallbackProfile.careers,
       bio: asString(user.bio) || asString(user.description) || fallbackProfile.bio,
@@ -130,18 +140,28 @@ const mapProfileFromApi = (
         asString(user.avatarUrl) ||
         asString(user.profileImageUrl) ||
         asString(user.photoUrl) ||
+        asString(rootUser.avatarUrl) ||
+        asString(rootUser.profileImageUrl) ||
+        asString(rootUser.photoUrl) ||
+        asString(root.avatarUrl) ||
+        asString(root.profileImageUrl) ||
+        asString(root.photoUrl) ||
         fallbackProfile.avatarUrl,
       coverUrl:
         asString(user.coverUrl) ||
         asString(user.coverImageUrl) ||
+        asString(rootUser.coverUrl) ||
+        asString(rootUser.coverImageUrl) ||
+        asString(root.coverUrl) ||
+        asString(root.coverImageUrl) ||
         fallbackProfile.coverUrl,
       isOwnProfile,
-      isFollowing: asBoolean(user.isFollowing ?? user.following ?? data.isFollowing, fallbackProfile.isFollowing),
+      isFollowing: asBoolean(user.isFollowing ?? user.following ?? rootUser.isFollowing ?? rootUser.following ?? data.isFollowing ?? root.isFollowing, fallbackProfile.isFollowing),
     },
     stats: {
-      posts: asNumber(data.postsCount ?? user.postsCount ?? data.publicationsCount, Number(MOCK_PROFILE_STATS.posts)),
-      followers: asNumber(data.followersCount ?? user.followersCount ?? data.followers, Number(MOCK_PROFILE_STATS.followers)),
-      following: asNumber(data.followingCount ?? user.followingCount ?? data.following, Number(MOCK_PROFILE_STATS.following)),
+      posts: asNumber(data.postsCount ?? user.postsCount ?? root.postsCount ?? rootUser.postsCount ?? data.publicationsCount, Number(MOCK_PROFILE_STATS.posts)),
+      followers: asNumber(data.followersCount ?? user.followersCount ?? root.followersCount ?? rootUser.followersCount ?? data.followers, Number(MOCK_PROFILE_STATS.followers)),
+      following: asNumber(data.followingCount ?? user.followingCount ?? root.followingCount ?? rootUser.followingCount ?? data.following, Number(MOCK_PROFILE_STATS.following)),
     },
     posts: Array.isArray(posts) ? posts.map(p => mapPostFromApi(p, { id: fallbackProfile.userId, name: fallbackProfile.fullName })) : [],
   };
