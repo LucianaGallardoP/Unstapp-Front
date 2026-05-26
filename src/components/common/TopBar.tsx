@@ -50,7 +50,6 @@ export const TopBar = ({ simple = false }: TopBarProps) => {
   const navigate = useNavigate();
   const {
     notifications,
-    unreadCount,
     showUnreadIndicator,
     loading: notificationsLoading,
     hideUnreadIndicator,
@@ -71,6 +70,7 @@ export const TopBar = ({ simple = false }: TopBarProps) => {
   const openNotifications = () => {
     setIsNotificationsOpen(true);
     hideUnreadIndicator();
+    markAllAsRead();
   };
 
   return (
@@ -152,14 +152,6 @@ export const TopBar = ({ simple = false }: TopBarProps) => {
 
                     <div className="mt-2 flex justify-end">
                       <div className="flex flex-wrap items-center justify-end gap-x-3 gap-y-1">
-                        <button
-                          type="button"
-                          onClick={markAllAsRead}
-                          disabled={unreadCount === 0}
-                          className="text-[11px] font-black uppercase text-[#1E4E9D] transition-colors hover:text-[#155DFC] disabled:cursor-not-allowed disabled:text-gray-300"
-                        >
-                          Marcar todas como leidas
-                        </button>
                         <button
                           type="button"
                           onClick={removeAllNotifications}
