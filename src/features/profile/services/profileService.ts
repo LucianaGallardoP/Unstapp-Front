@@ -26,7 +26,11 @@ const asString = (value: unknown, fallback = '') =>
   typeof value === 'string' ? value : fallback;
 
 const asNumber = (value: unknown, fallback = 0) =>
-  typeof value === 'number' ? value : fallback;
+  typeof value === 'number'
+    ? value
+    : typeof value === 'string' && value.trim() && Number.isFinite(Number(value))
+      ? Number(value)
+      : fallback;
 
 const asBoolean = (value: unknown, fallback = false) =>
   typeof value === 'boolean' ? value : fallback;
@@ -111,6 +115,7 @@ const mapProfileFromApi = (
   const user = asRecord(data.user ?? data.profile ?? data.person ?? data);
   const rootUser = asRecord(root.user ?? root.profile ?? root.person);
   const posts = data.posts ?? data.publications ?? data.userPosts;
+  const apiPostsCount = data.postsCount ?? user.postsCount ?? root.postsCount ?? rootUser.postsCount ?? data.publicationsCount;
   const careers = [
     ...asStringList(user.careers),
     ...asStringList(user.career),
@@ -159,7 +164,7 @@ const mapProfileFromApi = (
       isFollowing: asBoolean(user.isFollowing ?? user.following ?? rootUser.isFollowing ?? rootUser.following ?? data.isFollowing ?? root.isFollowing, fallbackProfile.isFollowing),
     },
     stats: {
-      posts: asNumber(data.postsCount ?? user.postsCount ?? root.postsCount ?? rootUser.postsCount ?? data.publicationsCount, Number(MOCK_PROFILE_STATS.posts)),
+      posts: asNumber(apiPostsCount, Array.isArray(posts) ? posts.length : Number(MOCK_PROFILE_STATS.posts)),
       followers: asNumber(data.followersCount ?? user.followersCount ?? root.followersCount ?? rootUser.followersCount ?? data.followers, Number(MOCK_PROFILE_STATS.followers)),
       following: asNumber(data.followingCount ?? user.followingCount ?? root.followingCount ?? rootUser.followingCount ?? data.following, Number(MOCK_PROFILE_STATS.following)),
     },

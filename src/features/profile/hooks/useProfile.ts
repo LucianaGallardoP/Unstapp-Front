@@ -1,10 +1,10 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import {
   profileService,
   type ProfileViewData,
   MOCK_PROFILE_DETAILS,
   MOCK_PUBLIC_PROFILE_DETAILS,
-  MOCK_PROFILE_STATS
+  MOCK_PROFILE_STATS,
 } from '../services/profileService';
 
 const decodeTokenPayload = (token: string) => {
@@ -50,11 +50,16 @@ const getCurrentUserId = () => {
   return null;
 };
 
+const getNumericStat = (value: string | number) => {
+  const numericValue = typeof value === 'number' ? value : Number(value);
+
+  return Number.isFinite(numericValue) ? numericValue : 0;
+};
+
 export const useProfile = (userId: string | undefined) => {
   const isPublicProfile = Boolean(userId);
   const fallbackProfile = isPublicProfile ? MOCK_PUBLIC_PROFILE_DETAILS : MOCK_PROFILE_DETAILS;
-  
-  // Estado inicializado con mocks para evitar parpadeos visuales
+
   const [profileData, setProfileData] = useState<ProfileViewData>({
     profile: fallbackProfile,
     stats: MOCK_PROFILE_STATS,
@@ -79,12 +84,14 @@ export const useProfile = (userId: string | undefined) => {
 
     let isMounted = true;
 
+    // Carga datos reales del perfil desde backend.
     const loadProfile = async () => {
       setIsLoading(true);
       setError(null);
 
       try {
         const response = await profileService.getById(profileId, !isPublicProfile);
+
         if (isMounted) {
           setProfileData(response);
         }
@@ -106,30 +113,32 @@ export const useProfile = (userId: string | undefined) => {
     };
   }, [userId, fallbackProfile, isPublicProfile]);
 
-  const handleFollowToggle = async () => {
+  const handleFollowToggle = async (nextIsFollowing: boolean) => {
     if (!userId) return;
 
-    // Actualización visual instantánea (Optimistic Update)
+    const previousProfileData = profileData;
+
+    // Actualiza estado y contador de seguidores al instante.
     setProfileData((prev) => ({
       ...prev,
       profile: {
         ...prev.profile,
-        isFollowing: !prev.profile.isFollowing
-      }
+        isFollowing: nextIsFollowing,
+      },
+      stats: {
+        ...prev.stats,
+        followers: nextIsFollowing
+          ? getNumericStat(prev.stats.followers) + 1
+          : Math.max(getNumericStat(prev.stats.followers) - 1, 0),
+      },
     }));
 
     try {
       await profileService.follow(userId);
     } catch (err) {
-      console.error("Error al seguir:", err);
-      // Revertimos en caso de error
-      setProfileData((prev) => ({
-        ...prev,
-        profile: {
-          ...prev.profile,
-          isFollowing: !prev.profile.isFollowing
-        }
-      }));
+      console.error('Error al seguir:', err);
+      setProfileData(previousProfileData);
+      throw err;
     }
   };
 
@@ -138,6 +147,6 @@ export const useProfile = (userId: string | undefined) => {
     isLoading,
     error,
     isPublicProfile,
-    handleFollowToggle
+    handleFollowToggle,
   };
 };
