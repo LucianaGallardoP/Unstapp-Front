@@ -5,12 +5,19 @@ import { Button } from '../../../components/common/Button';
 import { useLogin } from '../hooks/useLogin'; 
 import unstaLogo from '../../../assets/img/UNSTA-logo.png'; 
 
+const LoginErrorMessage = () => (
+  <p className="text-[#E7000B] text-[13px] font-medium mt-1 text-center">
+    Usuario o contraseña incorrectos
+  </p>
+);
+
 export const LoginForm = () => {
   const [showPassword, setShowPassword] = useState(false);
+  const [localError, setLocalError] = useState(false);
   const navigate = useNavigate(); // 2. Inicializamos el navegador [cite: 2083]
   
   // Inicializamos el hook para obtener la lógica de conexión con .NET [cite: 2048, 2049]
-  const { login, loading, error } = useLogin(); 
+  const { login, loading } = useLogin(); 
 
   // Estado local para controlar los campos del formulario [cite: 2069, 2070]
   const [formData, setFormData] = useState({
@@ -30,8 +37,8 @@ export const LoginForm = () => {
       navigate('/feed'); 
       
     } catch {
-      // Mostramos un alert al fallar el inicio de sesión
-      alert('Usuario o contraseña incorrectos');
+      // Mostramos un mensaje local al fallar el inicio de sesión
+      setLocalError(true);
     }
   };
 
@@ -50,12 +57,6 @@ export const LoginForm = () => {
       {/* Conectamos el handleSubmit al formulario [cite: 2069] */}
       <form className="flex flex-col gap-5" onSubmit={handleSubmit}>
         
-        {/* Mostramos el mensaje de error si la API de .NET falla (ej: DNI no encontrado)  */}
-        {error && (
-          <div className="p-3 bg-[#E7000B]/10 border border-[#E7000B]/20 rounded-lg">
-            <p className="text-[#E7000B] text-sm text-center font-medium">{error}</p>
-          </div>
-        )}
 
         {/* Campo de DNI controlado por el estado [cite: 2070] */}
         <Input
@@ -68,40 +69,49 @@ export const LoginForm = () => {
           className="placeholder-gray-400"
           value={formData.dni} 
           disabled={loading} // Bloqueamos durante la carga 
-          onChange={(e: ChangeEvent<HTMLInputElement>) => setFormData({ ...formData, dni: e.target.value.replace(/\D/g, '') })}
+          onChange={(e: ChangeEvent<HTMLInputElement>) => {
+            setLocalError(false);
+            setFormData({ ...formData, dni: e.target.value.replace(/\D/g, '') });
+          }}
         />
 
         {/* Campo de Contraseña controlado por el estado [cite: 2070] */}
-        <Input
-          label="Contraseña"
-          id="password"
-          type={showPassword ? "text" : "password"}
-          placeholder="********"
-          className={showPassword ? "placeholder-gray-400" : "placeholder-gray-300 text-lg tracking-widest"}
-          value={formData.password} 
-          disabled={loading} 
-          onChange={(e: ChangeEvent<HTMLInputElement>) => setFormData({ ...formData, password: e.target.value })}
-          suffix={
-            <button
-              type="button"
-              onClick={() => setShowPassword(!showPassword)}
-              className="text-[#1E4E9D] hover:text-[#155DFC] focus:outline-none"
-              disabled={loading}
-            >
-              {showPassword ? (
-                <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
-                  <line x1="1" y1="1" x2="23" y2="23"></line>
-                </svg>
-              ) : (
-                <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path>
-                  <circle cx="12" cy="12" r="3"></circle>
-                </svg>
-              )}
-            </button>
-          }
-        />
+        <div className="flex flex-col">
+          <Input
+            label="Contraseña"
+            id="password"
+            type={showPassword ? "text" : "password"}
+            placeholder="********"
+            className={showPassword ? "placeholder-gray-400" : "placeholder-gray-300 text-lg tracking-widest"}
+            value={formData.password} 
+            disabled={loading} 
+            onChange={(e: ChangeEvent<HTMLInputElement>) => {
+              setLocalError(false);
+              setFormData({ ...formData, password: e.target.value });
+            }}
+            suffix={
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="text-[#1E4E9D] hover:text-[#155DFC] focus:outline-none"
+                disabled={loading}
+              >
+                {showPassword ? (
+                  <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+                    <line x1="1" y1="1" x2="23" y2="23"></line>
+                  </svg>
+                ) : (
+                  <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path>
+                    <circle cx="12" cy="12" r="3"></circle>
+                  </svg>
+                )}
+              </button>
+            }
+          />
+          {localError && <LoginErrorMessage />}
+        </div>
 
 
         <div className="text-center mt-2">
