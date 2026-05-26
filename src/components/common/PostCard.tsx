@@ -104,8 +104,8 @@ export const PostCard = ({ post, hideAuthor = false }: PostCardProps) => {
   return (
     <article className="w-full rounded-[22px] border border-gray-100 bg-white px-4 py-4 shadow-[0_10px_30px_rgba(15,23,42,0.08)] sm:px-5 sm:py-5 md:h-full">
       {/* Encabezado del autor */}
-      {!hideAuthor && (
-        <header className="flex items-start gap-3">
+      <header className="flex items-start gap-3">
+        {!hideAuthor && (
           <button
             type="button"
             onClick={handleOpenAuthorProfile}
@@ -115,10 +115,12 @@ export const PostCard = ({ post, hideAuthor = false }: PostCardProps) => {
           >
             <AuthorIcon size={18} strokeWidth={2.3} />
           </button>
+        )}
 
-          <div className="min-w-0 flex-1">
-            <div className="flex items-start justify-between gap-2">
-              <div className="min-w-0">
+        <div className="min-w-0 flex-1">
+          <div className="flex items-start justify-between gap-2">
+            <div className="min-w-0">
+              {!hideAuthor && (
                 <div className="flex items-center gap-1">
                   <button
                     type="button"
@@ -136,24 +138,24 @@ export const PostCard = ({ post, hideAuthor = false }: PostCardProps) => {
                     />
                   )}
                 </div>
-                <time
-                  dateTime={post.publishedAt}
-                  title={formattedDate}
-                  className="mt-0.5 block text-[9px] font-bold uppercase leading-3 text-gray-400 sm:text-[10px]"
-                >
-                  {relativeTime}
-                </time>
-              </div>
-
-              <span
-                className={`shrink-0 rounded-full px-2 py-1 text-[8px] font-black tracking-wide sm:text-[9px] ${categoryStyles[post.category]}`}
+              )}
+              <time
+                dateTime={post.publishedAt}
+                title={formattedDate}
+                className={`${hideAuthor ? '' : 'mt-0.5 '}block text-[9px] font-bold uppercase leading-3 text-gray-400 sm:text-[10px]`}
               >
-                {categoryLabels[post.category]}
-              </span>
+                {relativeTime}
+              </time>
             </div>
+
+            <span
+              className={`shrink-0 rounded-full px-2 py-1 text-[8px] font-black tracking-wide sm:text-[9px] ${categoryStyles[post.category]}`}
+            >
+              {categoryLabels[post.category]}
+            </span>
           </div>
-        </header>
-      )}
+        </div>
+      </header>
 
       {/* Texto principal del post */}
       <div className="mt-4 w-full break-words">

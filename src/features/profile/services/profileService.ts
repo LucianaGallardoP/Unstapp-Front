@@ -1,6 +1,7 @@
 import { apiClient } from '../../../services/apiClient';
 import type { ProfileResponseDTO, ProfileStatsDTO } from '../types/profile.dtos';
 import type { Post } from '../../feed/types/post.types';
+import { postService } from '../../feed/services/postService';
 
 type ApiRecord = Record<string, unknown>;
 
@@ -74,42 +75,7 @@ export const MOCK_PROFILE_STATS: ProfileStatsDTO = {
   following: 850,
 };
 
-// 2. Mock de las publicaciones del Perfil
-export const MOCK_PROFILE_POSTS: Post[] = [
-  {
-    id: '1',
-    author: { id: 1, name: 'María Gonzales', role: 'Alumno' },
-    category: 'alumno',
-    audience: 'general',
-    publishedAt: new Date().toISOString(),
-    content: 'AVISO IMPORTANTE: El profesor de Álgebra II no asistirá el día de hoy. Por otro lado, la clase de Testeo Automatizado se dictará en el Laboratorio 1. Por favor, difundir.',
-    likes: 12,
-    commentsCount: 23,
-    comments: [],
-  },
-  {
-    id: '2',
-    author: { id: 1, name: 'María Gonzales', role: 'Alumno' },
-    category: 'alumno',
-    audience: 'general',
-    publishedAt: new Date(Date.now() - 5 * 60000).toISOString(),
-    content: 'Recordatorio: Las inscripciones para las mesas de exámenes finales de Ingeniería de Software cierran este viernes. ¡No olviden anotarse!',
-    likes: 15,
-    commentsCount: 2,
-    comments: [],
-  },
-  {
-    id: '3',
-    author: { id: 1, name: 'María Gonzales', role: 'Alumno' },
-    category: 'alumno',
-    audience: 'general',
-    publishedAt: new Date(Date.now() - 32 * 60000).toISOString(),
-    content: '¿Alguien tiene el apunte de Derecho Civil II del profesor Méndez?',
-    likes: 0,
-    commentsCount: 1,
-    comments: [],
-  }
-];
+
 
 const mapPostFromApi = (apiPost: unknown, fallbackAuthor: { id: number; name: string }): Post => {
   const post = asRecord(apiPost);
@@ -177,7 +143,7 @@ const mapProfileFromApi = (
       followers: asNumber(data.followersCount ?? user.followersCount ?? data.followers, Number(MOCK_PROFILE_STATS.followers)),
       following: asNumber(data.followingCount ?? user.followingCount ?? data.following, Number(MOCK_PROFILE_STATS.following)),
     },
-    posts: Array.isArray(posts) ? posts.map(p => mapPostFromApi(p, { id: fallbackProfile.userId, name: fallbackProfile.fullName })) : MOCK_PROFILE_POSTS,
+    posts: Array.isArray(posts) ? posts.map(p => mapPostFromApi(p, { id: fallbackProfile.userId, name: fallbackProfile.fullName })) : [],
   };
 };
 
@@ -188,7 +154,20 @@ export const profileService = {
     });
     const fallbackProfile = isOwnProfile ? MOCK_PROFILE_DETAILS : MOCK_PUBLIC_PROFILE_DETAILS;
 
-    return mapProfileFromApi(response.data, fallbackProfile, isOwnProfile);
+    const mappedData = mapProfileFromApi(response.data, fallbackProfile, isOwnProfile);
+
+    // Si el endpoint de perfil no devolvió posts, los traemos del feed general y los filtramos
+    if (!mappedData.posts || mappedData.posts.length === 0) {
+      try {
+        const allPosts = await postService.getAll();
+        // Filtramos asegurándonos de convertir ambos IDs a string para evitar falsos negativos
+        mappedData.posts = allPosts.filter(post => String(post.author.id) === String(profileId));
+      } catch (err) {
+        console.warn('No se pudieron obtener los posts del feed general:', err);
+      }
+    }
+
+    return mappedData;
   },
 
   follow: async (profileId: number | string) => {

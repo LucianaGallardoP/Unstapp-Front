@@ -4,8 +4,7 @@ import {
   type ProfileViewData,
   MOCK_PROFILE_DETAILS,
   MOCK_PUBLIC_PROFILE_DETAILS,
-  MOCK_PROFILE_STATS,
-  MOCK_PROFILE_POSTS
+  MOCK_PROFILE_STATS
 } from '../services/profileService';
 
 export const useProfile = (userId: string | undefined) => {
@@ -16,7 +15,7 @@ export const useProfile = (userId: string | undefined) => {
   const [profileData, setProfileData] = useState<ProfileViewData>({
     profile: fallbackProfile,
     stats: MOCK_PROFILE_STATS,
-    posts: MOCK_PROFILE_POSTS,
+    posts: [],
   });
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -27,7 +26,7 @@ export const useProfile = (userId: string | undefined) => {
     setProfileData({
       profile: fallbackProfile,
       stats: MOCK_PROFILE_STATS,
-      posts: MOCK_PROFILE_POSTS,
+      posts: [],
     });
 
     if (!profileId) return;
