@@ -93,7 +93,7 @@ export const LoginForm = () => {
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="text-[#1E4E9D] hover:text-[#155DFC] focus:outline-none"
+                className="text-[#1E4E9D] hover:text-[#122b54] focus:outline-none"
                 disabled={loading}
               >
                 {showPassword ? (
@@ -121,7 +121,7 @@ export const LoginForm = () => {
               e.preventDefault();
               navigate('/forgot-password'); // Ruta que no existe, activará el 404
             }}
-            className="text-[#1E4E9D] font-medium text-[15px] hover:underline transition-all"
+            className="text-[#1E4E9D] font-medium text-[15px] hover:text-[#122b54] hover:underline transition-all"
           >
             ¿Olvidaste tu contraseña?
           </a>
@@ -131,7 +131,7 @@ export const LoginForm = () => {
         <Button 
           type="submit" 
           fullWidth 
-          className="mt-2" 
+          className="mt-2 hover:bg-[#122b54]" 
           disabled={loading || !formData.dni || !formData.password}
         > 
           {loading ? (

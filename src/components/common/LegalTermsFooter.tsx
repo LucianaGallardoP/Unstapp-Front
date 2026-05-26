@@ -4,7 +4,7 @@ export const LegalTermsFooter = () => {
       <a 
         href="#" 
         onClick={(e) => e.preventDefault()} 
-        className="hover:text-gray-700 transition-colors"
+        className="hover:text-[#122b54] transition-colors"
       >
         Privacidad
       </a>
@@ -12,7 +12,7 @@ export const LegalTermsFooter = () => {
       <a 
         href="#" 
         onClick={(e) => e.preventDefault()} 
-        className="hover:text-gray-700 transition-colors"
+        className="hover:text-[#122b54] transition-colors"
       >
         Términos y Condiciones
       </a>
@@ -20,7 +20,7 @@ export const LegalTermsFooter = () => {
       <a 
         href="#" 
         onClick={(e) => e.preventDefault()} 
-        className="hover:text-gray-700 transition-colors"
+        className="hover:text-[#122b54] transition-colors"
       >
         Soporte
       </a>
