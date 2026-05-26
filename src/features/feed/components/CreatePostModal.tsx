@@ -59,9 +59,8 @@ export const CreatePostModal = ({ isOpen, onClose, onPublish }: CreatePostModalP
     setPublishError(null);
   };
 
-  // Envia la publicacion y limpia el formulario.
   const handleSubmit = async () => {
-    if (!trimmedContent || isPublishing) {
+    if ((!trimmedContent && !selectedFile) || isPublishing) {
       return;
     }
 
@@ -182,7 +181,7 @@ export const CreatePostModal = ({ isOpen, onClose, onPublish }: CreatePostModalP
           <button
             type="button"
             onClick={handleSubmit}
-            disabled={!trimmedContent || isPublishing}
+            disabled={(!trimmedContent && !selectedFile) || isPublishing}
             className="flex h-9 min-w-0 flex-1 items-center justify-center gap-2 rounded-full bg-[#1E4E9D] px-5 text-[13px] font-black uppercase text-white transition-colors hover:bg-[#155DFC] disabled:cursor-not-allowed disabled:bg-gray-200 disabled:text-gray-400 min-[360px]:max-w-[174px] md:h-11 md:max-w-[240px] md:text-[14px]"
           >
             {isPublishing && <LoaderCircle size={16} className="animate-spin" />}
