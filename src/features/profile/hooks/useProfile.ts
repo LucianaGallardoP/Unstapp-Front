@@ -57,7 +57,8 @@ const getNumericStat = (value: string | number) => {
 };
 
 export const useProfile = (userId: string | undefined) => {
-  const isPublicProfile = Boolean(userId);
+  const currentUserId = getCurrentUserId();
+  const isPublicProfile = Boolean(userId) && String(userId) !== String(currentUserId);
   const fallbackProfile = isPublicProfile ? MOCK_PUBLIC_PROFILE_DETAILS : MOCK_PROFILE_DETAILS;
 
   const [profileData, setProfileData] = useState<ProfileViewData>({
@@ -69,7 +70,7 @@ export const useProfile = (userId: string | undefined) => {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const profileId = userId ?? getCurrentUserId();
+    const profileId = userId ?? currentUserId;
 
     setProfileData({
       profile: fallbackProfile,
