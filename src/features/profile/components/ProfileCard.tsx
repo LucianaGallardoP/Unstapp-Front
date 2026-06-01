@@ -26,6 +26,7 @@ interface ProfileCardProps {
   // 2. Mantenemos stats separado temporalmente hasta que el backend lo incluya
   stats?: ProfileStatsDTO;
   onFollowToggle?: (nextIsFollowing: boolean) => Promise<void>;
+  onEditProfile?: () => void;
 }
 
 export const ProfileCard = ({
@@ -36,6 +37,7 @@ export const ProfileCard = ({
     following: 0,
   },
   onFollowToggle,
+  onEditProfile,
 }: ProfileCardProps) => {
   // Controla el estado visual inmediato del seguimiento.
   const [isFollowing, setIsFollowing] = useState(profile.isFollowing);
@@ -119,6 +121,7 @@ export const ProfileCard = ({
         {profile.isOwnProfile ? (
           <button 
             type="button"
+            onClick={onEditProfile}
             className="mb-1 h-8 rounded-lg bg-[#F0F2F5] px-4 text-[12px] font-bold text-gray-900 transition-colors hover:bg-[#E4E6E9] sm:h-9 sm:px-5 sm:text-[13px]"
           >
             Editar Perfil

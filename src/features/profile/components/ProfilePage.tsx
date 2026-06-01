@@ -1,21 +1,25 @@
 import { TopBar } from '../../../components/common/TopBar';
 import { BottomNavigation } from '../../../components/common/BottomNavigation';
 import { ProfileCard } from './ProfileCard';
+import { EditProfileModal } from './EditProfileModal';
 import { PostCard } from '../../../components/common/PostCard';
 import { useParams } from 'react-router-dom';
 import { useProfile } from '../hooks/useProfile';
+import { useState } from 'react';
 
 export const ProfilePage = () => {
   const { userId } = useParams<{ userId?: string }>();
-  
-  // Extraemos toda la lógica pesada a nuestro Hook
-  const { 
-    profileData, 
-    isLoading, 
-    error, 
-    isPublicProfile, 
-    handleFollowToggle 
+  const {
+    profileData,
+    removingPostIds,
+    isLoading,
+    error,
+    isPublicProfile,
+    handleFollowToggle,
+    deletePost,
+    updateProfile,
   } = useProfile(userId);
+  const [isEditProfileModalOpen, setIsEditProfileModalOpen] = useState(false);
 
   const postsTitle = isPublicProfile ? 'Publicaciones' : 'Mis Publicaciones';
 
@@ -40,24 +44,35 @@ export const ProfilePage = () => {
           profile={profileData.profile}
           stats={profileData.stats}
           onFollowToggle={isPublicProfile ? handleFollowToggle : undefined}
+          onEditProfile={!isPublicProfile ? () => setIsEditProfileModalOpen(true) : undefined}
         />
-        
+
         <div className="mx-auto mt-6 flex w-full max-w-[430px] flex-col gap-4 sm:max-w-[560px] md:max-w-[600px]">
           <h2 className="px-1 text-base font-black uppercase tracking-tight text-black">
             {postsTitle}
           </h2>
-          
+
           <div className="flex flex-col">
             {profileData.posts.map((post) => (
-              <PostCard 
-                key={post.id} 
-                post={post} 
-                hideAuthor={true} // <-- Corrección visual clave aplicada
+              <PostCard
+                key={post.id}
+                post={post}
+                hideAuthor={true}
+                canDelete={!isPublicProfile}
+                isRemoving={removingPostIds.has(String(post.id))}
+                onDelete={deletePost}
               />
             ))}
           </div>
         </div>
       </main>
+
+      <EditProfileModal
+        isOpen={isEditProfileModalOpen}
+        profile={profileData.profile}
+        onClose={() => setIsEditProfileModalOpen(false)}
+        onSave={updateProfile}
+      />
 
       <BottomNavigation activeTab="perfil" />
     </div>

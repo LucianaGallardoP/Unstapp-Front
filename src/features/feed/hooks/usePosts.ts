@@ -5,6 +5,7 @@ import type { Post } from '../types/post.types';
 
 export const usePosts = () => {
   const [posts, setPosts] = useState<Post[]>([]);
+  const [removingPostIds, setRemovingPostIds] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -39,11 +40,28 @@ export const usePosts = () => {
     setPosts((currentPosts) => [createdPost, ...currentPosts]);
   };
 
+  const deletePost = async (postId: number | string) => {
+    await postService.remove(postId);
+
+    // Anima la salida antes de retirar la card de la lista.
+    setRemovingPostIds((currentIds) => new Set(currentIds).add(String(postId)));
+    window.setTimeout(() => {
+      setPosts((currentPosts) => currentPosts.filter((post) => String(post.id) !== String(postId)));
+      setRemovingPostIds((currentIds) => {
+        const nextIds = new Set(currentIds);
+        nextIds.delete(String(postId));
+        return nextIds;
+      });
+    }, 220);
+  };
+
   return {
     posts,
+    removingPostIds,
     loading,
     error,
     createPost,
+    deletePost,
     refreshPosts,
   };
 };

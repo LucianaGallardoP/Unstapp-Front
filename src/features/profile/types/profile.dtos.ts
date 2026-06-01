@@ -18,3 +18,9 @@ export interface ProfileStatsDTO {
     followers: string | number;
     following: string | number;
 }
+
+export interface ProfileEditValues {
+    avatarUrl?: string;
+    coverUrl?: string;
+    bio: string;
+}

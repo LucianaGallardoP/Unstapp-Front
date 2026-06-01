@@ -6,7 +6,9 @@ import {
   GraduationCap,
   Heart,
   MessageCircle,
+  MoreVertical,
   Send,
+  Trash2,
   UserRound,
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
@@ -19,6 +21,9 @@ import { CommentItem } from './CommentItem';
 interface PostCardProps {
   post: Post;
   hideAuthor?: boolean;
+  canDelete?: boolean;
+  isRemoving?: boolean;
+  onDelete?: (postId: number | string) => Promise<void>;
 }
 
 const categoryStyles: Record<PostCategory, string> = {
@@ -49,7 +54,15 @@ const categoryIcons = {
   alumno: UserRound,
 };
 
-export const PostCard = ({ post, hideAuthor = false }: PostCardProps) => {
+const getCurrentUserId = () => localStorage.getItem('unstapp_user_id');
+
+export const PostCard = ({
+  post,
+  hideAuthor = false,
+  canDelete,
+  isRemoving = false,
+  onDelete,
+}: PostCardProps) => {
   const navigate = useNavigate();
   // Estados de interaccion local.
   const {
@@ -74,6 +87,10 @@ export const PostCard = ({ post, hideAuthor = false }: PostCardProps) => {
     initialComments: post.comments,
   });
   const [currentDate, setCurrentDate] = useState(() => new Date());
+  const [isActionsOpen, setIsActionsOpen] = useState(false);
+  const [isConfirmOpen, setIsConfirmOpen] = useState(false);
+  const [isDeleteLoading, setIsDeleteLoading] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
 
   // Refresca los horarios relativos.
   useEffect(() => {
@@ -94,6 +111,10 @@ export const PostCard = ({ post, hideAuthor = false }: PostCardProps) => {
   const commentsCount = comments.length || post.commentsCount || 0;
   const canSendComment = isAuthenticated && newComment.trim().length > 0 && !commentLoading;
   const canOpenAuthorProfile = Boolean(post.author.id);
+  const currentUserId = getCurrentUserId();
+  const canShowDeleteAction =
+    Boolean(onDelete) &&
+    (canDelete ?? Boolean(currentUserId && post.author.id && String(currentUserId) === String(post.author.id)));
 
   const handleOpenAuthorProfile = () => {
     if (!post.author.id) return;
@@ -101,8 +122,29 @@ export const PostCard = ({ post, hideAuthor = false }: PostCardProps) => {
     navigate(`/perfil/${post.author.id}`);
   };
 
+  const handleDeletePost = async () => {
+    if (!onDelete) return;
+
+    setIsDeleteLoading(true);
+    setDeleteError(null);
+
+    try {
+      await onDelete(post.id);
+      setIsConfirmOpen(false);
+      setIsActionsOpen(false);
+    } catch {
+      setDeleteError('No se pudo eliminar la publicacion.');
+    } finally {
+      setIsDeleteLoading(false);
+    }
+  };
+
   return (
-    <article className="w-full rounded-[22px] border border-gray-100 bg-white px-4 py-4 shadow-[0_10px_30px_rgba(15,23,42,0.08)] sm:px-5 sm:py-5 md:h-full">
+    <article
+      className={`w-full rounded-[22px] border border-gray-100 bg-white px-4 py-4 shadow-[0_10px_30px_rgba(15,23,42,0.08)] transition-all duration-200 sm:px-5 sm:py-5 md:h-full ${
+        isRemoving ? 'scale-[0.98] opacity-0' : 'scale-100 opacity-100'
+      }`}
+    >
       {/* Encabezado del autor */}
       <header className="flex items-start gap-3">
         {!hideAuthor && (
@@ -148,11 +190,43 @@ export const PostCard = ({ post, hideAuthor = false }: PostCardProps) => {
               </time>
             </div>
 
-            <span
-              className={`shrink-0 rounded-full px-2 py-1 text-[8px] font-black tracking-wide sm:text-[9px] ${categoryStyles[post.category]}`}
-            >
-              {categoryLabels[post.category]}
-            </span>
+            <div className="relative flex shrink-0 items-start gap-1">
+              <span
+                className={`rounded-full px-2 py-1 text-[8px] font-black tracking-wide sm:text-[9px] ${categoryStyles[post.category]}`}
+              >
+                {categoryLabels[post.category]}
+              </span>
+
+              {canShowDeleteAction && (
+                <div className="relative">
+                  <button
+                    type="button"
+                    onClick={() => setIsActionsOpen((currentValue) => !currentValue)}
+                    className="-mr-1 -mt-1 flex h-7 w-7 items-center justify-center rounded-full text-gray-400 transition-colors hover:bg-gray-100 hover:text-[#1F2937]"
+                    aria-label="Abrir menu de publicacion"
+                    aria-expanded={isActionsOpen}
+                  >
+                    <MoreVertical size={16} />
+                  </button>
+
+                  {isActionsOpen && (
+                    <div className="absolute right-0 top-8 z-20 min-w-44 rounded-xl border border-gray-100 bg-white p-1 shadow-[0_12px_28px_rgba(15,23,42,0.16)]">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIsConfirmOpen(true);
+                          setIsActionsOpen(false);
+                        }}
+                        className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-[12px] font-bold text-[#E7000B] transition-colors hover:bg-[#E7000B]/10"
+                      >
+                        <Trash2 size={14} />
+                        Eliminar Publicación
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </header>
@@ -226,6 +300,10 @@ export const PostCard = ({ post, hideAuthor = false }: PostCardProps) => {
           <p className="mt-2 text-[11px] font-semibold text-[#E7000B]">{likeError}</p>
         )}
 
+        {deleteError && (
+          <p className="mt-2 text-[11px] font-semibold text-[#E7000B]">{deleteError}</p>
+        )}
+
         {/* Hilo de comentarios */}
         {commentsOpen && (
           <section className="mt-3 rounded-2xl bg-gray-50 p-3">
@@ -272,6 +350,38 @@ export const PostCard = ({ post, hideAuthor = false }: PostCardProps) => {
           </section>
         )}
       </footer>
+
+      {isConfirmOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/35 px-4">
+          <section className="w-full max-w-[340px] rounded-2xl bg-white p-5 shadow-[0_18px_45px_rgba(15,23,42,0.28)]">
+            <h3 className="text-[16px] font-black text-[#1F2937]">
+              Eliminar publicación
+            </h3>
+            <p className="mt-2 text-[13px] leading-5 text-gray-600">
+              ¿Estás seguro de eliminar esta publicación?
+            </p>
+
+            <div className="mt-5 flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setIsConfirmOpen(false)}
+                disabled={isDeleteLoading}
+                className="rounded-xl px-4 py-2 text-[12px] font-bold text-gray-500 transition-colors hover:bg-gray-100 disabled:opacity-60"
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                onClick={handleDeletePost}
+                disabled={isDeleteLoading}
+                className="rounded-xl bg-[#E7000B] px-4 py-2 text-[12px] font-bold text-white transition-colors hover:bg-[#b80009] disabled:cursor-wait disabled:opacity-70"
+              >
+                {isDeleteLoading ? 'Eliminando...' : 'Eliminar'}
+              </button>
+            </div>
+          </section>
+        </div>
+      )}
     </article>
   );
 };

@@ -6,6 +6,8 @@ import {
   MOCK_PUBLIC_PROFILE_DETAILS,
   MOCK_PROFILE_STATS,
 } from '../services/profileService';
+import { postService } from '../../feed/services/postService';
+import type { ProfileEditValues } from '../types/profile.dtos';
 
 const decodeTokenPayload = (token: string) => {
   try {
@@ -66,6 +68,7 @@ export const useProfile = (userId: string | undefined) => {
     stats: MOCK_PROFILE_STATS,
     posts: [],
   });
+  const [removingPostIds, setRemovingPostIds] = useState<Set<string>>(new Set());
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -143,11 +146,49 @@ export const useProfile = (userId: string | undefined) => {
     }
   };
 
+  const deletePost = async (postId: number | string) => {
+    await postService.remove(postId);
+
+    // Anima la salida antes de retirar la card del perfil.
+    setRemovingPostIds((currentIds) => new Set(currentIds).add(String(postId)));
+    window.setTimeout(() => {
+      setProfileData((prev) => ({
+        ...prev,
+        stats: {
+          ...prev.stats,
+          posts: Math.max(getNumericStat(prev.stats.posts) - 1, 0),
+        },
+        posts: prev.posts.filter((post) => String(post.id) !== String(postId)),
+      }));
+      setRemovingPostIds((currentIds) => {
+        const nextIds = new Set(currentIds);
+        nextIds.delete(String(postId));
+        return nextIds;
+      });
+    }, 220);
+  };
+
+  const updateProfile = async (values: ProfileEditValues) => {
+    // Hasta que exista endpoint, persistimos el cambio en el estado local.
+    setProfileData((prev) => ({
+      ...prev,
+      profile: {
+        ...prev.profile,
+        avatarUrl: values.avatarUrl,
+        coverUrl: values.coverUrl,
+        bio: values.bio,
+      },
+    }));
+  };
+
   return {
     profileData,
+    removingPostIds,
     isLoading,
     error,
     isPublicProfile,
     handleFollowToggle,
+    deletePost,
+    updateProfile,
   };
 };

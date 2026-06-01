@@ -199,4 +199,10 @@ export const postService = {
 
     return mapPostFromApi(response.data, content);
   },
+
+  remove: async (postId: number | string) => {
+    await apiClient.delete(`/posts/${postId}`, {
+      headers: getAuthHeaders(),
+    });
+  },
 };

@@ -27,7 +27,7 @@ export const FeedPage = () => {
   const [activeTab, setActiveTab] = useState<TabType>('feed');
   const [activeFilter, setActiveFilter] = useState<FeedFilter>('todo');
   const [isCreatePostModalOpen, setIsCreatePostModalOpen] = useState(false);
-  const { posts, loading, error, createPost, refreshPosts } = usePosts();
+  const { posts, removingPostIds, loading, error, createPost, deletePost, refreshPosts } = usePosts();
 
   const handleFilterClick = (filterId: FeedFilter) => {
     setActiveFilter(filterId);
@@ -93,7 +93,12 @@ export const FeedPage = () => {
         {/* Lista de publicaciones */}
         <section className="flex flex-col gap-4 lg:gap-5">
           {visiblePosts.map((post) => (
-            <PostCard key={post.id} post={post} />
+            <PostCard
+              key={post.id}
+              post={post}
+              isRemoving={removingPostIds.has(String(post.id))}
+              onDelete={deletePost}
+            />
           ))}
         </section>
 
