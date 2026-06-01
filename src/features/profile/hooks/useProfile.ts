@@ -155,14 +155,18 @@ export const useProfile = (userId: string | undefined) => {
     // Anima la salida antes de retirar la card del perfil.
     setRemovingPostIds((currentIds) => new Set(currentIds).add(String(postId)));
     window.setTimeout(() => {
-      setProfileData((prev) => ({
-        ...prev,
-        stats: {
-          ...prev.stats,
-          posts: Math.max(getNumericStat(prev.stats.posts) - 1, 0),
-        },
-        posts: prev.posts.filter((post) => String(post.id) !== String(postId)),
-      }));
+      setProfileData((prev) => {
+        const nextPosts = prev.posts.filter((post) => String(post.id) !== String(postId));
+
+        return {
+          ...prev,
+          stats: {
+            ...prev.stats,
+            posts: nextPosts.length,
+          },
+          posts: nextPosts,
+        };
+      });
       setRemovingPostIds((currentIds) => {
         const nextIds = new Set(currentIds);
         nextIds.delete(String(postId));

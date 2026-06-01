@@ -192,6 +192,9 @@ export const profileService = {
       }
     }
 
+    // El contador debe coincidir con las publicaciones visibles del perfil.
+    mappedData.stats.posts = mappedData.posts.length;
+
     return mappedData;
   },
 
