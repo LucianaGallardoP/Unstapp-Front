@@ -12,6 +12,7 @@ export const ProfilePage = () => {
   const {
     profileData,
     removingPostIds,
+    hasLoadedProfile,
     isLoading,
     error,
     isPublicProfile,
@@ -40,39 +41,45 @@ export const ProfilePage = () => {
           </div>
         )}
 
-        <ProfileCard
-          profile={profileData.profile}
-          stats={profileData.stats}
-          onFollowToggle={isPublicProfile ? handleFollowToggle : undefined}
-          onEditProfile={!isPublicProfile ? () => setIsEditProfileModalOpen(true) : undefined}
-        />
+        {hasLoadedProfile && (
+          <ProfileCard
+            profile={profileData.profile}
+            stats={profileData.stats}
+            onFollowToggle={isPublicProfile ? handleFollowToggle : undefined}
+            onEditProfile={!isPublicProfile ? () => setIsEditProfileModalOpen(true) : undefined}
+          />
+        )}
 
-        <div className="mx-auto mt-6 flex w-full max-w-[430px] flex-col gap-4 sm:max-w-[560px] md:max-w-[600px]">
-          <h2 className="px-1 text-base font-black uppercase tracking-tight text-black">
-            {postsTitle}
-          </h2>
+        {hasLoadedProfile && (
+          <div className="mx-auto mt-6 flex w-full max-w-[430px] flex-col gap-4 sm:max-w-[560px] md:max-w-[600px]">
+            <h2 className="px-1 text-base font-black uppercase tracking-tight text-black">
+              {postsTitle}
+            </h2>
 
-          <div className="flex flex-col">
-            {profileData.posts.map((post) => (
-              <PostCard
-                key={post.id}
-                post={post}
-                hideAuthor={true}
-                canDelete={!isPublicProfile}
-                isRemoving={removingPostIds.has(String(post.id))}
-                onDelete={deletePost}
-              />
-            ))}
+            <div className="flex flex-col">
+              {profileData.posts.map((post) => (
+                <PostCard
+                  key={post.id}
+                  post={post}
+                  hideAuthor={true}
+                  canDelete={!isPublicProfile}
+                  isRemoving={removingPostIds.has(String(post.id))}
+                  onDelete={deletePost}
+                />
+              ))}
+            </div>
           </div>
-        </div>
+        )}
       </main>
 
-      <EditProfileModal
-        isOpen={isEditProfileModalOpen}
-        profile={profileData.profile}
-        onClose={() => setIsEditProfileModalOpen(false)}
-        onSave={updateProfile}
-      />
+      {hasLoadedProfile && (
+        <EditProfileModal
+          isOpen={isEditProfileModalOpen}
+          profile={profileData.profile}
+          onClose={() => setIsEditProfileModalOpen(false)}
+          onSave={updateProfile}
+        />
+      )}
 
       <BottomNavigation activeTab="perfil" />
     </div>

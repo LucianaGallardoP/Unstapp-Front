@@ -69,6 +69,7 @@ export const useProfile = (userId: string | undefined) => {
     posts: [],
   });
   const [removingPostIds, setRemovingPostIds] = useState<Set<string>>(new Set());
+  const [hasLoadedProfile, setHasLoadedProfile] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -80,6 +81,7 @@ export const useProfile = (userId: string | undefined) => {
       stats: MOCK_PROFILE_STATS,
       posts: [],
     });
+    setHasLoadedProfile(false);
 
     if (!profileId) {
       setError('No se pudo identificar el usuario autenticado.');
@@ -98,6 +100,7 @@ export const useProfile = (userId: string | undefined) => {
 
         if (isMounted) {
           setProfileData(response);
+          setHasLoadedProfile(true);
         }
       } catch {
         if (isMounted) {
@@ -184,6 +187,7 @@ export const useProfile = (userId: string | undefined) => {
   return {
     profileData,
     removingPostIds,
+    hasLoadedProfile,
     isLoading,
     error,
     isPublicProfile,
