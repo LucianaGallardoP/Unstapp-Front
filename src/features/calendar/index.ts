@@ -1,1 +1,1 @@
-// index.ts
+export { CalendarPage } from './components/CalendarPage';
