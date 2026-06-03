@@ -73,18 +73,21 @@ export const PostCard = ({
     isAuthenticated,
     commentsOpen,
     comments,
+    commentsCount,
     newComment,
     commentLoading,
     commentError,
     setNewComment,
     handleLike,
     handleAddComment,
+    handleDeleteComment,
     toggleComments,
   } = usePostInteractions({
     postId: post.id,
     initialLikes: post.likes,
     initialLiked: Boolean(post.likedByCurrentUser),
     initialComments: post.comments,
+    initialCommentsCount: post.commentsCount,
   });
   const [currentDate, setCurrentDate] = useState(() => new Date());
   const [isActionsOpen, setIsActionsOpen] = useState(false);
@@ -108,7 +111,6 @@ export const PostCard = ({
   }).format(new Date(post.publishedAt));
   const relativeTime = formatRelativeTime(post.publishedAt, currentDate);
   const AuthorIcon = categoryIcons[post.category];
-  const commentsCount = comments.length || post.commentsCount || 0;
   const canSendComment = isAuthenticated && newComment.trim().length > 0 && !commentLoading;
   const canOpenAuthorProfile = Boolean(post.author.id);
   const currentUserId = getCurrentUserId();
@@ -318,6 +320,7 @@ export const PostCard = ({
                     comment={comment}
                     currentDate={currentDate}
                     canDelete={Boolean(isCommentAuthor || isPostAuthor)}
+                    onDelete={handleDeleteComment}
                   />
                 );
               })}

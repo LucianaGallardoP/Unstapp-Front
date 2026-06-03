@@ -8,6 +8,7 @@ interface UsePostInteractionsParams {
   initialLikes: number;
   initialLiked: boolean;
   initialComments: PostComment[];
+  initialCommentsCount?: number;
 }
 
 // Maneja likes y comentarios de una publicacion.
@@ -16,6 +17,7 @@ export const usePostInteractions = ({
   initialLikes,
   initialLiked,
   initialComments,
+  initialCommentsCount,
 }: UsePostInteractionsParams) => {
   const [liked, setLiked] = useState(initialLiked);
   const [likesCount, setLikesCount] = useState(initialLikes);
@@ -23,6 +25,9 @@ export const usePostInteractions = ({
   const [likeError, setLikeError] = useState<string | null>(null);
   const [commentsOpen, setCommentsOpen] = useState(false);
   const [comments, setComments] = useState(initialComments);
+  const [commentsCount, setCommentsCount] = useState(
+    initialCommentsCount ?? initialComments.length
+  );
   const [newComment, setNewComment] = useState('');
   const [commentLoading, setCommentLoading] = useState(false);
   const [commentError, setCommentError] = useState<string | null>(null);
@@ -39,6 +44,8 @@ export const usePostInteractions = ({
     setPrevInitialLikes(initialLikes);
     setLiked(initialLiked);
     setLikesCount(initialLikes);
+    setComments(initialComments);
+    setCommentsCount(initialCommentsCount ?? initialComments.length);
   }
 
   const handleLike = async () => {
@@ -91,6 +98,7 @@ export const usePostInteractions = ({
     };
 
     setComments((currentComments) => [...currentComments, optimisticComment]);
+    setCommentsCount((count) => count + 1);
     setNewComment('');
 
     try {
@@ -105,10 +113,33 @@ export const usePostInteractions = ({
       setComments((currentComments) =>
         currentComments.filter((comment) => comment.id !== optimisticComment.id),
       );
+      setCommentsCount((count) => Math.max(0, count - 1));
       setNewComment(trimmedComment);
       setCommentError('No se pudo publicar el comentario');
     } finally {
       setCommentLoading(false);
+    }
+  };
+
+  const handleDeleteComment = async (commentId: number | string) => {
+    const commentToDelete = comments.find((c) => c.id === commentId);
+    if (!commentToDelete) return;
+
+    setComments((current) => current.filter((c) => c.id !== commentId));
+    setCommentsCount((count) => Math.max(0, count - 1));
+
+    try {
+      console.warn(`TODO: Implementar llamado a la API para eliminar el comentario ${commentId} del post ${postId}`);
+      // await commentService.delete(postId, commentId);
+    } catch {
+      setComments((current) => {
+        const reverted = [...current, commentToDelete];
+        return reverted.sort(
+          (a, b) => new Date(a.publishedAt).getTime() - new Date(b.publishedAt).getTime()
+        );
+      });
+      setCommentsCount((count) => count + 1);
+      setCommentError('No se pudo eliminar el comentario');
     }
   };
 
@@ -124,12 +155,14 @@ export const usePostInteractions = ({
     isAuthenticated,
     commentsOpen,
     comments,
+    commentsCount,
     newComment,
     commentLoading,
     commentError,
     setNewComment,
     handleLike,
     handleAddComment,
+    handleDeleteComment,
     toggleComments,
   };
 };
