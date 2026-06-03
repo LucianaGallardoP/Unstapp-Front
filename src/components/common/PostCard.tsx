@@ -308,13 +308,19 @@ export const PostCard = ({
         {commentsOpen && (
           <section className="mt-3 rounded-2xl bg-gray-50 p-3">
             <div className="flex max-h-56 flex-col gap-3 overflow-y-auto pr-1">
-              {comments.map((comment) => (
-                <CommentItem
-                  key={comment.id}
-                  comment={comment}
-                  currentDate={currentDate}
-                />
-              ))}
+              {comments.map((comment) => {
+                const isCommentAuthor = currentUserId && comment.author.id && String(currentUserId) === String(comment.author.id);
+                const isPostAuthor = currentUserId && post.author.id && String(currentUserId) === String(post.author.id);
+
+                return (
+                  <CommentItem
+                    key={comment.id}
+                    comment={comment}
+                    currentDate={currentDate}
+                    canDelete={Boolean(isCommentAuthor || isPostAuthor)}
+                  />
+                );
+              })}
             </div>
 
             <div className="mt-3 flex gap-2">

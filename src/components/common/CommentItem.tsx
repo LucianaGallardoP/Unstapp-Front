@@ -16,6 +16,7 @@ interface CommentItemProps {
   comment: PostComment;
   currentDate: Date;
   onDelete?: (commentId: string | number) => void;
+  canDelete?: boolean;
 }
 
 const roleIconStyles: Record<PostAuthorRole, string> = {
@@ -32,7 +33,7 @@ const roleIcons = {
   Alumno: UserRound,
 };
 
-export const CommentItem = ({ comment, currentDate, onDelete }: CommentItemProps) => {
+export const CommentItem = ({ comment, currentDate, onDelete, canDelete = false }: CommentItemProps) => {
   const navigate = useNavigate();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [menuCoords, setMenuCoords] = useState<{ top: number; left: number } | null>(null);
@@ -132,38 +133,40 @@ export const CommentItem = ({ comment, currentDate, onDelete }: CommentItemProps
         </p>
       </div>
 
-      <div className="relative shrink-0">
-        <button
-          ref={buttonRef}
-          type="button"
-          onClick={toggleMenu}
-          className="flex h-6 w-6 items-center justify-center rounded-full text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600"
-          aria-label="Opciones del comentario"
-        >
-          <MoreVertical size={16} />
-        </button>
-
-        {isMenuOpen && menuCoords && createPortal(
-          <div
-            ref={menuRef}
-            className="absolute z-[9999] mt-1 w-32 overflow-hidden rounded-lg bg-white shadow-[0_4px_20px_-4px_rgba(0,0,0,0.1)] ring-1 ring-black/5"
-            style={{ top: menuCoords.top, left: menuCoords.left }}
+      {canDelete && (
+        <div className="relative shrink-0">
+          <button
+            ref={buttonRef}
+            type="button"
+            onClick={toggleMenu}
+            className="flex h-6 w-6 items-center justify-center rounded-full text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600"
+            aria-label="Opciones del comentario"
           >
-            <button
-              type="button"
-              onClick={() => {
-                if (onDelete) onDelete(comment.id);
-                setIsMenuOpen(false);
-              }}
-              className="flex w-full items-center gap-2 px-3 py-2.5 text-[13px] font-medium text-[#E7000B] transition-colors hover:bg-[#E7000B]/10"
+            <MoreVertical size={16} />
+          </button>
+
+          {isMenuOpen && menuCoords && createPortal(
+            <div
+              ref={menuRef}
+              className="absolute z-[9999] mt-1 w-32 overflow-hidden rounded-lg bg-white shadow-[0_4px_20px_-4px_rgba(0,0,0,0.1)] ring-1 ring-black/5"
+              style={{ top: menuCoords.top, left: menuCoords.left }}
             >
-              <Trash2 size={15} />
-              <span>Eliminar</span>
-            </button>
-          </div>,
-          document.body
-        )}
-      </div>
+              <button
+                type="button"
+                onClick={() => {
+                  if (onDelete) onDelete(comment.id);
+                  setIsMenuOpen(false);
+                }}
+                className="flex w-full items-center gap-2 px-3 py-2.5 text-[13px] font-medium text-[#E7000B] transition-colors hover:bg-[#E7000B]/10"
+              >
+                <Trash2 size={15} />
+                <span>Eliminar</span>
+              </button>
+            </div>,
+            document.body
+          )}
+        </div>
+      )}
     </article>
   );
 };
