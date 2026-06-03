@@ -1,8 +1,11 @@
+import { useState, useRef, useEffect } from 'react';
 import {
   BriefcaseBusiness,
   Coffee,
   GraduationCap,
   UserRound,
+  MoreVertical,
+  Trash2,
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import type { PostAuthorRole, PostComment } from '../../features/feed/types/post.types';
@@ -11,6 +14,7 @@ import { formatRelativeTime } from '../../features/feed/utils/formatRelativeTime
 interface CommentItemProps {
   comment: PostComment;
   currentDate: Date;
+  onDelete?: (commentId: string | number) => void;
 }
 
 const roleIconStyles: Record<PostAuthorRole, string> = {
@@ -27,10 +31,23 @@ const roleIcons = {
   Alumno: UserRound,
 };
 
-export const CommentItem = ({ comment, currentDate }: CommentItemProps) => {
+export const CommentItem = ({ comment, currentDate, onDelete }: CommentItemProps) => {
   const navigate = useNavigate();
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+
   const CommentAuthorIcon = roleIcons[comment.author.role];
   const canOpenAuthorProfile = Boolean(comment.author.id);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setIsMenuOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const handleOpenAuthorProfile = () => {
     if (!comment.author.id) return;
@@ -80,6 +97,33 @@ export const CommentItem = ({ comment, currentDate }: CommentItemProps) => {
         <p className="mt-1 text-[12px] leading-5 text-gray-600">
           {comment.content}
         </p>
+      </div>
+
+      <div className="relative shrink-0" ref={menuRef}>
+        <button
+          type="button"
+          onClick={() => setIsMenuOpen(!isMenuOpen)}
+          className="flex h-6 w-6 items-center justify-center rounded-full text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600"
+          aria-label="Opciones del comentario"
+        >
+          <MoreVertical size={16} />
+        </button>
+
+        {isMenuOpen && (
+          <div className="absolute right-0 top-full z-10 mt-1 w-32 overflow-hidden rounded-lg bg-white shadow-[0_4px_20px_-4px_rgba(0,0,0,0.1)] ring-1 ring-black/5">
+            <button
+              type="button"
+              onClick={() => {
+                if (onDelete) onDelete(comment.id);
+                setIsMenuOpen(false);
+              }}
+              className="flex w-full items-center gap-2 px-3 py-2.5 text-[13px] font-medium text-[#E7000B] transition-colors hover:bg-[#E7000B]/10"
+            >
+              <Trash2 size={15} />
+              <span>Eliminar</span>
+            </button>
+          </div>
+        )}
       </div>
     </article>
   );
