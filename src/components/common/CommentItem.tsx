@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import {
   BriefcaseBusiness,
   Coffee,
@@ -34,6 +35,8 @@ const roleIcons = {
 export const CommentItem = ({ comment, currentDate, onDelete }: CommentItemProps) => {
   const navigate = useNavigate();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [menuCoords, setMenuCoords] = useState<{ top: number; left: number } | null>(null);
+  const buttonRef = useRef<HTMLButtonElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
 
   const CommentAuthorIcon = roleIcons[comment.author.role];
@@ -41,13 +44,43 @@ export const CommentItem = ({ comment, currentDate, onDelete }: CommentItemProps
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+      const target = event.target as Node;
+      if (
+        menuRef.current && !menuRef.current.contains(target) &&
+        buttonRef.current && !buttonRef.current.contains(target)
+      ) {
         setIsMenuOpen(false);
       }
     };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
+
+    const handleScroll = (event: Event) => {
+      if (menuRef.current && menuRef.current.contains(event.target as Node)) return;
+      setIsMenuOpen(false);
+    };
+
+    if (isMenuOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+      window.addEventListener('scroll', handleScroll, true);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      window.removeEventListener('scroll', handleScroll, true);
+    };
+  }, [isMenuOpen]);
+
+  const toggleMenu = () => {
+    if (!isMenuOpen && buttonRef.current) {
+      const rect = buttonRef.current.getBoundingClientRect();
+      setMenuCoords({
+        top: rect.bottom + window.scrollY,
+        left: rect.right - 128 + window.scrollX, // 128px es el ancho w-32
+      });
+      setIsMenuOpen(true);
+    } else {
+      setIsMenuOpen(false);
+    }
+  };
 
   const handleOpenAuthorProfile = () => {
     if (!comment.author.id) return;
@@ -99,18 +132,23 @@ export const CommentItem = ({ comment, currentDate, onDelete }: CommentItemProps
         </p>
       </div>
 
-      <div className="relative shrink-0" ref={menuRef}>
+      <div className="relative shrink-0">
         <button
+          ref={buttonRef}
           type="button"
-          onClick={() => setIsMenuOpen(!isMenuOpen)}
+          onClick={toggleMenu}
           className="flex h-6 w-6 items-center justify-center rounded-full text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600"
           aria-label="Opciones del comentario"
         >
           <MoreVertical size={16} />
         </button>
 
-        {isMenuOpen && (
-          <div className="absolute right-0 top-full z-10 mt-1 w-32 overflow-hidden rounded-lg bg-white shadow-[0_4px_20px_-4px_rgba(0,0,0,0.1)] ring-1 ring-black/5">
+        {isMenuOpen && menuCoords && createPortal(
+          <div
+            ref={menuRef}
+            className="absolute z-[9999] mt-1 w-32 overflow-hidden rounded-lg bg-white shadow-[0_4px_20px_-4px_rgba(0,0,0,0.1)] ring-1 ring-black/5"
+            style={{ top: menuCoords.top, left: menuCoords.left }}
+          >
             <button
               type="button"
               onClick={() => {
@@ -122,7 +160,8 @@ export const CommentItem = ({ comment, currentDate, onDelete }: CommentItemProps
               <Trash2 size={15} />
               <span>Eliminar</span>
             </button>
-          </div>
+          </div>,
+          document.body
         )}
       </div>
     </article>
