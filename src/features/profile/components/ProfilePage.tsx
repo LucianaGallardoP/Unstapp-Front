@@ -61,7 +61,6 @@ export const ProfilePage = () => {
                 <PostCard
                   key={post.id}
                   post={post}
-                  hideAuthor={true}
                   canDelete={!isPublicProfile}
                   isRemoving={removingPostIds.has(String(post.id))}
                   onDelete={deletePost}

@@ -81,7 +81,7 @@ export const MOCK_PROFILE_STATS: ProfileStatsDTO = {
 
 
 
-const mapPostFromApi = (apiPost: unknown, fallbackAuthor: { id: number; name: string }): Post => {
+const mapPostFromApi = (apiPost: unknown, fallbackAuthor: { id: number; name: string; avatarUrl?: string }): Post => {
   const post = asRecord(apiPost);
 
   return {
@@ -90,6 +90,7 @@ const mapPostFromApi = (apiPost: unknown, fallbackAuthor: { id: number; name: st
       id: fallbackAuthor.id,
       name: fallbackAuthor.name,
       role: 'Alumno',
+      avatarUrl: fallbackAuthor.avatarUrl,
     },
     category: 'alumno',
     audience: 'general',
@@ -168,7 +169,13 @@ const mapProfileFromApi = (
       followers: asNumber(data.followersCount ?? user.followersCount ?? root.followersCount ?? rootUser.followersCount ?? data.followers, Number(MOCK_PROFILE_STATS.followers)),
       following: asNumber(data.followingCount ?? user.followingCount ?? root.followingCount ?? rootUser.followingCount ?? data.following, Number(MOCK_PROFILE_STATS.following)),
     },
-    posts: Array.isArray(posts) ? posts.map(p => mapPostFromApi(p, { id: fallbackProfile.userId, name: fallbackProfile.fullName })) : [],
+    posts: Array.isArray(posts)
+      ? posts.map(p => mapPostFromApi(p, {
+          id: fallbackProfile.userId,
+          name: fallbackProfile.fullName,
+          avatarUrl: fallbackProfile.avatarUrl,
+        }))
+      : [],
   };
 };
 
@@ -191,6 +198,17 @@ export const profileService = {
         console.warn('No se pudieron obtener los posts del feed general:', err);
       }
     }
+
+    // En el muro de perfil, cada card conserva el autor del perfil visible.
+    mappedData.posts = mappedData.posts.map((post) => ({
+      ...post,
+      author: {
+        ...post.author,
+        id: mappedData.profile.userId,
+        name: mappedData.profile.fullName,
+        avatarUrl: mappedData.profile.avatarUrl,
+      },
+    }));
 
     // El contador debe coincidir con las publicaciones visibles del perfil.
     mappedData.stats.posts = mappedData.posts.length;

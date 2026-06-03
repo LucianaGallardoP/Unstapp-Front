@@ -7,6 +7,7 @@ export interface PostAuthor {
   id?: number | string;
   name: string;
   role: PostAuthorRole;
+  avatarUrl?: string;
   verified?: boolean;
 }
 

@@ -10,6 +10,7 @@ import {
   Send,
   Trash2,
   UserRound,
+  X,
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -94,6 +95,7 @@ export const PostCard = ({
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
   const [isDeleteLoading, setIsDeleteLoading] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [selectedImageUrl, setSelectedImageUrl] = useState<string | null>(null);
 
   // Refresca los horarios relativos.
   useEffect(() => {
@@ -154,10 +156,18 @@ export const PostCard = ({
             type="button"
             onClick={handleOpenAuthorProfile}
             disabled={!canOpenAuthorProfile}
-            className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full sm:h-11 sm:w-11 ${authorIconStyles[post.category]}`}
+            className={`flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full sm:h-11 sm:w-11 ${authorIconStyles[post.category]}`}
             aria-label={`Ver perfil de ${post.author.name}`}
           >
-            <AuthorIcon size={18} strokeWidth={2.3} />
+            {post.author.avatarUrl ? (
+              <img
+                src={post.author.avatarUrl}
+                alt={`Foto de ${post.author.name}`}
+                className="h-full w-full object-cover"
+              />
+            ) : (
+              <AuthorIcon size={18} strokeWidth={2.3} />
+            )}
           </button>
         )}
 
@@ -242,11 +252,18 @@ export const PostCard = ({
 
       {/* Imagen opcional */}
       {post.media?.type === 'image' && (
-        <img
-          src={post.media.url}
-          alt={post.media.alt ?? 'Contenido multimedia de la publicacion'}
-          className="mt-3 max-h-72 w-full rounded-2xl object-cover sm:max-h-80"
-        />
+        <button
+          type="button"
+          onClick={() => setSelectedImageUrl(post.media?.url ?? null)}
+          className="mt-3 block w-full overflow-hidden rounded-2xl bg-gray-50"
+          aria-label="Ver imagen completa"
+        >
+          <img
+            src={post.media.url}
+            alt={post.media.alt ?? 'Contenido multimedia de la publicacion'}
+            className="max-h-72 w-full object-cover transition-transform duration-200 hover:scale-[1.01] sm:max-h-80"
+          />
+        </button>
       )}
 
       {/* Video opcional */}
@@ -388,6 +405,32 @@ export const PostCard = ({
                 {isDeleteLoading ? 'Eliminando...' : 'Eliminar'}
               </button>
             </div>
+          </section>
+        </div>
+      )}
+
+      {selectedImageUrl && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 px-3 py-6"
+          onClick={() => setSelectedImageUrl(null)}
+        >
+          <section
+            className="relative max-h-full w-full max-w-5xl"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <button
+              type="button"
+              onClick={() => setSelectedImageUrl(null)}
+              className="absolute right-2 top-2 z-10 flex h-9 w-9 items-center justify-center rounded-full bg-white/90 text-black shadow-lg transition-colors hover:bg-white"
+              aria-label="Cerrar imagen"
+            >
+              <X size={20} />
+            </button>
+            <img
+              src={selectedImageUrl}
+              alt={post.media?.alt ?? 'Imagen de la publicacion'}
+              className="mx-auto max-h-[calc(100vh-48px)] w-auto max-w-full rounded-2xl object-contain shadow-[0_24px_60px_rgba(0,0,0,0.32)]"
+            />
           </section>
         </div>
       )}

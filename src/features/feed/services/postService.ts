@@ -119,6 +119,14 @@ const mapPostFromApi = (apiPost: unknown, fallbackContent = ''): Post => {
         asString(post.userName) ||
         asString(post.authorName, 'Usuario'),
       role,
+      avatarUrl:
+        asString(author.avatarUrl) ||
+        asString(author.profileImageUrl) ||
+        asString(author.photoUrl) ||
+        asString(post.avatarUrl) ||
+        asString(post.profileImageUrl) ||
+        asString(post.photoUrl) ||
+        undefined,
       verified: Boolean(author.verified ?? post.verified),
     },
     category: visualCategory,
