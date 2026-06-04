@@ -233,7 +233,13 @@ export const CalendarPage = () => {
       {/* Modal Overlay para Eventos del Día */}
       {isDailyEventsModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
-          <DailyEventsCard onClose={() => setIsDailyEventsModalOpen(false)} />
+          <DailyEventsCard 
+            onClose={() => setIsDailyEventsModalOpen(false)} 
+            onAddEventClick={() => {
+              setIsDailyEventsModalOpen(false);
+              setIsCreateModalOpen(true);
+            }}
+          />
         </div>
       )}
     </div>

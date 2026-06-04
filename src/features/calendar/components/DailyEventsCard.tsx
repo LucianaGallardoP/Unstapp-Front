@@ -31,9 +31,10 @@ const mockEvents: EventData[] = [
 
 interface DailyEventsCardProps {
   onClose?: () => void;
+  onAddEventClick?: () => void;
 }
 
-export const DailyEventsCard: React.FC<DailyEventsCardProps> = ({ onClose }) => {
+export const DailyEventsCard: React.FC<DailyEventsCardProps> = ({ onClose, onAddEventClick }) => {
   return (
     <div className="w-full max-w-[420px] bg-white rounded-[2.5rem] shadow-[0_12px_40px_-10px_rgb(0,0,0,0.15)] p-8 relative font-sans">
       
@@ -87,7 +88,10 @@ export const DailyEventsCard: React.FC<DailyEventsCardProps> = ({ onClose }) => 
 
       {/* Add Button */}
       <div className="flex justify-center">
-        <button className="bg-[#21519c] hover:bg-[#1a4079] text-white font-bold py-3.5 px-10 rounded-full transition-colors text-[15px]">
+        <button 
+          onClick={onAddEventClick}
+          className="bg-[#21519c] hover:bg-[#1a4079] text-white font-bold py-3.5 px-10 rounded-full transition-colors text-[15px]"
+        >
           + Agregar Evento
         </button>
       </div>
