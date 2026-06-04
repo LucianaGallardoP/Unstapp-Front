@@ -29,7 +29,11 @@ const mockEvents: EventData[] = [
   }
 ];
 
-export const DailyEventsCard: React.FC = () => {
+interface DailyEventsCardProps {
+  onClose?: () => void;
+}
+
+export const DailyEventsCard: React.FC<DailyEventsCardProps> = ({ onClose }) => {
   return (
     <div className="w-full max-w-[420px] bg-white rounded-[2.5rem] shadow-[0_12px_40px_-10px_rgb(0,0,0,0.15)] p-8 relative font-sans">
       
@@ -39,6 +43,7 @@ export const DailyEventsCard: React.FC = () => {
           Eventos del 5 de Enero
         </h2>
         <button 
+          onClick={onClose}
           className="absolute right-0 top-1/2 -translate-y-1/2 text-gray-800 hover:bg-gray-100 p-1.5 rounded-full transition-colors"
           aria-label="Cerrar"
         >

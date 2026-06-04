@@ -4,6 +4,7 @@ import { BottomNavigation } from '../../../components/common/BottomNavigation';
 import { TopBar } from '../../../components/common/TopBar';
 import { useMonthlyCalendar } from '../hooks/useMonthlyCalendar';
 import { CreateEventModal } from './CreateEventModal';
+import { DailyEventsCard } from './DailyEventsCard';
 
 const weekDays = ['Lun', 'Mar', 'Mie', 'Jue', 'Vie', 'Sab', 'Dom'];
 
@@ -61,6 +62,7 @@ const getMonthInitials = (date: Date) =>
 
 export const CalendarPage = () => {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [isDailyEventsModalOpen, setIsDailyEventsModalOpen] = useState(false);
   const {
     calendarDays,
     monthTitle,
@@ -125,7 +127,10 @@ export const CalendarPage = () => {
                 <button
                   key={day.date.toISOString()}
                   type="button"
-                  onClick={() => selectDay(day.date)}
+                  onClick={() => {
+                    selectDay(day.date);
+                    setIsDailyEventsModalOpen(true);
+                  }}
                   className={`mx-auto flex aspect-square w-full max-w-11 items-center justify-center rounded-full text-[11px] font-black transition-colors sm:max-w-12 sm:text-[12px] ${
                     day.isToday
                       ? 'bg-[#155DFC] text-white shadow-[0_8px_18px_rgba(21,93,252,0.28)]'
@@ -218,10 +223,17 @@ export const CalendarPage = () => {
 
       <BottomNavigation activeTab="calendario" />
 
-      {/* Modal Overlay */}
+      {/* Modal Overlay para Crear Evento */}
       {isCreateModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
           <CreateEventModal onClose={() => setIsCreateModalOpen(false)} />
+        </div>
+      )}
+
+      {/* Modal Overlay para Eventos del Día */}
+      {isDailyEventsModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
+          <DailyEventsCard onClose={() => setIsDailyEventsModalOpen(false)} />
         </div>
       )}
     </div>
