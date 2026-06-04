@@ -1,5 +1,6 @@
 import React from 'react';
 import { X } from 'lucide-react';
+import { EventTypeDropdown } from './EventTypeDropdown';
 
 export const CreateEventModal: React.FC = () => {
   return (
@@ -37,8 +38,9 @@ export const CreateEventModal: React.FC = () => {
           <label className="text-[14px] font-[800] text-[#2c2c2c] whitespace-nowrap">
             Tipo de evento
           </label>
-          {/* Espacio en blanco respetando el diseño proporcionado */}
-          <div className="w-[55%]"></div>
+          <div className="w-[55%]">
+            <EventTypeDropdown />
+          </div>
         </div>
 
         {/* Hora */}

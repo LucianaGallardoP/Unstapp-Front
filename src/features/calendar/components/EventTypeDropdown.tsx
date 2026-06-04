@@ -13,7 +13,7 @@ export const EventTypeDropdown: React.FC = () => {
   ];
 
   return (
-    <div className="relative w-[240px] font-sans">
+    <div className="relative w-full font-sans">
       {/* Trigger del Dropdown */}
       <button 
         onClick={() => setIsOpen(!isOpen)}
