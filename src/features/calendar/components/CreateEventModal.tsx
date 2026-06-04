@@ -2,7 +2,11 @@ import React from 'react';
 import { X } from 'lucide-react';
 import { EventTypeDropdown } from './EventTypeDropdown';
 
-export const CreateEventModal: React.FC = () => {
+interface CreateEventModalProps {
+  onClose?: () => void;
+}
+
+export const CreateEventModal: React.FC<CreateEventModalProps> = ({ onClose }) => {
   return (
     <div className="w-full max-w-[420px] bg-white rounded-[2.5rem] shadow-[0_12px_40px_-10px_rgb(0,0,0,0.15)] p-8 relative font-sans border border-gray-50">
       
@@ -12,6 +16,7 @@ export const CreateEventModal: React.FC = () => {
           Crear Evento - 1 de Junio
         </h2>
         <button 
+          onClick={onClose}
           className="absolute right-0 top-1/2 -translate-y-1/2 text-gray-800 hover:bg-gray-100 p-1.5 rounded-full transition-colors"
           aria-label="Cerrar"
         >

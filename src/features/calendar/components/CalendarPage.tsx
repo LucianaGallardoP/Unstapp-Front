@@ -1,7 +1,9 @@
+import { useState } from 'react';
 import { ChevronLeft, ChevronRight, Plus } from 'lucide-react';
 import { BottomNavigation } from '../../../components/common/BottomNavigation';
 import { TopBar } from '../../../components/common/TopBar';
 import { useMonthlyCalendar } from '../hooks/useMonthlyCalendar';
+import { CreateEventModal } from './CreateEventModal';
 
 const weekDays = ['Lun', 'Mar', 'Mie', 'Jue', 'Vie', 'Sab', 'Dom'];
 
@@ -58,6 +60,7 @@ const getMonthInitials = (date: Date) =>
     .toUpperCase();
 
 export const CalendarPage = () => {
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const {
     calendarDays,
     monthTitle,
@@ -148,6 +151,7 @@ export const CalendarPage = () => {
               </h2>
               <button
                 type="button"
+                onClick={() => setIsCreateModalOpen(true)}
                 className="flex h-8 w-8 items-center justify-center rounded-full text-[#1E4E9D] transition-colors hover:bg-[#EFF6FF]"
                 aria-label="Crear nuevo evento"
               >
@@ -213,6 +217,13 @@ export const CalendarPage = () => {
       </main>
 
       <BottomNavigation activeTab="calendario" />
+
+      {/* Modal Overlay */}
+      {isCreateModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
+          <CreateEventModal onClose={() => setIsCreateModalOpen(false)} />
+        </div>
+      )}
     </div>
   );
 };
