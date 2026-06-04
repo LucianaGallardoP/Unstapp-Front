@@ -2,8 +2,8 @@ import React, { useState } from 'react';
 import { ChevronDown } from 'lucide-react';
 
 export const EventTypeDropdown: React.FC = () => {
-  // Inicializamos en true para que se vea desplegado igual que en la imagen de referencia
-  const [isOpen, setIsOpen] = useState(true);
+  // Inicializamos en false para que el dropdown esté cerrado por defecto
+  const [isOpen, setIsOpen] = useState(false);
   
   const options = [
     { id: 'exam', label: 'EXÁMENES', color: 'bg-[#982015]' },
