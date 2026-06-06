@@ -88,6 +88,64 @@ const getMediaType = (url: string) => {
   return 'file';
 };
 
+const getProfileAvatarFromApi = async (authorId: number | string) => {
+  try {
+    const response = await apiClient.get<unknown>(`/profile/${authorId}`, {
+      headers: getAuthHeaders(),
+    });
+    const root = asRecord(response.data);
+    const data = asRecord(root.data ?? root.value ?? root.profile ?? root);
+    const user = asRecord(data.user ?? data.profile ?? data.person ?? data);
+    const rootUser = asRecord(root.user ?? root.profile ?? root.person);
+
+    return (
+      asString(user.avatarUrl) ||
+      asString(user.profileImageUrl) ||
+      asString(user.profilePictureUrl) ||
+      asString(user.profilePhotoUrl) ||
+      asString(user.photoUrl) ||
+      asString(rootUser.avatarUrl) ||
+      asString(rootUser.profileImageUrl) ||
+      asString(rootUser.profilePictureUrl) ||
+      asString(rootUser.profilePhotoUrl) ||
+      asString(rootUser.photoUrl) ||
+      asString(root.avatarUrl) ||
+      asString(root.profileImageUrl) ||
+      asString(root.profilePictureUrl) ||
+      asString(root.profilePhotoUrl) ||
+      asString(root.photoUrl) ||
+      undefined
+    );
+  } catch {
+    return undefined;
+  }
+};
+
+const hydrateAuthorAvatars = async (posts: Post[]) => {
+  const uniqueAuthorIds = Array.from(
+    new Set(
+      posts
+        .map((post) => post.author.id)
+        .filter((authorId): authorId is number | string => typeof authorId === 'number' || typeof authorId === 'string'),
+    ),
+  );
+  const avatarEntries = await Promise.all(
+    uniqueAuthorIds.map(async (authorId) => [String(authorId), await getProfileAvatarFromApi(authorId)] as const),
+  );
+  const avatarsByAuthorId = new Map(avatarEntries);
+
+  // Completa la foto real del perfil cuando el endpoint de posts no la incluye.
+  return posts.map((post) => ({
+    ...post,
+    author: {
+      ...post.author,
+      avatarUrl:
+        avatarsByAuthorId.get(String(post.author.id)) ||
+        post.author.avatarUrl,
+    },
+  }));
+};
+
 const mapPostFromApi = (apiPost: unknown, fallbackContent = ''): Post => {
   const post = asRecord(apiPost);
   const author = asRecord(post.author ?? post.user ?? post.createdBy);
@@ -170,7 +228,7 @@ export const postService = {
       return [];
     }
 
-    const mappedPosts = posts.map((post) => mapPostFromApi(post));
+    const mappedPosts = await hydrateAuthorAvatars(posts.map((post) => mapPostFromApi(post)));
 
     return Promise.all(
       mappedPosts.map(async (post) => {
