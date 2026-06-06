@@ -1,5 +1,5 @@
 import { apiClient } from '../../../services/apiClient';
-import type { ProfileResponseDTO, ProfileStatsDTO } from '../types/profile.dtos';
+import type { ProfileEditValues, ProfileResponseDTO, ProfileStatsDTO } from '../types/profile.dtos';
 import type { Post } from '../../feed/types/post.types';
 import { postService } from '../../feed/services/postService';
 
@@ -220,5 +220,48 @@ export const profileService = {
     await apiClient.post(`/users/${profileId}/follow`, undefined, {
       headers: getAuthHeaders(),
     });
+  },
+
+  updateProfile: async (values: ProfileEditValues): Promise<Partial<ProfileResponseDTO>> => {
+    const formData = new FormData();
+
+    // Envia solo los campos editados al endpoint PATCH de perfil.
+    if (values.bio.trim() || values.removeBio) {
+      formData.append('Bio', values.bio.trim());
+    }
+
+    if (values.avatarFile) {
+      formData.append('AvatarFile', values.avatarFile);
+    }
+
+    if (values.coverFile) {
+      formData.append('CoverFile', values.coverFile);
+    }
+
+    formData.append('RemoveBio', String(values.removeBio));
+    formData.append('RemoveAvatar', String(values.removeAvatar));
+    formData.append('RemoveCover', String(values.removeCover));
+
+    const response = await apiClient.patch<unknown>('/profile', formData, {
+      headers: {
+        ...getAuthHeaders(),
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+    const root = asRecord(response.data);
+    const data = asRecord(root.data ?? root.value ?? root.profile ?? root);
+
+    return {
+      bio: asString(data.bio) || asString(data.description) || undefined,
+      avatarUrl:
+        asString(data.avatarUrl) ||
+        asString(data.profileImageUrl) ||
+        asString(data.photoUrl) ||
+        undefined,
+      coverUrl:
+        asString(data.coverUrl) ||
+        asString(data.coverImageUrl) ||
+        undefined,
+    };
   },
 };

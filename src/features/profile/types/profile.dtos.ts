@@ -20,7 +20,12 @@ export interface ProfileStatsDTO {
 }
 
 export interface ProfileEditValues {
+    avatarFile?: File;
+    coverFile?: File;
     avatarUrl?: string;
     coverUrl?: string;
     bio: string;
+    removeBio: boolean;
+    removeAvatar: boolean;
+    removeCover: boolean;
 }

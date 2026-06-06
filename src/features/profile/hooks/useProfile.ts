@@ -176,15 +176,32 @@ export const useProfile = (userId: string | undefined) => {
   };
 
   const updateProfile = async (values: ProfileEditValues) => {
-    // Hasta que exista endpoint, persistimos el cambio en el estado local.
+    const updatedProfile = await profileService.updateProfile(values);
+
+    // Refleja el cambio del perfil sin recargar toda la pagina.
     setProfileData((prev) => ({
       ...prev,
       profile: {
         ...prev.profile,
-        avatarUrl: values.avatarUrl,
-        coverUrl: values.coverUrl,
-        bio: values.bio,
+        avatarUrl: values.removeAvatar && !values.avatarFile
+          ? undefined
+          : updatedProfile.avatarUrl ?? values.avatarUrl ?? prev.profile.avatarUrl,
+        coverUrl: values.removeCover && !values.coverFile
+          ? undefined
+          : updatedProfile.coverUrl ?? values.coverUrl ?? prev.profile.coverUrl,
+        bio: values.removeBio && !values.bio.trim()
+          ? undefined
+          : updatedProfile.bio ?? values.bio,
       },
+      posts: prev.posts.map((post) => ({
+        ...post,
+        author: {
+          ...post.author,
+          avatarUrl: values.removeAvatar && !values.avatarFile
+            ? undefined
+            : updatedProfile.avatarUrl ?? values.avatarUrl ?? post.author.avatarUrl,
+        },
+      })),
     }));
   };
 
