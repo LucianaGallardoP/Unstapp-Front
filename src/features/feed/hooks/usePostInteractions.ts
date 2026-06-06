@@ -129,8 +129,7 @@ export const usePostInteractions = ({
     setCommentsCount((count) => Math.max(0, count - 1));
 
     try {
-      console.warn(`TODO: Implementar llamado a la API para eliminar el comentario ${commentId} del post ${postId}`);
-      // await commentService.delete(postId, commentId);
+      await commentService.remove(postId, commentId);
     } catch {
       setComments((current) => {
         const reverted = [...current, commentToDelete];

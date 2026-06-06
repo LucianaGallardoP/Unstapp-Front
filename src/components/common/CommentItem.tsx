@@ -1,10 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import {
-  BriefcaseBusiness,
-  Coffee,
-  GraduationCap,
-  UserRound,
   MoreVertical,
   Trash2,
 } from 'lucide-react';
@@ -26,12 +22,8 @@ const roleIconStyles: Record<PostAuthorRole, string> = {
   Alumno: 'bg-[#FF751F]/10 text-[#FF751F]',
 };
 
-const roleIcons = {
-  Administrativo: BriefcaseBusiness,
-  Docente: GraduationCap,
-  Bar: Coffee,
-  Alumno: UserRound,
-};
+const defaultProfileAvatar =
+  'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 96 96%22%3E%3Crect width=%2296%22 height=%2296%22 rx=%2248%22 fill=%22%23EFF6FF%22/%3E%3Ccircle cx=%2248%22 cy=%2237%22 r=%2215%22 fill=%22none%22 stroke=%22%231E4E9D%22 stroke-width=%226%22/%3E%3Cpath d=%22M25 78c3-16 15-25 23-25s20 9 23 25%22 fill=%22none%22 stroke=%22%231E4E9D%22 stroke-width=%226%22 stroke-linecap=%22round%22/%3E%3C/svg%3E';
 
 export const CommentItem = ({ comment, currentDate, onDelete, canDelete = false }: CommentItemProps) => {
   const navigate = useNavigate();
@@ -40,7 +32,6 @@ export const CommentItem = ({ comment, currentDate, onDelete, canDelete = false 
   const buttonRef = useRef<HTMLButtonElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
 
-  const CommentAuthorIcon = roleIcons[comment.author.role];
   const canOpenAuthorProfile = Boolean(comment.author.id);
 
   useEffect(() => {
@@ -95,10 +86,14 @@ export const CommentItem = ({ comment, currentDate, onDelete, canDelete = false 
         type="button"
         onClick={handleOpenAuthorProfile}
         disabled={!canOpenAuthorProfile}
-        className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${roleIconStyles[comment.author.role]}`}
+        className={`flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-full ${roleIconStyles[comment.author.role]}`}
         aria-label={`Ver perfil de ${comment.author.name}`}
       >
-        <CommentAuthorIcon size={15} strokeWidth={2.3} />
+        <img
+          src={comment.author.avatarUrl || defaultProfileAvatar}
+          alt={`Foto de ${comment.author.name}`}
+          className="h-full w-full object-cover"
+        />
       </button>
 
       <div className="min-w-0 flex-1">

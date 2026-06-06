@@ -1,71 +1,150 @@
-import React from 'react';
-import { X } from 'lucide-react';
+import React, { useState } from 'react';
+import { Loader2, X } from 'lucide-react';
 import { EventTypeDropdown } from './EventTypeDropdown';
+import type {
+  CalendarEventType,
+  CreateCalendarEventPayload,
+} from '../types/calendar.types';
 
 interface CreateEventModalProps {
+  selectedDate: Date;
+  isSubmitting?: boolean;
   onClose?: () => void;
+  onCreate: (payload: CreateCalendarEventPayload) => Promise<void>;
 }
 
-export const CreateEventModal: React.FC<CreateEventModalProps> = ({ onClose }) => {
+const formatDateTitle = (date: Date) =>
+  new Intl.DateTimeFormat('es-AR', {
+    day: 'numeric',
+    month: 'long',
+  }).format(date);
+
+const buildDateTime = (date: Date, time: string) => {
+  const [hours, minutes] = time.split(':').map(Number);
+  const nextDate = new Date(date);
+
+  nextDate.setHours(Number.isFinite(hours) ? hours : 0);
+  nextDate.setMinutes(Number.isFinite(minutes) ? minutes : 0);
+  nextDate.setSeconds(0);
+  nextDate.setMilliseconds(0);
+
+  return nextDate;
+};
+
+export const CreateEventModal: React.FC<CreateEventModalProps> = ({
+  selectedDate,
+  isSubmitting = false,
+  onClose,
+  onCreate,
+}) => {
+  const [title, setTitle] = useState('');
+  const [description, setDescription] = useState('');
+  const [type, setType] = useState<CalendarEventType>(3);
+  const [time, setTime] = useState('08:00');
+  const [formError, setFormError] = useState<string | null>(null);
+
+  const canSubmit = title.trim().length > 0 && !isSubmitting;
+
+  const handleSubmit = async (event: React.FormEvent) => {
+    event.preventDefault();
+
+    if (!canSubmit) {
+      return;
+    }
+
+    const startDate = buildDateTime(selectedDate, time);
+    const endDate = new Date(startDate.getTime() + 60 * 60 * 1000);
+
+    setFormError(null);
+
+    try {
+      await onCreate({
+        title: title.trim(),
+        description: description.trim(),
+        type,
+        startDate: startDate.toISOString(),
+        endDate: endDate.toISOString(),
+      });
+      onClose?.();
+    } catch {
+      setFormError('No se pudo crear el evento.');
+    }
+  };
+
   return (
-    <div className="w-full max-w-[420px] bg-white rounded-[2.5rem] shadow-[0_12px_40px_-10px_rgb(0,0,0,0.15)] p-8 relative font-sans border border-gray-50">
-      
-      {/* Header */}
-      <div className="flex justify-center items-center mb-10 relative">
-        <h2 className="text-[#1f4e99] text-[1.25rem] font-bold tracking-tight">
-          Crear Evento - 1 de Junio
+    <form
+      onSubmit={handleSubmit}
+      className="relative w-full max-w-[420px] rounded-[2.5rem] border border-gray-50 bg-white p-8 font-sans shadow-[0_12px_40px_-10px_rgb(0,0,0,0.15)]"
+    >
+      <div className="relative mb-9 flex items-center justify-center">
+        <h2 className="text-center text-[1.25rem] font-bold tracking-tight text-[#1f4e99]">
+          Crear Evento - {formatDateTitle(selectedDate)}
         </h2>
-        <button 
+        <button
+          type="button"
           onClick={onClose}
-          className="absolute right-0 top-1/2 -translate-y-1/2 text-gray-800 hover:bg-gray-100 p-1.5 rounded-full transition-colors"
+          className="absolute right-0 top-1/2 -translate-y-1/2 rounded-full p-1.5 text-gray-800 transition-colors hover:bg-gray-100"
           aria-label="Cerrar"
         >
-          <X className="w-6 h-6" strokeWidth={1.5} />
+          <X className="h-6 w-6" strokeWidth={1.5} />
         </button>
       </div>
 
-      {/* Form Content */}
-      <div className="flex flex-col gap-8 mb-10">
-        {/* Titulo */}
-        <div className="flex items-center justify-between gap-4">
-          <label className="text-[14px] font-[800] text-[#2c2c2c] whitespace-nowrap">
-            Titulo del evento
-          </label>
-          <input 
+      <div className="mb-8 flex flex-col gap-5">
+        <label className="flex flex-col gap-2 text-[14px] font-[800] text-[#2c2c2c]">
+          Titulo del evento
+          <input
             type="text"
+            value={title}
+            onChange={(event) => setTitle(event.target.value)}
             placeholder="Titulo para el evento"
-            className="w-[55%] border border-[#1f4e99] rounded-full px-4 py-2 text-[13px] text-gray-600 focus:outline-none focus:ring-1 focus:ring-[#1f4e99] placeholder-gray-400"
+            className="rounded-full border border-[#1f4e99] px-4 py-2 text-[13px] font-medium text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-[#1f4e99]"
           />
-        </div>
+        </label>
 
-        {/* Tipo */}
-        <div className="flex items-center justify-between gap-4">
-          <label className="text-[14px] font-[800] text-[#2c2c2c] whitespace-nowrap">
-            Tipo de evento
-          </label>
-          <div className="w-[55%]">
-            <EventTypeDropdown />
-          </div>
-        </div>
+        <label className="flex flex-col gap-2 text-[14px] font-[800] text-[#2c2c2c]">
+          Tipo de evento
+          <EventTypeDropdown value={type} onChange={setType} />
+        </label>
 
-        {/* Hora */}
-        <div className="flex items-center justify-between gap-4">
-          <label className="text-[14px] font-[800] text-[#2c2c2c] whitespace-nowrap">
-            Hora del evento
-          </label>
-          <input 
-            type="text"
-            className="w-[55%] border border-[#1f4e99] rounded-full px-4 py-4 text-[13px] text-gray-700 focus:outline-none focus:ring-1 focus:ring-[#1f4e99] bg-transparent"
+        <label className="flex flex-col gap-2 text-[14px] font-[800] text-[#2c2c2c]">
+          Hora del evento
+          <input
+            type="time"
+            value={time}
+            onChange={(event) => setTime(event.target.value)}
+            className="rounded-full border border-[#1f4e99] bg-transparent px-4 py-2 text-[13px] font-medium text-gray-700 focus:outline-none focus:ring-1 focus:ring-[#1f4e99]"
           />
-        </div>
+        </label>
+
+        <label className="flex flex-col gap-2 text-[14px] font-[800] text-[#2c2c2c]">
+          Descripcion
+          <textarea
+            value={description}
+            onChange={(event) => setDescription(event.target.value)}
+            placeholder="Detalle opcional del evento"
+            rows={3}
+            className="resize-none rounded-2xl border border-[#1f4e99] px-4 py-3 text-[13px] font-medium text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-[#1f4e99]"
+          />
+        </label>
       </div>
 
-      {/* Add Button */}
+      {formError && (
+        <p className="mb-4 text-center text-[12px] font-bold text-[#E7000B]">
+          {formError}
+        </p>
+      )}
+
       <div className="flex justify-center">
-        <button className="bg-[#21519c] hover:bg-[#1a4079] text-white font-bold py-3.5 px-12 rounded-full transition-colors text-[15px]">
-          Crear Evento
+        <button
+          type="submit"
+          disabled={!canSubmit}
+          className="flex min-w-40 items-center justify-center gap-2 rounded-full bg-[#21519c] px-10 py-3.5 text-[15px] font-bold text-white transition-colors hover:bg-[#1a4079] disabled:cursor-not-allowed disabled:bg-gray-300"
+        >
+          {isSubmitting && <Loader2 size={16} className="animate-spin" />}
+          {isSubmitting ? 'Creando...' : 'Crear Evento'}
         </button>
       </div>
-    </div>
+    </form>
   );
 };

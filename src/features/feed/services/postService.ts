@@ -122,10 +122,16 @@ const mapPostFromApi = (apiPost: unknown, fallbackContent = ''): Post => {
       avatarUrl:
         asString(author.avatarUrl) ||
         asString(author.profileImageUrl) ||
+        asString(author.profilePictureUrl) ||
+        asString(author.profilePhotoUrl) ||
         asString(author.photoUrl) ||
+        asString(author.imageUrl) ||
         asString(post.avatarUrl) ||
         asString(post.profileImageUrl) ||
+        asString(post.profilePictureUrl) ||
+        asString(post.profilePhotoUrl) ||
         asString(post.photoUrl) ||
+        asString(post.imageUrl) ||
         undefined,
       verified: Boolean(author.verified ?? post.verified),
     },

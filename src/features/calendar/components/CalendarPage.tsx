@@ -3,30 +3,21 @@ import { ChevronLeft, ChevronRight, Plus } from 'lucide-react';
 import { BottomNavigation } from '../../../components/common/BottomNavigation';
 import { TopBar } from '../../../components/common/TopBar';
 import { useMonthlyCalendar } from '../hooks/useMonthlyCalendar';
+import { useCalendarEvents } from '../hooks/useCalendarEvents';
 import { CreateEventModal } from './CreateEventModal';
 import { DailyEventsCard } from './DailyEventsCard';
+import type { CalendarEvent, CalendarEventType } from '../types/calendar.types';
 
 const weekDays = ['Lun', 'Mar', 'Mie', 'Jue', 'Vie', 'Sab', 'Dom'];
 
-const eventTypeStyles = {
-  classes: 'bg-[#4bedb6]/20 text-[#1d8c57]',
-  event: 'bg-[#ffde59]/30 text-[#91210e]',
+const eventTypeStyles: Record<CalendarEventType, string> = {
+  1: 'bg-[#91210e]/15 text-[#91210e]',
+  2: 'bg-[#4bedb6]/20 text-[#1d8c57]',
+  3: 'bg-[#ffde59]/30 text-[#91210e]',
+  4: 'bg-[#7ed957]/20 text-[#1d8c57]',
 };
 
-const dailyEvents = [
-  {
-    id: 1,
-    title: 'Sistemas Operativos Lab 3',
-    type: 'classes',
-  },
-  {
-    id: 2,
-    title: 'Feria de Empleo Edicion Tech',
-    type: 'event',
-  },
-] as const;
-
-const viewFilters = [
+const viewFilterBase = [
   {
     id: 'exams',
     label: 'Examenes',
@@ -49,7 +40,6 @@ const viewFilters = [
     id: 'holidays',
     label: 'Feriados',
     color: '#7ed957',
-    count: 0,
   },
 ] as const;
 
@@ -60,6 +50,12 @@ const getMonthInitials = (date: Date) =>
     .slice(0, 3)
     .toUpperCase();
 
+const formatTime = (date: string) =>
+  new Intl.DateTimeFormat('es-AR', {
+    hour: '2-digit',
+    minute: '2-digit',
+  }).format(new Date(date));
+
 export const CalendarPage = () => {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isDailyEventsModalOpen, setIsDailyEventsModalOpen] = useState(false);
@@ -67,11 +63,25 @@ export const CalendarPage = () => {
     calendarDays,
     monthTitle,
     selectedDate,
+    visibleDate,
     visibleYear,
     goToPreviousMonth,
     goToNextMonth,
     selectDay,
   } = useMonthlyCalendar();
+  const {
+    selectedDayEvents,
+    monthlyCounters,
+    isLoading: isEventsLoading,
+    isCreating,
+    error: eventsError,
+    createEvent,
+  } = useCalendarEvents(visibleDate, selectedDate);
+  const viewFilters = viewFilterBase.map((filter) => ({
+    ...filter,
+    count: monthlyCounters[filter.id],
+  }));
+  const previewEvents: CalendarEvent[] = selectedDayEvents.slice(0, 3);
 
   return (
     <div className="min-h-screen bg-white pb-20 text-gray-900 md:bg-gray-50">
@@ -165,29 +175,58 @@ export const CalendarPage = () => {
             </header>
 
             <div className="mt-3 flex flex-col gap-3">
-              {dailyEvents.map((event) => (
+              {isEventsLoading && (
+                <p className="rounded-[10px] bg-white px-4 py-5 text-center text-[12px] font-bold text-[#526174] shadow-[0_8px_20px_rgba(15,23,42,0.1)]">
+                  Cargando eventos...
+                </p>
+              )}
+
+              {!isEventsLoading && previewEvents.map((event) => (
                 <article
                   key={event.id}
                   className="flex min-h-[70px] items-center gap-3 rounded-[10px] bg-white px-3 py-3 shadow-[0_8px_20px_rgba(15,23,42,0.14)]"
                 >
+                  {(() => {
+                    const eventDate = new Date(event.startDate);
+
+                    return (
                   <div
                     className={`flex h-11 w-11 shrink-0 flex-col items-center justify-center rounded-full text-center ${eventTypeStyles[event.type]}`}
-                    aria-label={`Fecha del evento ${selectedDate.getDate()} de ${getMonthInitials(selectedDate)}`}
+                    aria-label={`Fecha del evento ${eventDate.getDate()} de ${getMonthInitials(eventDate)}`}
                   >
                     <span className="text-[8px] font-black leading-none">
-                      {getMonthInitials(selectedDate)}
+                      {getMonthInitials(eventDate)}
                     </span>
                     <span className="mt-0.5 text-[12px] font-black leading-none">
-                      {selectedDate.getDate()}
+                      {eventDate.getDate()}
                     </span>
                   </div>
-                  <h3 className="line-clamp-2 text-[11px] font-black uppercase leading-4 text-[#1F2937] sm:text-[12px]">
-                    {event.title}
-                  </h3>
+                    );
+                  })()}
+                  <div className="min-w-0 flex-1">
+                    <h3 className="line-clamp-2 text-[11px] font-black uppercase leading-4 text-[#1F2937] sm:text-[12px]">
+                      {event.title}
+                    </h3>
+                    <p className="mt-1 text-[10px] font-bold text-gray-400">
+                      {formatTime(event.startDate)}
+                    </p>
+                  </div>
                 </article>
               ))}
+
+              {!isEventsLoading && previewEvents.length === 0 && (
+                <p className="rounded-[10px] bg-white px-4 py-5 text-center text-[12px] font-bold text-[#526174] shadow-[0_8px_20px_rgba(15,23,42,0.1)]">
+                  No hay eventos para este dia.
+                </p>
+              )}
             </div>
           </section>
+
+          {eventsError && (
+            <p className="mt-4 rounded-xl border border-[#E7000B]/20 bg-[#E7000B]/10 px-4 py-3 text-center text-[12px] font-bold text-[#E7000B]">
+              {eventsError}
+            </p>
+          )}
 
           <section className="mt-5 rounded-[10px] bg-[#123866] px-4 py-4 text-white shadow-[0_10px_24px_rgba(15,23,42,0.24)]">
             <h2 className="text-[9px] font-black uppercase tracking-wide text-white sm:text-[10px]">
@@ -226,7 +265,14 @@ export const CalendarPage = () => {
       {/* Modal Overlay para Crear Evento */}
       {isCreateModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
-          <CreateEventModal onClose={() => setIsCreateModalOpen(false)} />
+          <CreateEventModal
+            selectedDate={selectedDate}
+            isSubmitting={isCreating}
+            onClose={() => setIsCreateModalOpen(false)}
+            onCreate={async (payload) => {
+              await createEvent(payload);
+            }}
+          />
         </div>
       )}
 
@@ -234,6 +280,9 @@ export const CalendarPage = () => {
       {isDailyEventsModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
           <DailyEventsCard 
+            selectedDate={selectedDate}
+            events={selectedDayEvents}
+            isLoading={isEventsLoading}
             onClose={() => setIsDailyEventsModalOpen(false)} 
             onAddEventClick={() => {
               setIsDailyEventsModalOpen(false);

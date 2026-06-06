@@ -113,6 +113,7 @@ export const useMonthlyCalendar = () => {
     calendarDays,
     monthTitle: monthNames[visibleDate.getMonth()],
     selectedDate,
+    visibleDate,
     visibleYear: visibleDate.getFullYear(),
     goToPreviousMonth,
     goToNextMonth,

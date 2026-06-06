@@ -1,15 +1,11 @@
 import {
-  BriefcaseBusiness,
   CheckCircle2,
-  Coffee,
   FileText,
-  GraduationCap,
   Heart,
   MessageCircle,
   MoreVertical,
   Send,
   Trash2,
-  UserRound,
   X,
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
@@ -48,14 +44,20 @@ const categoryLabels: Record<PostCategory, string> = {
   alumno: 'ALUMNO',
 };
 
-const categoryIcons = {
-  administrativo: BriefcaseBusiness,
-  carrera: GraduationCap,
-  bar: Coffee,
-  alumno: UserRound,
-};
+const defaultProfileAvatar =
+  'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 96 96%22%3E%3Crect width=%2296%22 height=%2296%22 rx=%2248%22 fill=%22%23EFF6FF%22/%3E%3Ccircle cx=%2248%22 cy=%2237%22 r=%2215%22 fill=%22none%22 stroke=%22%231E4E9D%22 stroke-width=%226%22/%3E%3Cpath d=%22M25 78c3-16 15-25 23-25s20 9 23 25%22 fill=%22none%22 stroke=%22%231E4E9D%22 stroke-width=%226%22 stroke-linecap=%22round%22/%3E%3C/svg%3E';
 
 const getCurrentUserId = () => localStorage.getItem('unstapp_user_id');
+
+const getIsCurrentUserAdmin = () => {
+  try {
+    const roles = JSON.parse(localStorage.getItem('unstapp_user_roles') ?? '[]');
+
+    return Array.isArray(roles) && roles.some((role) => String(role).toLowerCase().includes('admin'));
+  } catch {
+    return false;
+  }
+};
 
 export const PostCard = ({
   post,
@@ -112,10 +114,10 @@ export const PostCard = ({
     timeStyle: 'short',
   }).format(new Date(post.publishedAt));
   const relativeTime = formatRelativeTime(post.publishedAt, currentDate);
-  const AuthorIcon = categoryIcons[post.category];
   const canSendComment = isAuthenticated && newComment.trim().length > 0 && !commentLoading;
   const canOpenAuthorProfile = Boolean(post.author.id);
   const currentUserId = getCurrentUserId();
+  const isCurrentUserAdmin = getIsCurrentUserAdmin();
   const canShowDeleteAction =
     Boolean(onDelete) &&
     (canDelete ?? Boolean(currentUserId && post.author.id && String(currentUserId) === String(post.author.id)));
@@ -159,15 +161,11 @@ export const PostCard = ({
             className={`flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full sm:h-11 sm:w-11 ${authorIconStyles[post.category]}`}
             aria-label={`Ver perfil de ${post.author.name}`}
           >
-            {post.author.avatarUrl ? (
-              <img
-                src={post.author.avatarUrl}
-                alt={`Foto de ${post.author.name}`}
-                className="h-full w-full object-cover"
-              />
-            ) : (
-              <AuthorIcon size={18} strokeWidth={2.3} />
-            )}
+            <img
+              src={post.author.avatarUrl || defaultProfileAvatar}
+              alt={`Foto de ${post.author.name}`}
+              className="h-full w-full object-cover"
+            />
           </button>
         )}
 
@@ -336,7 +334,7 @@ export const PostCard = ({
                     key={comment.id}
                     comment={comment}
                     currentDate={currentDate}
-                    canDelete={Boolean(isCommentAuthor || isPostAuthor)}
+                    canDelete={Boolean(isCommentAuthor || isPostAuthor || isCurrentUserAdmin)}
                     onDelete={handleDeleteComment}
                   />
                 );

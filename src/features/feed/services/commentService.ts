@@ -38,6 +38,16 @@ const mapCommentFromApi = (apiComment: unknown, fallbackContent: string): PostCo
         asString(comment.userName) ||
         localStorage.getItem('unstapp_user_name') ||
         'Vos',
+      avatarUrl:
+        asString(author.avatarUrl) ||
+        asString(author.profileImageUrl) ||
+        asString(author.profilePictureUrl) ||
+        asString(author.photoUrl) ||
+        asString(comment.avatarUrl) ||
+        asString(comment.profileImageUrl) ||
+        asString(comment.profilePictureUrl) ||
+        asString(comment.photoUrl) ||
+        undefined,
       role: 'Alumno',
     },
     publishedAt:
@@ -76,5 +86,12 @@ export const commentService = {
     );
 
     return mapCommentFromApi(response.data, content);
+  },
+
+  // Elimina un comentario asociado a una publicacion.
+  remove: async (postId: number | string, commentId: number | string) => {
+    await apiClient.delete(`/posts/${postId}/comments/${commentId}`, {
+      headers: getAuthHeaders(),
+    });
   },
 };
