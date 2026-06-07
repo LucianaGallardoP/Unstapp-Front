@@ -73,6 +73,7 @@ export const CalendarPage = () => {
     selectedDayEvents,
     monthlyCounters,
     isLoading: isEventsLoading,
+    isDailyLoading,
     isCreating,
     error: eventsError,
     createEvent,
@@ -186,13 +187,13 @@ export const CalendarPage = () => {
             </header>
 
             <div className="mt-3 flex flex-col gap-3">
-              {isEventsLoading && (
+              {(isEventsLoading || isDailyLoading) && (
                 <p className="rounded-[10px] bg-white px-4 py-5 text-center text-[12px] font-bold text-[#526174] shadow-[0_8px_20px_rgba(15,23,42,0.1)]">
                   Cargando eventos...
                 </p>
               )}
 
-              {!isEventsLoading && previewEvents.map((event) => (
+              {!(isEventsLoading || isDailyLoading) && previewEvents.map((event) => (
                 <article
                   key={event.id}
                   className="flex min-h-[70px] items-center gap-3 rounded-[10px] bg-white px-3 py-3 shadow-[0_8px_20px_rgba(15,23,42,0.14)]"
@@ -225,7 +226,7 @@ export const CalendarPage = () => {
                 </article>
               ))}
 
-              {!isEventsLoading && previewEvents.length === 0 && (
+              {!(isEventsLoading || isDailyLoading) && previewEvents.length === 0 && (
                 <p className="rounded-[10px] bg-white px-4 py-5 text-center text-[12px] font-bold text-[#526174] shadow-[0_8px_20px_rgba(15,23,42,0.1)]">
                   No hay eventos para este dia.
                 </p>
@@ -293,7 +294,7 @@ export const CalendarPage = () => {
           <DailyEventsCard
             selectedDate={selectedDate}
             events={selectedDayEvents}
-            isLoading={isEventsLoading}
+            isLoading={isEventsLoading || isDailyLoading}
             onClose={() => setIsDailyEventsModalOpen(false)}
             onAddEventClick={() => {
               setIsDailyEventsModalOpen(false);

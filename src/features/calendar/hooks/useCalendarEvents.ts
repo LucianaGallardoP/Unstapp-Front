@@ -30,6 +30,9 @@ export const useCalendarEvents = (visibleDate: Date, selectedDate: Date) => {
   const [isCreating, setIsCreating] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const [dailyEvents, setDailyEvents] = useState<CalendarEvent[]>([]);
+  const [isDailyLoading, setIsDailyLoading] = useState(false);
+
   const monthRange = useMemo(() => getMonthRange(visibleDate), [visibleDate]);
 
   useEffect(() => {
@@ -63,10 +66,46 @@ export const useCalendarEvents = (visibleDate: Date, selectedDate: Date) => {
     };
   }, [monthRange.start, monthRange.end]);
 
-  const selectedDayEvents = useMemo(
-    () => events.filter((event) => isSameDay(new Date(event.startDate), selectedDate)),
-    [events, selectedDate],
-  );
+  useEffect(() => {
+    let isMounted = true;
+
+    const loadDailyEvents = async () => {
+      setIsDailyLoading(true);
+      
+      try {
+        const year = selectedDate.getFullYear();
+        const month = String(selectedDate.getMonth() + 1).padStart(2, '0');
+        const day = String(selectedDate.getDate()).padStart(2, '0');
+        const formattedDate = `${year}-${month}-${day}`;
+
+        const response = await calendarService.getDailyEvents(formattedDate);
+
+        if (isMounted) {
+          // Salvaguarda: filtramos localmente la respuesta del endpoint por si el backend no está 
+          // aplicando el filtro de fecha correctamente y devuelve más eventos de los debidos.
+          const filteredResponse = response.filter((event) => 
+            isSameDay(new Date(event.startDate), selectedDate)
+          );
+          setDailyEvents(filteredResponse);
+        }
+      } catch {
+        if (isMounted) {
+          // Fallback en caso de error: filtramos localmente si el endpoint falla
+          setDailyEvents(events.filter((event) => isSameDay(new Date(event.startDate), selectedDate)));
+        }
+      } finally {
+        if (isMounted) {
+          setIsDailyLoading(false);
+        }
+      }
+    };
+
+    loadDailyEvents();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [selectedDate, events]);
 
   const monthlyCounters = useMemo(
     () => ({
@@ -96,9 +135,10 @@ export const useCalendarEvents = (visibleDate: Date, selectedDate: Date) => {
 
   return {
     events,
-    selectedDayEvents,
+    selectedDayEvents: dailyEvents,
     monthlyCounters,
     isLoading,
+    isDailyLoading,
     isCreating,
     error,
     createEvent,
