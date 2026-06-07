@@ -60,7 +60,9 @@ export const calendarService = {
       headers: getAuthHeaders(),
     });
     const data = response.data;
-    const events = Array.isArray(data) ? data : asRecord(data).items ?? asRecord(data).data;
+    const events = Array.isArray(data) 
+      ? data 
+      : asRecord(data).events ?? asRecord(data).items ?? asRecord(data).value ?? asRecord(data).data;
 
     return Array.isArray(events) ? events.map(mapEventFromApi) : [];
   },
