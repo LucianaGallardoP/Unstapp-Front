@@ -54,7 +54,11 @@ export const CreateEventModal: React.FC<CreateEventModalProps> = ({
     }
   })();
 
-  const canSubmit = title.trim().length > 0 && !isSubmitting;
+  const canSubmit = 
+    title.trim().length > 0 && 
+    description.trim().length > 0 && 
+    time.trim().length > 0 && 
+    !isSubmitting;
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
