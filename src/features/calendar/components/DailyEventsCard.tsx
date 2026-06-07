@@ -43,6 +43,17 @@ export const DailyEventsCard: React.FC<DailyEventsCardProps> = ({
   onClose,
   onAddEventClick,
 }) => {
+  const isAlumno = (() => {
+    try {
+      const rolesStr = localStorage.getItem('unstapp_user_roles');
+      if (!rolesStr) return false;
+      const roles = JSON.parse(rolesStr);
+      return roles.includes('Alumno');
+    } catch {
+      return false;
+    }
+  })();
+
   return (
     <div className="relative w-full max-w-[420px] rounded-[2.5rem] bg-white p-8 font-sans shadow-[0_12px_40px_-10px_rgb(0,0,0,0.15)]">
       <div className="relative mb-8 flex items-center justify-center">
@@ -112,16 +123,18 @@ export const DailyEventsCard: React.FC<DailyEventsCardProps> = ({
         )}
       </div>
 
-      <div className="flex justify-center">
-        <button
-          type="button"
-          onClick={onAddEventClick}
-          className="flex items-center gap-2 rounded-full bg-[#21519c] px-10 py-3.5 text-[15px] font-bold text-white transition-colors hover:bg-[#1a4079]"
-        >
-          <Plus size={17} />
-          Agregar Evento
-        </button>
-      </div>
+      {!isAlumno && (
+        <div className="flex justify-center">
+          <button
+            type="button"
+            onClick={onAddEventClick}
+            className="flex items-center gap-2 rounded-full bg-[#21519c] px-10 py-3.5 text-[15px] font-bold text-white transition-colors hover:bg-[#1a4079]"
+          >
+            <Plus size={17} />
+            Agregar Evento
+          </button>
+        </div>
+      )}
     </div>
   );
 };

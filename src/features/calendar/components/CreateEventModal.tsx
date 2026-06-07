@@ -43,6 +43,17 @@ export const CreateEventModal: React.FC<CreateEventModalProps> = ({
   const [time, setTime] = useState('08:00');
   const [formError, setFormError] = useState<string | null>(null);
 
+  const isAlumno = (() => {
+    try {
+      const rolesStr = localStorage.getItem('unstapp_user_roles');
+      if (!rolesStr) return false;
+      const roles = JSON.parse(rolesStr);
+      return roles.includes('Alumno');
+    } catch {
+      return false;
+    }
+  })();
+
   const canSubmit = title.trim().length > 0 && !isSubmitting;
 
   const handleSubmit = async (event: React.FormEvent) => {
@@ -70,6 +81,10 @@ export const CreateEventModal: React.FC<CreateEventModalProps> = ({
       setFormError('No se pudo crear el evento.');
     }
   };
+
+  if (isAlumno) {
+    return null;
+  }
 
   return (
     <form

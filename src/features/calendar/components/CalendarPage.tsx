@@ -77,6 +77,16 @@ export const CalendarPage = () => {
     error: eventsError,
     createEvent,
   } = useCalendarEvents(visibleDate, selectedDate);
+  const isAlumno = (() => {
+    try {
+      const rolesStr = localStorage.getItem('unstapp_user_roles');
+      if (!rolesStr) return false;
+      const roles = JSON.parse(rolesStr);
+      return roles.includes('Alumno');
+    } catch {
+      return false;
+    }
+  })();
   const viewFilters = viewFilterBase.map((filter) => ({
     ...filter,
     count: monthlyCounters[filter.id],
@@ -141,15 +151,14 @@ export const CalendarPage = () => {
                     selectDay(day.date);
                     setIsDailyEventsModalOpen(true);
                   }}
-                  className={`mx-auto flex aspect-square w-full max-w-11 items-center justify-center rounded-full text-[11px] font-black transition-colors sm:max-w-12 sm:text-[12px] ${
-                    day.isToday
+                  className={`mx-auto flex aspect-square w-full max-w-11 items-center justify-center rounded-full text-[11px] font-black transition-colors sm:max-w-12 sm:text-[12px] ${day.isToday
                       ? 'bg-[#155DFC] text-white shadow-[0_8px_18px_rgba(21,93,252,0.28)]'
                       : day.isSelected
                         ? 'bg-[#EFF6FF] text-[#155DFC] ring-2 ring-[#155DFC]/30'
-                      : day.isCurrentMonth
-                        ? 'text-[#526174] hover:bg-gray-100'
-                        : 'text-gray-200'
-                  }`}
+                        : day.isCurrentMonth
+                          ? 'text-[#526174] hover:bg-gray-100'
+                          : 'text-gray-200'
+                    }`}
                   aria-current={day.isToday ? 'date' : undefined}
                   aria-label={`Seleccionar dia ${day.dayNumber}`}
                 >
@@ -164,14 +173,16 @@ export const CalendarPage = () => {
               <h2 className="text-[17px] font-black uppercase tracking-tight text-black sm:text-[20px]">
                 Eventos del dia
               </h2>
-              <button
-                type="button"
-                onClick={() => setIsCreateModalOpen(true)}
-                className="flex h-8 w-8 items-center justify-center rounded-full text-[#1E4E9D] transition-colors hover:bg-[#EFF6FF]"
-                aria-label="Crear nuevo evento"
-              >
-                <Plus size={18} strokeWidth={2.4} />
-              </button>
+              {!isAlumno && (
+                <button
+                  type="button"
+                  onClick={() => setIsCreateModalOpen(true)}
+                  className="flex h-8 w-8 items-center justify-center rounded-full text-[#1E4E9D] transition-colors hover:bg-[#EFF6FF]"
+                  aria-label="Crear nuevo evento"
+                >
+                  <Plus size={18} strokeWidth={2.4} />
+                </button>
+              )}
             </header>
 
             <div className="mt-3 flex flex-col gap-3">
@@ -190,17 +201,17 @@ export const CalendarPage = () => {
                     const eventDate = new Date(event.startDate);
 
                     return (
-                  <div
-                    className={`flex h-11 w-11 shrink-0 flex-col items-center justify-center rounded-full text-center ${eventTypeStyles[event.type]}`}
-                    aria-label={`Fecha del evento ${eventDate.getDate()} de ${getMonthInitials(eventDate)}`}
-                  >
-                    <span className="text-[8px] font-black leading-none">
-                      {getMonthInitials(eventDate)}
-                    </span>
-                    <span className="mt-0.5 text-[12px] font-black leading-none">
-                      {eventDate.getDate()}
-                    </span>
-                  </div>
+                      <div
+                        className={`flex h-11 w-11 shrink-0 flex-col items-center justify-center rounded-full text-center ${eventTypeStyles[event.type]}`}
+                        aria-label={`Fecha del evento ${eventDate.getDate()} de ${getMonthInitials(eventDate)}`}
+                      >
+                        <span className="text-[8px] font-black leading-none">
+                          {getMonthInitials(eventDate)}
+                        </span>
+                        <span className="mt-0.5 text-[12px] font-black leading-none">
+                          {eventDate.getDate()}
+                        </span>
+                      </div>
                     );
                   })()}
                   <div className="min-w-0 flex-1">
@@ -279,11 +290,11 @@ export const CalendarPage = () => {
       {/* Modal Overlay para Eventos del Día */}
       {isDailyEventsModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
-          <DailyEventsCard 
+          <DailyEventsCard
             selectedDate={selectedDate}
             events={selectedDayEvents}
             isLoading={isEventsLoading}
-            onClose={() => setIsDailyEventsModalOpen(false)} 
+            onClose={() => setIsDailyEventsModalOpen(false)}
             onAddEventClick={() => {
               setIsDailyEventsModalOpen(false);
               setIsCreateModalOpen(true);
