@@ -90,6 +90,7 @@ export const usePostInteractions = ({
     const optimisticComment: PostComment = {
       id: Date.now(),
       author: {
+        id: localStorage.getItem('unstapp_user_id') || undefined,
         name: localStorage.getItem('unstapp_user_name') ?? 'Vos',
         role: 'Alumno',
       },
@@ -129,8 +130,9 @@ export const usePostInteractions = ({
     setCommentsCount((count) => Math.max(0, count - 1));
 
     try {
-      await commentService.remove(postId, commentId);
-    } catch {
+      await commentService.remove(commentId);
+    } catch (error) {
+      console.error('Error al eliminar comentario:', error);
       setComments((current) => {
         const reverted = [...current, commentToDelete];
         return reverted.sort(
