@@ -3,6 +3,7 @@ import { LoginPage } from './features/auth';
 import { FeedPage } from './features/feed';
 import { ProfilePage } from './features/profile';
 import { CalendarPage } from './features/calendar';
+import { SchedulePage } from './features/schedule';
 import { NotFoundPage } from './pages/NotFoundPage';
 import { TestPage } from './pages/TestPage';
 import { NotificationsProvider } from './store/notificationsContext';
@@ -17,7 +18,7 @@ function App() {
           <Route path="/feed" element={<FeedPage />} />
           <Route path="/comunidad" element={<TestPage activeTab="comunidad" />} />
           <Route path="/calendario" element={<CalendarPage />} />
-          <Route path="/horario" element={<TestPage activeTab="horario" />} />
+          <Route path="/horario" element={<SchedulePage />} />
           <Route path="/perfil" element={<ProfilePage />} />
           <Route path="/perfil/:userId" element={<ProfilePage />} />
           <Route path="*" element={<NotFoundPage />} />

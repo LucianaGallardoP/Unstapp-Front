@@ -1,1 +1,1 @@
-// index.ts
+export { SchedulePage } from './components/SchedulePage';
