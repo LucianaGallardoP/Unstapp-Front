@@ -10,10 +10,11 @@ interface CreateSubjectModalProps {
 export const CreateSubjectModal = ({ onClose, onCreate }: CreateSubjectModalProps) => {
   const [subject, setSubject] = useState('');
   const [startTime, setStartTime] = useState('15:00');
+  const [durationHours, setDurationHours] = useState(2);
   const [teacher, setTeacher] = useState('');
   const [room, setRoom] = useState('');
 
-  const canSubmit = subject.trim().length > 0 && startTime.trim().length > 0;
+  const canSubmit = subject.trim().length > 0 && startTime.trim().length > 0 && durationHours > 0;
 
   const handleSubmit = () => {
     if (!canSubmit) return;
@@ -21,6 +22,7 @@ export const CreateSubjectModal = ({ onClose, onCreate }: CreateSubjectModalProp
     onCreate({
       subject: subject.trim(),
       startTime,
+      durationHours,
       teacher: teacher.trim() || 'Profesor a confirmar',
       room: room.trim() || 'Aula a confirmar',
     });
@@ -61,6 +63,18 @@ export const CreateSubjectModal = ({ onClose, onCreate }: CreateSubjectModalProp
               type="time"
               value={startTime}
               onChange={(event) => setStartTime(event.target.value)}
+              className="h-8 rounded-full border border-[#1E4E9D] px-3 text-[11px] font-semibold text-gray-700 outline-none focus:ring-1 focus:ring-[#1E4E9D]"
+            />
+          </label>
+
+          <label className="grid grid-cols-[74px_1fr] items-center gap-3 text-[11px] font-black text-[#1F2937]">
+            Duración
+            <input
+              type="number"
+              min={1}
+              max={6}
+              value={durationHours}
+              onChange={(event) => setDurationHours(Number(event.target.value))}
               className="h-8 rounded-full border border-[#1E4E9D] px-3 text-[11px] font-semibold text-gray-700 outline-none focus:ring-1 focus:ring-[#1E4E9D]"
             />
           </label>

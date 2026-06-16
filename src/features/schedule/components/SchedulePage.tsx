@@ -123,12 +123,9 @@ export const SchedulePage = () => {
               <h2 className="text-[10px] font-black uppercase tracking-wide text-[#526174]">
                 Cronograma del día
               </h2>
-              <button
-                type="button"
-                className="text-[9px] font-black uppercase text-[#1E4E9D]"
-              >
-                Ver semanal
-              </button>
+              <span className="text-[9px] font-black uppercase text-[#1E4E9D]">
+                {selectedClasses.length} {selectedClasses.length === 1 ? 'materia' : 'materias'}
+              </span>
             </div>
 
             <div className="flex flex-col gap-3">
@@ -146,6 +143,9 @@ export const SchedulePage = () => {
                   <div className="min-w-0 flex-1">
                     <p className="text-[14px] font-black leading-4 text-black">
                       {scheduleClass.startTime}
+                    </p>
+                    <p className="mt-0.5 text-[8px] font-bold uppercase text-[#808080]">
+                      {scheduleClass.durationHours} {scheduleClass.durationHours === 1 ? 'hora' : 'horas'}
                     </p>
                     <h3 className="mt-1 text-[12px] font-black uppercase leading-4 text-black">
                       {scheduleClass.subject}

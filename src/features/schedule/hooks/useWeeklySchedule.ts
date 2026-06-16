@@ -14,6 +14,7 @@ export interface ScheduleClass {
   id: number;
   day: WeekDayId;
   startTime: string;
+  durationHours: number;
   subject: string;
   teacher: string;
   room: string;
@@ -23,6 +24,7 @@ export interface ScheduleClass {
 export interface CreateScheduleClassInput {
   subject: string;
   startTime: string;
+  durationHours: number;
   teacher: string;
   room: string;
 }
@@ -43,123 +45,19 @@ const studentContext: StudentContext = {
 };
 
 const classes: ScheduleClass[] = [
-  {
-    id: 1,
-    day: 'lun',
-    startTime: '09:00',
-    subject: 'Advanced Algorithms',
-    teacher: 'Prof. Matias Rodriguez',
-    room: 'Lab 2',
-    color: '#1E4E9D',
-  },
-  {
-    id: 2,
-    day: 'lun',
-    startTime: '14:15',
-    subject: 'Database Systems',
-    teacher: 'Prof. Agustina Gomez',
-    room: 'Lab 1',
-    color: '#ffb000',
-  },
-  {
-    id: 3,
-    day: 'lun',
-    startTime: '17:45',
-    subject: 'Software Architecture',
-    teacher: 'Prof. Pedro Gomez',
-    room: 'Aula 4',
-    color: '#E7000B',
-  },
-  {
-    id: 4,
-    day: 'mar',
-    startTime: '10:30',
-    subject: 'Database Systems',
-    teacher: 'Prof. Agustina Gomez',
-    room: 'Lab 1',
-    color: '#ffb000',
-  },
-  {
-    id: 5,
-    day: 'mar',
-    startTime: '15:15',
-    subject: 'Seminario Informatico',
-    teacher: 'Prof. Roberto Suarez',
-    room: 'Aula 1',
-    color: '#f4ea00',
-  },
-  {
-    id: 6,
-    day: 'mie',
-    startTime: '08:00',
-    subject: 'Advanced Algorithms',
-    teacher: 'Prof. Matias Rodriguez',
-    room: 'Lab 2',
-    color: '#1E4E9D',
-  },
-  {
-    id: 7,
-    day: 'mie',
-    startTime: '13:45',
-    subject: 'Software Architecture',
-    teacher: 'Prof. Pedro Gomez',
-    room: 'Aula 4',
-    color: '#E7000B',
-  },
-  {
-    id: 8,
-    day: 'mie',
-    startTime: '17:25',
-    subject: 'Database Systems',
-    teacher: 'Prof. Agustina Gomez',
-    room: 'Lab 1',
-    color: '#ffb000',
-  },
-  {
-    id: 9,
-    day: 'jue',
-    startTime: '15:15',
-    subject: 'Seminario Informatico',
-    teacher: 'Prof. Roberto Suarez',
-    room: 'Aula 1',
-    color: '#f4ea00',
-  },
-  {
-    id: 10,
-    day: 'vie',
-    startTime: '08:35',
-    subject: 'Seminario Informatico',
-    teacher: 'Prof. Roberto Suarez',
-    room: 'Aula 1',
-    color: '#f4ea00',
-  },
-  {
-    id: 11,
-    day: 'vie',
-    startTime: '11:20',
-    subject: 'Advanced Algorithms',
-    teacher: 'Prof. Matias Rodriguez',
-    room: 'Lab 2',
-    color: '#1E4E9D',
-  },
-  {
-    id: 12,
-    day: 'vie',
-    startTime: '15:00',
-    subject: 'Database Systems',
-    teacher: 'Prof. Agustina Gomez',
-    room: 'Lab 1',
-    color: '#ffb000',
-  },
-  {
-    id: 13,
-    day: 'vie',
-    startTime: '17:45',
-    subject: 'Software Architecture',
-    teacher: 'Prof. Pedro Gomez',
-    room: 'Aula 4',
-    color: '#E7000B',
-  },
+  { id: 1, day: 'lun', startTime: '09:00', durationHours: 2, subject: 'Advanced Algorithms', teacher: 'Prof. Matias Rodriguez', room: 'Lab 2', color: '#1E4E9D' },
+  { id: 2, day: 'lun', startTime: '14:15', durationHours: 2, subject: 'Database Systems', teacher: 'Prof. Agustina Gomez', room: 'Lab 1', color: '#ffb000' },
+  { id: 3, day: 'lun', startTime: '17:45', durationHours: 2, subject: 'Software Architecture', teacher: 'Prof. Pedro Gomez', room: 'Aula 4', color: '#E7000B' },
+  { id: 4, day: 'mar', startTime: '10:30', durationHours: 2, subject: 'Database Systems', teacher: 'Prof. Agustina Gomez', room: 'Lab 1', color: '#ffb000' },
+  { id: 5, day: 'mar', startTime: '15:15', durationHours: 2, subject: 'Seminario Informatico', teacher: 'Prof. Roberto Suarez', room: 'Aula 1', color: '#f4ea00' },
+  { id: 6, day: 'mie', startTime: '08:00', durationHours: 2, subject: 'Advanced Algorithms', teacher: 'Prof. Matias Rodriguez', room: 'Lab 2', color: '#1E4E9D' },
+  { id: 7, day: 'mie', startTime: '13:45', durationHours: 2, subject: 'Software Architecture', teacher: 'Prof. Pedro Gomez', room: 'Aula 4', color: '#E7000B' },
+  { id: 8, day: 'mie', startTime: '17:25', durationHours: 2, subject: 'Database Systems', teacher: 'Prof. Agustina Gomez', room: 'Lab 1', color: '#ffb000' },
+  { id: 9, day: 'jue', startTime: '15:15', durationHours: 2, subject: 'Seminario Informatico', teacher: 'Prof. Roberto Suarez', room: 'Aula 1', color: '#f4ea00' },
+  { id: 10, day: 'vie', startTime: '08:35', durationHours: 2, subject: 'Seminario Informatico', teacher: 'Prof. Roberto Suarez', room: 'Aula 1', color: '#f4ea00' },
+  { id: 11, day: 'vie', startTime: '11:20', durationHours: 2, subject: 'Advanced Algorithms', teacher: 'Prof. Matias Rodriguez', room: 'Lab 2', color: '#1E4E9D' },
+  { id: 12, day: 'vie', startTime: '15:00', durationHours: 2, subject: 'Database Systems', teacher: 'Prof. Agustina Gomez', room: 'Lab 1', color: '#ffb000' },
+  { id: 13, day: 'vie', startTime: '17:45', durationHours: 2, subject: 'Software Architecture', teacher: 'Prof. Pedro Gomez', room: 'Aula 4', color: '#E7000B' },
 ];
 
 const getTodayWeekDay = (): WeekDayId => {
@@ -181,7 +79,9 @@ export const useWeeklySchedule = () => {
   const [contextError, setContextError] = useState<string | null>(null);
 
   const selectedClasses = useMemo(
-    () => scheduleClasses.filter((scheduleClass) => scheduleClass.day === selectedDay),
+    () => scheduleClasses
+      .filter((scheduleClass) => scheduleClass.day === selectedDay)
+      .sort((firstClass, secondClass) => firstClass.startTime.localeCompare(secondClass.startTime)),
     [scheduleClasses, selectedDay],
   );
 
@@ -192,6 +92,7 @@ export const useWeeklySchedule = () => {
         id: Date.now(),
         day: selectedDay,
         startTime: newClass.startTime,
+        durationHours: newClass.durationHours,
         subject: newClass.subject,
         teacher: newClass.teacher,
         room: newClass.room,
