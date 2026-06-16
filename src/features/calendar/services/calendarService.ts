@@ -68,7 +68,7 @@ export const calendarService = {
   },
 
   getDailyEvents: async (date: string, isToday: boolean = false): Promise<CalendarEvent[]> => {
-    const endpoint = isToday ? '/calendar/day' : '/calendar/daily';
+    const endpoint = isToday ? '/calendar/daily' : '/calendar/day';
     const response = await apiClient.get<unknown>(endpoint, {
       params: { date },
       headers: getAuthHeaders(),

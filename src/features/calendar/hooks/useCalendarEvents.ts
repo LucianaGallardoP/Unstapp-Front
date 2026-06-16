@@ -82,17 +82,21 @@ export const useCalendarEvents = (visibleDate: Date, selectedDate: Date) => {
         const response = await calendarService.getDailyEvents(formattedDate, isToday);
 
         if (isMounted) {
-          // Salvaguarda: filtramos localmente la respuesta del endpoint por si el backend no está 
-          // aplicando el filtro de fecha correctamente y devuelve más eventos de los debidos.
-          const filteredResponse = response.filter((event) => 
-            isSameDay(new Date(event.startDate), selectedDate)
-          );
-          setDailyEvents(filteredResponse);
+          // Confiamos en el filtro del backend (que ya recibe el parámetro date).
+          // Filtrar localmente con new Date() puede causar bugs de zona horaria 
+          // si los eventos vienen en formato UTC de medianoche.
+          setDailyEvents(response);
         }
       } catch {
         if (isMounted) {
-          // Fallback en caso de error: filtramos localmente si el endpoint falla
-          setDailyEvents(events.filter((event) => isSameDay(new Date(event.startDate), selectedDate)));
+          // Fallback en caso de error: filtramos localmente los eventos mensuales.
+          // Comparamos el string YYYY-MM-DD directamente para evitar que el navegador cambie de día por la zona horaria.
+          const year = selectedDate.getFullYear();
+          const month = String(selectedDate.getMonth() + 1).padStart(2, '0');
+          const day = String(selectedDate.getDate()).padStart(2, '0');
+          const dateString = `${year}-${month}-${day}`;
+          
+          setDailyEvents(events.filter((event) => event.startDate.startsWith(dateString)));
         }
       } finally {
         if (isMounted) {
