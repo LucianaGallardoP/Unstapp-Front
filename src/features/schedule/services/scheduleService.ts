@@ -1,4 +1,4 @@
-import { apiClient } from '../../../services/apiClient';
+﻿import { apiClient } from '../../../services/apiClient';
 import type { StudentContext } from '../hooks/useWeeklySchedule';
 
 type ApiRecord = Record<string, unknown>;
@@ -38,7 +38,7 @@ const mapContextFromApi = (apiContext: unknown): StudentContext => {
       asString(data.academicYear) ||
       asString(data.year) ||
       asString(data.anio) ||
-      '2do ano',
+      '2do año',
     commission:
       asString(data.commissionName) ||
       asString(data.comisionNombre) ||

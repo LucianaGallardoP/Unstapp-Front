@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+﻿import { useEffect, useMemo, useState } from 'react';
 import { scheduleService } from '../services/scheduleService';
 
 export type WeekDayId = 'lun' | 'mar' | 'mie' | 'jue' | 'vie';
@@ -30,7 +30,7 @@ export const weekDays: { id: WeekDayId; label: string }[] = [
 
 const studentContext: StudentContext = {
   career: 'Ingenieria de Software',
-  year: '2do ano',
+  year: '2do año',
   commission: 'Comision B',
   campus: 'Sede Yerba Buena',
 };
@@ -192,7 +192,7 @@ export const useWeeklySchedule = () => {
         }
       } catch {
         if (isMounted) {
-          setContextError('No se pudo cargar el contexto academico.');
+          setContextError('No se pudo cargar el contexto académico.');
         }
       } finally {
         if (isMounted) {

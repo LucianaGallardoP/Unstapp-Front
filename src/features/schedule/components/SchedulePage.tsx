@@ -1,4 +1,4 @@
-import { AlertTriangle } from 'lucide-react';
+﻿import { AlertTriangle } from 'lucide-react';
 import { BottomNavigation } from '../../../components/common/BottomNavigation';
 import { TopBar } from '../../../components/common/TopBar';
 import { useWeeklySchedule } from '../hooks/useWeeklySchedule';
@@ -34,7 +34,7 @@ export const SchedulePage = () => {
                   {studentContext.career}
                 </h1>
 
-                <div className="mt-2 grid grid-cols-3 gap-2 text-center">
+                <div className="mt-2 grid grid-cols-2 gap-2 text-center">
                   <div>
                     <p className="text-[9px] font-black uppercase leading-3 text-[#1E4E9D]">
                       {studentContext.year}
@@ -51,14 +51,7 @@ export const SchedulePage = () => {
                       {studentContext.campus}
                     </p>
                   </div>
-                  <div>
-                    <p className="text-[9px] font-black uppercase leading-3 text-[#526174]">
-                      Turno
-                    </p>
-                    <p className="text-[7px] font-black uppercase leading-3 text-[#526174]">
-                      Manana
-                    </p>
-                  </div>
+
                 </div>
               </div>
             </div>
@@ -103,7 +96,7 @@ export const SchedulePage = () => {
           <section className="mt-6">
             <div className="mb-3 flex items-center justify-between">
               <h2 className="text-[10px] font-black uppercase tracking-wide text-[#526174]">
-                Cronograma del dia
+                Cronograma del día
               </h2>
               <button
                 type="button"
@@ -146,7 +139,7 @@ export const SchedulePage = () => {
 
               {selectedClasses.length === 0 && (
                 <p className="rounded-[12px] bg-white px-4 py-5 text-center text-[12px] font-bold text-[#526174] shadow-[0_7px_18px_rgba(15,23,42,0.1)]">
-                  No hay clases cargadas para este dia.
+                  No hay clases cargadas para este día.
                 </p>
               )}
             </div>
@@ -160,7 +153,7 @@ export const SchedulePage = () => {
               </h2>
             </div>
             <p className="mx-auto mt-1 max-w-[320px] text-[8px] font-bold uppercase leading-3 text-white/80">
-              Si notas una inconsistencia, reportala para que administracion revise el cronograma.
+              Si notas una inconsistencia, reportala para que administración revise el cronograma.
             </p>
             <button
               type="button"
