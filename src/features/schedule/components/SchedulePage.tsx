@@ -1,9 +1,23 @@
-﻿import { AlertTriangle } from 'lucide-react';
+﻿import { useState } from 'react';
+import { AlertTriangle, Plus } from 'lucide-react';
 import { BottomNavigation } from '../../../components/common/BottomNavigation';
 import { TopBar } from '../../../components/common/TopBar';
 import { useWeeklySchedule } from '../hooks/useWeeklySchedule';
+import { CreateSubjectModal } from './CreateSubjectModal';
+
+const getIsCurrentUserAdmin = () => {
+  try {
+    const roles = JSON.parse(localStorage.getItem('unstapp_user_roles') ?? '[]');
+
+    return Array.isArray(roles) && roles.some((role) => String(role).toLowerCase().includes('admin'));
+  } catch {
+    return false;
+  }
+};
 
 export const SchedulePage = () => {
+  const [isCreateSubjectModalOpen, setIsCreateSubjectModalOpen] = useState(false);
+  const isCurrentUserAdmin = getIsCurrentUserAdmin();
   const {
     studentContext,
     isContextLoading,
@@ -11,6 +25,7 @@ export const SchedulePage = () => {
     weekDays,
     selectedDay,
     selectedClasses,
+    addScheduleClass,
     setSelectedDay,
   } = useWeeklySchedule();
 
@@ -20,8 +35,19 @@ export const SchedulePage = () => {
 
       <main className="mx-auto flex w-full max-w-[430px] flex-col px-3 py-4 sm:max-w-[560px] sm:px-5 md:max-w-2xl md:py-6 lg:max-w-3xl">
         <section className="mx-auto w-full max-w-[430px] sm:max-w-[560px] md:max-w-[600px]">
-          <article className="rounded-[16px] bg-white px-4 py-4 shadow-[0_8px_22px_rgba(15,23,42,0.13)]">
-            <div className="flex items-center gap-3">
+          <article className="relative rounded-[16px] bg-white px-4 py-4 shadow-[0_8px_22px_rgba(15,23,42,0.13)]">
+            {isCurrentUserAdmin && (
+              <button
+                type="button"
+                onClick={() => setIsCreateSubjectModalOpen(true)}
+                className="absolute right-4 top-4 flex h-8 w-8 items-center justify-center rounded-full text-[#1E4E9D] transition-colors hover:bg-[#EFF6FF]"
+                aria-label="Agregar materia"
+              >
+                <Plus size={19} strokeWidth={2.5} />
+              </button>
+            )}
+
+            <div className="flex items-center gap-3 pr-8">
               <div className="h-14 w-14 shrink-0 rounded-[10px] bg-[#1E4E9D]" />
 
               <div className="min-w-0 flex-1">
@@ -51,7 +77,6 @@ export const SchedulePage = () => {
                       {studentContext.campus}
                     </p>
                   </div>
-
                 </div>
               </div>
             </div>
@@ -164,6 +189,13 @@ export const SchedulePage = () => {
           </section>
         </section>
       </main>
+
+      {isCreateSubjectModalOpen && (
+        <CreateSubjectModal
+          onClose={() => setIsCreateSubjectModalOpen(false)}
+          onCreate={addScheduleClass}
+        />
+      )}
 
       <BottomNavigation activeTab="horario" />
     </div>

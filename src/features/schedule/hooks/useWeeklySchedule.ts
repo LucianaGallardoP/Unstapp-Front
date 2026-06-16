@@ -20,6 +20,13 @@ export interface ScheduleClass {
   color: string;
 }
 
+export interface CreateScheduleClassInput {
+  subject: string;
+  startTime: string;
+  teacher: string;
+  room: string;
+}
+
 export const weekDays: { id: WeekDayId; label: string }[] = [
   { id: 'lun', label: 'LUN' },
   { id: 'mar', label: 'MAR' },
@@ -168,14 +175,30 @@ const getTodayWeekDay = (): WeekDayId => {
 
 export const useWeeklySchedule = () => {
   const [selectedDay, setSelectedDay] = useState<WeekDayId>(() => getTodayWeekDay());
+  const [scheduleClasses, setScheduleClasses] = useState<ScheduleClass[]>(classes);
   const [currentStudentContext, setCurrentStudentContext] = useState<StudentContext>(studentContext);
   const [isContextLoading, setIsContextLoading] = useState(false);
   const [contextError, setContextError] = useState<string | null>(null);
 
   const selectedClasses = useMemo(
-    () => classes.filter((scheduleClass) => scheduleClass.day === selectedDay),
-    [selectedDay],
+    () => scheduleClasses.filter((scheduleClass) => scheduleClass.day === selectedDay),
+    [scheduleClasses, selectedDay],
   );
+
+  const addScheduleClass = (newClass: CreateScheduleClassInput) => {
+    setScheduleClasses((currentClasses) => [
+      ...currentClasses,
+      {
+        id: Date.now(),
+        day: selectedDay,
+        startTime: newClass.startTime,
+        subject: newClass.subject,
+        teacher: newClass.teacher,
+        room: newClass.room,
+        color: '#1E4E9D',
+      },
+    ]);
+  };
 
   useEffect(() => {
     let isMounted = true;
@@ -215,6 +238,7 @@ export const useWeeklySchedule = () => {
     weekDays,
     selectedDay,
     selectedClasses,
+    addScheduleClass,
     setSelectedDay,
   };
 };
