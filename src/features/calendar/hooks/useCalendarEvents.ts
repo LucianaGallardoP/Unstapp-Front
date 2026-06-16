@@ -77,8 +77,9 @@ export const useCalendarEvents = (visibleDate: Date, selectedDate: Date) => {
         const month = String(selectedDate.getMonth() + 1).padStart(2, '0');
         const day = String(selectedDate.getDate()).padStart(2, '0');
         const formattedDate = `${year}-${month}-${day}`;
+        const isToday = isSameDay(selectedDate, new Date());
 
-        const response = await calendarService.getDailyEvents(formattedDate);
+        const response = await calendarService.getDailyEvents(formattedDate, isToday);
 
         if (isMounted) {
           // Salvaguarda: filtramos localmente la respuesta del endpoint por si el backend no está 
