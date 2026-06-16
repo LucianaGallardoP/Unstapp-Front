@@ -56,7 +56,7 @@ export const ProfilePage = () => {
               {postsTitle}
             </h2>
 
-            <div className="flex flex-col">
+            <div className="flex flex-col gap-4 lg:gap-5">
               {profileData.posts.map((post) => (
                 <PostCard
                   key={post.id}
