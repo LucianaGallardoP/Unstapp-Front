@@ -70,6 +70,7 @@ export const CalendarPage = () => {
     selectDay,
   } = useMonthlyCalendar();
   const {
+    events,
     selectedDayEvents,
     monthlyCounters,
     isLoading: isEventsLoading,
@@ -144,28 +145,39 @@ export const CalendarPage = () => {
                 </span>
               ))}
 
-              {calendarDays.map((day) => (
-                <button
-                  key={day.date.toISOString()}
-                  type="button"
-                  onClick={() => {
-                    selectDay(day.date);
-                    setIsDailyEventsModalOpen(true);
-                  }}
-                  className={`mx-auto flex aspect-square w-full max-w-11 items-center justify-center rounded-full text-[11px] font-black transition-colors sm:max-w-12 sm:text-[12px] ${day.isToday
-                      ? 'bg-[#155DFC] text-white shadow-[0_8px_18px_rgba(21,93,252,0.28)]'
-                      : day.isSelected
-                        ? 'bg-[#EFF6FF] text-[#155DFC] ring-2 ring-[#155DFC]/30'
-                        : day.isCurrentMonth
-                          ? 'text-[#526174] hover:bg-gray-100'
-                          : 'text-gray-200'
-                    }`}
-                  aria-current={day.isToday ? 'date' : undefined}
-                  aria-label={`Seleccionar dia ${day.dayNumber}`}
-                >
-                  {day.dayNumber}
-                </button>
-              ))}
+              {calendarDays.map((day) => {
+                const year = day.date.getFullYear();
+                const month = String(day.date.getMonth() + 1).padStart(2, '0');
+                const date = String(day.date.getDate()).padStart(2, '0');
+                const dateString = `${year}-${month}-${date}`;
+                const hasEvents = events.some((event) => event.startDate.startsWith(dateString));
+
+                return (
+                  <button
+                    key={day.date.toISOString()}
+                    type="button"
+                    onClick={() => {
+                      selectDay(day.date);
+                      setIsDailyEventsModalOpen(true);
+                    }}
+                    className={`relative mx-auto flex aspect-square w-full max-w-11 items-center justify-center rounded-full text-[11px] font-black transition-colors sm:max-w-12 sm:text-[12px] ${day.isToday
+                        ? 'bg-[#155DFC] text-white shadow-[0_8px_18px_rgba(21,93,252,0.28)]'
+                        : day.isSelected
+                          ? 'bg-[#EFF6FF] text-[#155DFC] ring-2 ring-[#155DFC]/30'
+                          : day.isCurrentMonth
+                            ? 'text-[#526174] hover:bg-gray-100'
+                            : 'text-gray-200'
+                      }`}
+                    aria-current={day.isToday ? 'date' : undefined}
+                    aria-label={`Seleccionar dia ${day.dayNumber}`}
+                  >
+                    <span>{day.dayNumber}</span>
+                    {hasEvents && !day.isSelected && (
+                      <span className={`absolute bottom-1 h-1 w-1 rounded-full ${day.isToday ? 'bg-white' : 'bg-[#155DFC]'}`} />
+                    )}
+                  </button>
+                );
+              })}
             </div>
           </section>
 
