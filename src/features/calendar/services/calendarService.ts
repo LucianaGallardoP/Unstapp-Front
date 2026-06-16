@@ -67,8 +67,9 @@ export const calendarService = {
     return Array.isArray(events) ? events.map(mapEventFromApi) : [];
   },
 
-  getDailyEvents: async (date: string): Promise<CalendarEvent[]> => {
-    const response = await apiClient.get<unknown>('/calendar/daily', {
+  getDailyEvents: async (date: string, isToday: boolean = false): Promise<CalendarEvent[]> => {
+    const endpoint = isToday ? '/calendar/daily' : '/calendar/day';
+    const response = await apiClient.get<unknown>(endpoint, {
       params: { date },
       headers: getAuthHeaders(),
     });

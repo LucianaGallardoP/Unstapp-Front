@@ -120,7 +120,7 @@ export const PostCard = ({
   const isCurrentUserAdmin = getIsCurrentUserAdmin();
   const canShowDeleteAction =
     Boolean(onDelete) &&
-    (canDelete ?? Boolean(currentUserId && post.author.id && String(currentUserId) === String(post.author.id)));
+    (isCurrentUserAdmin || (canDelete ?? Boolean(currentUserId && post.author.id && String(currentUserId) === String(post.author.id))));
 
   const handleOpenAuthorProfile = () => {
     if (!post.author.id) return;

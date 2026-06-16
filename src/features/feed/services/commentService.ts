@@ -88,9 +88,8 @@ export const commentService = {
     return mapCommentFromApi(response.data, content);
   },
 
-  // Elimina un comentario asociado a una publicacion.
-  remove: async (postId: number | string, commentId: number | string) => {
-    await apiClient.delete(`/posts/${postId}/comments/${commentId}`, {
+  remove: async (commentId: number | string) => {
+    await apiClient.delete(`/comments/${commentId}`, {
       headers: getAuthHeaders(),
     });
   },
