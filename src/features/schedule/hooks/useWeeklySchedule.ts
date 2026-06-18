@@ -22,6 +22,7 @@ export interface ScheduleClass {
 }
 
 export interface CreateScheduleClassInput {
+  day: WeekDayId;
   subject: string;
   startTime: string;
   durationHours: number;
@@ -42,6 +43,27 @@ const studentContext: StudentContext = {
   year: '2do año',
   commission: 'Comision B',
   campus: 'Sede Yerba Buena',
+};
+
+const adminCareerContexts: Record<string, StudentContext> = {
+  'tec-desarrollo-software': {
+    career: 'Tec. Desarrollo de Software',
+    year: 'Año 3',
+    commission: 'Comision A',
+    campus: 'Sede Yerba Buena',
+  },
+  'ing-inteligencia-artificial': {
+    career: 'Ing. en Inteligencia Artificial',
+    year: 'Año 2',
+    commission: 'Comision A',
+    campus: 'Sede Yerba Buena',
+  },
+  'ing-software': {
+    career: 'Ingenieria de Software',
+    year: '2do año',
+    commission: 'Comision B',
+    campus: 'Sede Yerba Buena',
+  },
 };
 
 const classes: ScheduleClass[] = [
@@ -71,10 +93,11 @@ const getTodayWeekDay = (): WeekDayId => {
   return 'lun';
 };
 
-export const useWeeklySchedule = () => {
+export const useWeeklySchedule = (careerId?: string) => {
+  const selectedCareerContext = careerId ? (adminCareerContexts[careerId] ?? studentContext) : studentContext;
   const [selectedDay, setSelectedDay] = useState<WeekDayId>(() => getTodayWeekDay());
   const [scheduleClasses, setScheduleClasses] = useState<ScheduleClass[]>(classes);
-  const [currentStudentContext, setCurrentStudentContext] = useState<StudentContext>(studentContext);
+  const [currentStudentContext, setCurrentStudentContext] = useState<StudentContext>(selectedCareerContext);
   const [isContextLoading, setIsContextLoading] = useState(false);
   const [contextError, setContextError] = useState<string | null>(null);
 
@@ -90,7 +113,7 @@ export const useWeeklySchedule = () => {
       ...currentClasses,
       {
         id: Date.now(),
-        day: selectedDay,
+        day: newClass.day,
         startTime: newClass.startTime,
         durationHours: newClass.durationHours,
         subject: newClass.subject,
@@ -99,9 +122,18 @@ export const useWeeklySchedule = () => {
         color: '#1E4E9D',
       },
     ]);
+    setSelectedDay(newClass.day);
   };
 
   useEffect(() => {
+    if (careerId) {
+      setCurrentStudentContext(selectedCareerContext);
+      setContextError(null);
+      setIsContextLoading(false);
+
+      return;
+    }
+
     let isMounted = true;
 
     const loadContext = async () => {
@@ -130,7 +162,7 @@ export const useWeeklySchedule = () => {
     return () => {
       isMounted = false;
     };
-  }, []);
+  }, [careerId, selectedCareerContext]);
 
   return {
     studentContext: currentStudentContext,

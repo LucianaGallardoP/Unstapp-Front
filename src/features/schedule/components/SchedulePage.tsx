@@ -1,4 +1,5 @@
 ﻿import { useState } from 'react';
+import { useParams } from 'react-router-dom';
 import { AlertTriangle, Plus } from 'lucide-react';
 import { BottomNavigation } from '../../../components/common/BottomNavigation';
 import { TopBar } from '../../../components/common/TopBar';
@@ -17,6 +18,7 @@ const getIsCurrentUserAdmin = () => {
 
 export const SchedulePage = () => {
   const [isCreateSubjectModalOpen, setIsCreateSubjectModalOpen] = useState(false);
+  const { careerId } = useParams<{ careerId?: string }>();
   const isCurrentUserAdmin = getIsCurrentUserAdmin();
   const {
     studentContext,
@@ -27,7 +29,7 @@ export const SchedulePage = () => {
     selectedClasses,
     addScheduleClass,
     setSelectedDay,
-  } = useWeeklySchedule();
+  } = useWeeklySchedule(careerId);
 
   return (
     <div className="min-h-screen bg-white pb-20 text-gray-900 md:bg-gray-50">
@@ -192,6 +194,7 @@ export const SchedulePage = () => {
 
       {isCreateSubjectModalOpen && (
         <CreateSubjectModal
+          initialDay={selectedDay}
           onClose={() => setIsCreateSubjectModalOpen(false)}
           onCreate={addScheduleClass}
         />
