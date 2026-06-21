@@ -114,7 +114,7 @@ export const LoginForm = () => {
         </div>
 
 
-        <div className="text-center mt-2">
+        <div className="text-center mt-2 flex flex-col gap-2">
           <a 
             href="/forgot-password" 
             onClick={(e) => {
@@ -125,6 +125,15 @@ export const LoginForm = () => {
           >
             ¿Olvidaste tu contraseña?
           </a>
+          <button 
+            type="button"
+            onClick={(e) => {
+              e.preventDefault();
+            }}
+            className="text-[#1E4E9D] font-medium text-[15px] hover:text-[#122b54] hover:underline transition-all"
+          >
+            ¿Es tu primera vez ingresando?
+          </button>
         </div>
 
         {/* Botón dinámico: cambia texto y se bloquea durante la carga o si faltan datos */}
