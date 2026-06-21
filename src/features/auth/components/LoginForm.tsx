@@ -11,7 +11,11 @@ const LoginErrorMessage = () => (
   </p>
 );
 
-export const LoginForm = () => {
+interface LoginFormProps {
+  onFirstTimeClick?: () => void;
+}
+
+export const LoginForm = ({ onFirstTimeClick }: LoginFormProps) => {
   const [showPassword, setShowPassword] = useState(false);
   const [localError, setLocalError] = useState(false);
   const navigate = useNavigate(); // 2. Inicializamos el navegador [cite: 2083]
@@ -129,6 +133,9 @@ export const LoginForm = () => {
             type="button"
             onClick={(e) => {
               e.preventDefault();
+              if (onFirstTimeClick) {
+                onFirstTimeClick();
+              }
             }}
             className="text-[#1E4E9D] font-medium text-[15px] hover:text-[#122b54] hover:underline transition-all"
           >
