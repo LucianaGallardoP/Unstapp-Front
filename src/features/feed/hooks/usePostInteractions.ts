@@ -104,6 +104,11 @@ export const usePostInteractions = ({
 
     try {
       const createdComment = await commentService.create(postId, trimmedComment);
+      
+      // Ensure the created comment retains the current user's ID if the API didn't return it
+      if (!createdComment.author.id) {
+        createdComment.author.id = localStorage.getItem('unstapp_user_id') || undefined;
+      }
 
       setComments((currentComments) =>
         currentComments.map((comment) =>

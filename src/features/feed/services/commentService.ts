@@ -20,7 +20,46 @@ const asOptionalId = (value: unknown) =>
 
 const mapCommentFromApi = (apiComment: unknown, fallbackContent: string): PostComment => {
   const comment = asRecord(apiComment);
-  const author = asRecord(comment.author ?? comment.user ?? comment.createdBy);
+  const author = asRecord(comment.author ?? comment.user ?? comment.createdBy ?? comment.person ?? comment.autor);
+
+  const currentUserName = localStorage.getItem('unstapp_user_name');
+  const currentUserId = localStorage.getItem('unstapp_user_id');
+
+  const parsedName =
+    asString(author.name) ||
+    asString(author.fullName) ||
+    asString(author.username) ||
+    asString(comment.userName) ||
+    asString(comment.autorName) ||
+    asString(comment.autor);
+
+  let parsedId = asOptionalId(
+    author.id ??
+    author.userId ??
+    author.user_id ??
+    author.idUsuario ??
+    author.usuarioId ??
+    author.autorId ??
+    author.idAutor ??
+    author.personId ??
+    author.idPerson ??
+    comment.userId ??
+    comment.user_id ??
+    comment.authorId ??
+    comment.idUsuario ??
+    comment.usuarioId ??
+    comment.autorId ??
+    comment.idAutor ??
+    comment.personId ??
+    comment.idPerson ??
+    comment.createdById
+  );
+
+  // Fallback heurístico: si la API no manda el ID pero sí el nombre, 
+  // y coincide exactamente con el usuario local, asumimos que es suyo para la UI.
+  if (!parsedId && parsedName && currentUserName && parsedName.trim().toLowerCase() === currentUserName.trim().toLowerCase()) {
+    parsedId = currentUserId || undefined;
+  }
 
   return {
     id:
@@ -30,14 +69,8 @@ const mapCommentFromApi = (apiComment: unknown, fallbackContent: string): PostCo
           ? comment.commentId
         : Date.now(),
     author: {
-      id: asOptionalId(author.id ?? author.userId ?? comment.userId ?? comment.authorId ?? comment.createdById),
-      name:
-        asString(author.name) ||
-        asString(author.fullName) ||
-        asString(author.username) ||
-        asString(comment.userName) ||
-        localStorage.getItem('unstapp_user_name') ||
-        'Vos',
+      id: parsedId,
+      name: parsedName || currentUserName || 'Vos',
       avatarUrl:
         asString(author.avatarUrl) ||
         asString(author.profileImageUrl) ||
