@@ -13,10 +13,6 @@ export const RegisterForm = ({ onLoginClick }: RegisterFormProps) => {
   const [loading, setLoading] = useState(false);
   
   const [formData, setFormData] = useState({
-    nombre: '',
-    apellido: '',
-    codigo: '',
-    email: '',
     password: '',
     repeatPassword: ''
   });
@@ -34,10 +30,6 @@ export const RegisterForm = ({ onLoginClick }: RegisterFormProps) => {
   };
 
   const isFormValid = 
-    formData.nombre && 
-    formData.apellido && 
-    formData.codigo && 
-    formData.email && 
     formData.password && 
     formData.repeatPassword &&
     formData.password === formData.repeatPassword;
@@ -56,58 +48,7 @@ export const RegisterForm = ({ onLoginClick }: RegisterFormProps) => {
         </p>
 
         <form className="flex flex-col gap-5" onSubmit={handleSubmit}>
-          
-          <Input
-            label="Nombre"
-            id="nombre"
-            type="text"
-            placeholder="Juan"
-            className="placeholder-gray-400"
-            value={formData.nombre} 
-            disabled={loading} 
-            onChange={(e: ChangeEvent<HTMLInputElement>) => {
-              setFormData({ ...formData, nombre: e.target.value });
-            }}
-          />
 
-          <Input
-            label="Apellido"
-            id="apellido"
-            type="text"
-            placeholder="Pérez"
-            className="placeholder-gray-400"
-            value={formData.apellido} 
-            disabled={loading} 
-            onChange={(e: ChangeEvent<HTMLInputElement>) => {
-              setFormData({ ...formData, apellido: e.target.value });
-            }}
-          />
-
-          <Input
-            label="Código de Alumno"
-            id="codigo"
-            type="text"
-            placeholder="UIA..."
-            className="placeholder-gray-400"
-            value={formData.codigo} 
-            disabled={loading} 
-            onChange={(e: ChangeEvent<HTMLInputElement>) => {
-              setFormData({ ...formData, codigo: e.target.value });
-            }}
-          />
-
-          <Input
-            label="Email"
-            id="email"
-            type="email"
-            placeholder="estudiante@unsta.edu.ar"
-            className="placeholder-gray-400"
-            value={formData.email} 
-            disabled={loading} 
-            onChange={(e: ChangeEvent<HTMLInputElement>) => {
-              setFormData({ ...formData, email: e.target.value });
-            }}
-          />
 
           <div className="flex flex-col">
             <Input
