@@ -1,5 +1,5 @@
-﻿import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { LoginPage } from './features/auth';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { LoginPage, RegisterPage } from './features/auth';
 import { FeedPage } from './features/feed';
 import { ProfilePage } from './features/profile';
 import { CalendarPage } from './features/calendar';
@@ -15,6 +15,7 @@ function App() {
         <Routes>
           <Route path="/" element={<Navigate to="/login" replace />} />
           <Route path="/login" element={<LoginPage />} />
+          <Route path="/register" element={<RegisterPage />} />
           <Route path="/feed" element={<FeedPage />} />
           <Route path="/comunidad" element={<TestPage activeTab="comunidad" />} />
           <Route path="/calendario" element={<CalendarPage />} />
