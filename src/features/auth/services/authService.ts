@@ -4,11 +4,12 @@ import type {
   LoginResponse,
   RegisterRequest,
   VerifyFirstTimeRequest,
-  SetInitialPasswordRequest
+  SetInitialPasswordRequest,
+  VerifyFirstTimeResponse
 } from '../types/auth.dtos';
 
 export const authService = {
-  // Endpoint de Login (Método POST) [cite: 1578]
+  // Endpoint de Login (Metodo POST)
   login: async (credentials: LoginRequest): Promise<LoginResponse> => {
     const response = await apiClient.post<LoginResponse>('/auth/login', credentials);
     return response.data;
@@ -19,8 +20,8 @@ export const authService = {
     return response.data;
   },
 
-  verifyFirstTime: async (data: VerifyFirstTimeRequest) => {
-    const response = await apiClient.post('/Auth/verify-first-time', data);
+  verifyFirstTime: async (data: VerifyFirstTimeRequest): Promise<VerifyFirstTimeResponse> => {
+    const response = await apiClient.post<VerifyFirstTimeResponse>('/Auth/verify-first-time', data);
     return response.data;
   },
 
@@ -29,13 +30,13 @@ export const authService = {
     return response.data;
   },
 
-  // Endpoint de prueba pública (Método GET) [cite: 1590]
+  // Endpoint de prueba publica (Metodo GET)
   testPublic: async () => {
     const response = await apiClient.get('/testAuth/public');
     return response.data;
   },
 
-  // Endpoint de datos del usuario (Requiere Token) [cite: 1598]
+  // Endpoint de datos del usuario (Requiere Token)
   getMe: async (token: string): Promise<LoginResponse> => {
     const response = await apiClient.get('/testAuth/me', {
       headers: { Authorization: `Bearer ${token}` }

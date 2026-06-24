@@ -1,9 +1,18 @@
 import { useState, type ChangeEvent } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 import { Input } from '../../../components/common/Input';
 import { Button } from '../../../components/common/Button';
 import unstaLogo from '../../../assets/img/UNSTA-logo.png'; 
 import { useVerifyFirstTime } from '../hooks/useVerifyFirstTime';
+
+type VerifyFirstTimePayload = {
+  token?: string;
+  resetToken?: string;
+  registrationToken?: string;
+  data?: VerifyFirstTimePayload;
+  value?: VerifyFirstTimePayload;
+};
 
 const ValidationErrorMessage = ({ message = "DNI incorrecto" }: { message?: string }) => (
   <p className="text-[#E7000B] text-[13px] font-medium mt-1 text-center">
@@ -11,12 +20,31 @@ const ValidationErrorMessage = ({ message = "DNI incorrecto" }: { message?: stri
   </p>
 );
 
+const getInitialPasswordToken = (response: unknown): string => {
+  const payload = response as VerifyFirstTimePayload;
+
+  return (
+    payload?.token ||
+    payload?.resetToken ||
+    payload?.registrationToken ||
+    payload?.data?.token ||
+    payload?.data?.resetToken ||
+    payload?.data?.registrationToken ||
+    payload?.value?.token ||
+    payload?.value?.resetToken ||
+    payload?.value?.registrationToken ||
+    ''
+  );
+};
+
 interface DNIValidationFormProps {
   onBackClick?: () => void;
 }
 
 export const DNIValidationForm = ({ onBackClick }: DNIValidationFormProps) => {
+  const navigate = useNavigate();
   const [successMessage, setSuccessMessage] = useState(false);
+  const [missingTokenError, setMissingTokenError] = useState(false);
   
   const [formData, setFormData] = useState({
     dni: ''
@@ -27,11 +55,19 @@ export const DNIValidationForm = ({ onBackClick }: DNIValidationFormProps) => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSuccessMessage(false);
+    setMissingTokenError(false);
     
     try {
-      await verifyFirstTime({ dni: formData.dni });
+      const response = await verifyFirstTime({ dni: formData.dni });
+      const token = getInitialPasswordToken(response);
+
+      if (!token) {
+        setMissingTokenError(true);
+        return;
+      }
+
       setFormData({ dni: '' });
-      setSuccessMessage(true);
+      navigate(`/register?token=${encodeURIComponent(token)}`);
     } catch {
       // Error is handled by the hook and will be displayed via the error state
     }
@@ -43,21 +79,27 @@ export const DNIValidationForm = ({ onBackClick }: DNIValidationFormProps) => {
         <img src={unstaLogo} alt="Logo UNSTA" className="w-20 h-20 object-contain" />
       </div>
       <h1 className="text-[2.5rem] font-bold text-black text-center leading-tight mb-2">
-        Bienvenido
+        Primer ingreso
       </h1>
       <p className="text-gray-500 text-[15px] text-center mb-8 leading-snug">
-        Accede a tu comunidad académica y gestiona tu vida universitaria.
+        Ingresa tu DNI para validar tu cuenta y crear tu contrasena inicial.
       </p>
 
       {successMessage && (
         <div className="bg-[#E6F4EA] text-[#137333] p-4 rounded-xl mb-6 text-[14.5px] leading-snug font-medium text-center border border-[#CEEAD6]">
-          Se envió el enlace de registro al correo asociado.
+          DNI validado correctamente.
         </div>
       )}
 
       {error && error.toLowerCase().includes('registrado') && (
         <div className="bg-[#FFF8E6] text-[#B38000] p-4 rounded-xl mb-6 text-[14.5px] leading-snug font-medium text-center border border-[#FFE5B4]">
           {error}
+        </div>
+      )}
+
+      {missingTokenError && (
+        <div className="bg-[#FFF8E6] text-[#B38000] p-4 rounded-xl mb-6 text-[14.5px] leading-snug font-medium text-center border border-[#FFE5B4]">
+          No se recibio el token para crear la contrasena inicial.
         </div>
       )}
 
@@ -76,6 +118,7 @@ export const DNIValidationForm = ({ onBackClick }: DNIValidationFormProps) => {
             disabled={loading} 
             onChange={(e: ChangeEvent<HTMLInputElement>) => {
               setSuccessMessage(false);
+              setMissingTokenError(false);
               setFormData({ ...formData, dni: e.target.value.replace(/\D/g, '') });
             }}
           />
@@ -95,7 +138,7 @@ export const DNIValidationForm = ({ onBackClick }: DNIValidationFormProps) => {
             </span>
           ) : (
             <span className="flex items-center gap-2">
-              Validar
+              Continuar
               <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                 <line x1="5" y1="12" x2="19" y2="12"></line>
                 <polyline points="12 5 19 12 12 19"></polyline>

@@ -25,6 +25,13 @@ export interface VerifyFirstTimeRequest {
   dni: string;
 }
 
+export interface VerifyFirstTimeResponse {
+  token?: string;
+  message?: string;
+  data?: { token?: string };
+  value?: { token?: string };
+}
+
 export interface SetInitialPasswordRequest {
   token: string;
   password: string;
