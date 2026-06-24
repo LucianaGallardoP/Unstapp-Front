@@ -16,6 +16,7 @@ function App() {
           <Route path="/" element={<Navigate to="/login" replace />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
+          <Route path="/register/:token" element={<RegisterPage />} />
           <Route path="/feed" element={<FeedPage />} />
           <Route path="/comunidad" element={<TestPage activeTab="comunidad" />} />
           <Route path="/calendario" element={<CalendarPage />} />

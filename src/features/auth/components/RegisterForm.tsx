@@ -1,21 +1,41 @@
 import { useState, type ChangeEvent } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { Input } from '../../../components/common/Input';
 import { Button } from '../../../components/common/Button';
 import unstaLogo from '../../../assets/img/UNSTA-logo.png'; 
 import { useSetInitialPassword } from '../hooks/useSetInitialPassword'; 
+import type { LoginResponse } from '../types/auth.dtos';
 
 interface RegisterFormProps {
   onLoginClick?: () => void;
 }
 
+const isLoginResponse = (response: unknown): response is LoginResponse => {
+  return Boolean(
+    response &&
+    typeof response === 'object' &&
+    'token' in response &&
+    'userId' in response &&
+    'fullName' in response
+  );
+};
+
+const saveSessionIfPresent = (response: unknown) => {
+  if (!isLoginResponse(response)) return;
+
+  localStorage.setItem('unstapp_token', response.token);
+  localStorage.setItem('unstapp_user_id', String(response.userId));
+  localStorage.setItem('unstapp_user_name', response.fullName);
+  localStorage.setItem('unstapp_user_roles', JSON.stringify(response.roles ?? []));
+};
 export const RegisterForm = ({ onLoginClick }: RegisterFormProps) => {
   const [showPassword, setShowPassword] = useState(false);
   const [showRepeatPassword, setShowRepeatPassword] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const token = searchParams.get('token') || '';
+  const params = useParams<{ token?: string }>();
+  const token = searchParams.get('token') || params.token || '';
   const { setInitialPassword, loading, error } = useSetInitialPassword();
   
   const [formData, setFormData] = useState({
@@ -26,11 +46,12 @@ export const RegisterForm = ({ onLoginClick }: RegisterFormProps) => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await setInitialPassword({
+      const response = await setInitialPassword({
         token,
         password: formData.password,
         confirmPassword: formData.repeatPassword
       });
+      saveSessionIfPresent(response);
       setIsSuccess(true);
     } catch {
       // El error se maneja y se muestra mediante el hook (error state)
@@ -57,7 +78,7 @@ export const RegisterForm = ({ onLoginClick }: RegisterFormProps) => {
           </div>
 
           <h1 className="text-[2.5rem] font-extrabold text-black text-center leading-tight mb-3">
-            Todo Listo!
+            ¡Todo Listo!
           </h1>
           <p className="text-gray-500 text-[16px] text-center mb-10 leading-snug">
             Ya podés empezar a disfrutar de tu experiencia en Unstapp.
@@ -68,11 +89,7 @@ export const RegisterForm = ({ onLoginClick }: RegisterFormProps) => {
             fullWidth 
             className="hover:bg-[#122b54] py-3.5 mt-4" 
             onClick={() => {
-              if (onLoginClick) {
-                onLoginClick();
-              } else {
-                navigate('/login');
-              }
+              navigate('/feed');
             }}
           > 
             <span className="flex items-center justify-center gap-2 w-full text-[16px]">
@@ -216,7 +233,11 @@ export const RegisterForm = ({ onLoginClick }: RegisterFormProps) => {
           type="button"
           onClick={(e) => {
             e.preventDefault();
-            if (onLoginClick) onLoginClick();
+            if (onLoginClick) {
+              onLoginClick();
+            } else {
+              navigate('/login');
+            }
           }}
           className="text-[#1E4E9D] font-bold text-[15px] hover:text-[#122b54] hover:underline transition-all"
         >
