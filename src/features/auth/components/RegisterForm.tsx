@@ -11,6 +11,7 @@ export const RegisterForm = ({ onLoginClick }: RegisterFormProps) => {
   const [showPassword, setShowPassword] = useState(false);
   const [showRepeatPassword, setShowRepeatPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [isSuccess, setIsSuccess] = useState(false);
   
   const [formData, setFormData] = useState({
     password: '',
@@ -24,6 +25,7 @@ export const RegisterForm = ({ onLoginClick }: RegisterFormProps) => {
       // TODO: Implementar lógica de registro real
       console.log("Registrando usuario...", formData);
       await new Promise(resolve => setTimeout(resolve, 1000));
+      setIsSuccess(true);
     } finally {
       setLoading(false);
     }
@@ -33,6 +35,47 @@ export const RegisterForm = ({ onLoginClick }: RegisterFormProps) => {
     formData.password && 
     formData.repeatPassword &&
     formData.password === formData.repeatPassword;
+
+  if (isSuccess) {
+    return (
+      <div className="flex flex-col items-center w-full max-w-[400px]">
+        <div className="w-full p-10 md:p-12 bg-white border border-gray-200 rounded-[2.5rem] flex flex-col items-center">
+          
+          <div className="mb-8 mt-4">
+            <svg width="140" height="140" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="60" cy="60" r="60" fill="#3B82F6"/>
+              <path d="M52 83L97 38L120 60C118 78 107 94 92 105L52 83Z" fill="#2563EB" opacity="0.6"/>
+              <path d="M52 83L31 62C28 59 28 54 31 51C34 48 39 48 42 51L52 61L86 27C89 24 94 24 97 27C100 30 100 35 97 38L52 83Z" fill="white"/>
+            </svg>
+          </div>
+
+          <h1 className="text-[2.5rem] font-extrabold text-black text-center leading-tight mb-3">
+            Todo Listo!
+          </h1>
+          <p className="text-gray-500 text-[16px] text-center mb-10 leading-snug">
+            Ya podés empezar a disfrutar de tu experiencia en Unstapp.
+          </p>
+
+          <Button 
+            type="button" 
+            fullWidth 
+            className="hover:bg-[#122b54] py-3.5 mt-4" 
+            onClick={() => {
+              if (onLoginClick) onLoginClick();
+            }}
+          > 
+            <span className="flex items-center justify-center gap-2 w-full text-[16px]">
+              Comenzar
+              <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="5" y1="12" x2="19" y2="12"></line>
+                <polyline points="12 5 19 12 12 19"></polyline>
+              </svg>
+            </span>
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col items-center w-full max-w-[400px]">
