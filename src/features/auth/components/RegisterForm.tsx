@@ -1,4 +1,5 @@
 import { useState, type ChangeEvent } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Input } from '../../../components/common/Input';
 import { Button } from '../../../components/common/Button';
 import unstaLogo from '../../../assets/img/UNSTA-logo.png'; 
@@ -12,6 +13,7 @@ export const RegisterForm = ({ onLoginClick }: RegisterFormProps) => {
   const [showRepeatPassword, setShowRepeatPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
+  const navigate = useNavigate();
   
   const [formData, setFormData] = useState({
     password: '',
@@ -61,7 +63,10 @@ export const RegisterForm = ({ onLoginClick }: RegisterFormProps) => {
             fullWidth 
             className="hover:bg-[#122b54] py-3.5 mt-4" 
             onClick={() => {
-              if (onLoginClick) onLoginClick();
+              // Simulación de login exitoso
+              localStorage.setItem('unstapp_user_token', 'simulated_user_token');
+              localStorage.setItem('unstapp_user_roles', JSON.stringify(['student']));
+              navigate('/feed');
             }}
           > 
             <span className="flex items-center justify-center gap-2 w-full text-[16px]">
