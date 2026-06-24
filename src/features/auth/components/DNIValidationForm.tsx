@@ -3,10 +3,11 @@ import { useState, type ChangeEvent } from 'react';
 import { Input } from '../../../components/common/Input';
 import { Button } from '../../../components/common/Button';
 import unstaLogo from '../../../assets/img/UNSTA-logo.png'; 
+import { useVerifyFirstTime } from '../hooks/useVerifyFirstTime';
 
-const ValidationErrorMessage = () => (
+const ValidationErrorMessage = ({ message = "DNI incorrecto" }: { message?: string }) => (
   <p className="text-[#E7000B] text-[13px] font-medium mt-1 text-center">
-    DNI incorrecto
+    {message}
   </p>
 );
 
@@ -15,38 +16,24 @@ interface DNIValidationFormProps {
 }
 
 export const DNIValidationForm = ({ onBackClick }: DNIValidationFormProps) => {
-  const [localError, setLocalError] = useState(false);
-  const [loading, setLoading] = useState(false);
   const [successMessage, setSuccessMessage] = useState(false);
-  const [registeredMessage, setRegisteredMessage] = useState(false);
-
   
   const [formData, setFormData] = useState({
     dni: ''
   });
 
+  const { verifyFirstTime, loading, error } = useVerifyFirstTime();
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
-    setLocalError(false);
     setSuccessMessage(false);
-    setRegisteredMessage(false);
+    
     try {
-      // TODO: Implementar lógica de validación real
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Simulación: Si el DNI es 11111111, mostramos que ya está registrado
-      if (formData.dni === '11111111') {
-        setRegisteredMessage(true);
-      } else {
-        console.log("¡DNI validado!");
-        setFormData({ dni: '' });
-        setSuccessMessage(true);
-      }
+      await verifyFirstTime({ dni: formData.dni });
+      setFormData({ dni: '' });
+      setSuccessMessage(true);
     } catch {
-      setLocalError(true);
-    } finally {
-      setLoading(false);
+      // Error is handled by the hook and will be displayed via the error state
     }
   };
 
@@ -68,9 +55,9 @@ export const DNIValidationForm = ({ onBackClick }: DNIValidationFormProps) => {
         </div>
       )}
 
-      {registeredMessage && (
+      {error && error.toLowerCase().includes('registrado') && (
         <div className="bg-[#FFF8E6] text-[#B38000] p-4 rounded-xl mb-6 text-[14.5px] leading-snug font-medium text-center border border-[#FFE5B4]">
-          Este DNI ya se encuentra registrado. Si no recordás tu clave, seleccioná '¿Olvidaste tu contraseña?'.
+          {error}
         </div>
       )}
 
@@ -88,13 +75,11 @@ export const DNIValidationForm = ({ onBackClick }: DNIValidationFormProps) => {
             value={formData.dni} 
             disabled={loading} 
             onChange={(e: ChangeEvent<HTMLInputElement>) => {
-              setLocalError(false);
               setSuccessMessage(false);
-              setRegisteredMessage(false);
               setFormData({ ...formData, dni: e.target.value.replace(/\D/g, '') });
             }}
           />
-          {localError && <ValidationErrorMessage />}
+          {error && !error.toLowerCase().includes('registrado') && <ValidationErrorMessage message={error} />}
         </div>
 
         <Button 

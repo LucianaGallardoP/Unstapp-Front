@@ -1,8 +1,9 @@
 import { useState, type ChangeEvent } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Input } from '../../../components/common/Input';
 import { Button } from '../../../components/common/Button';
 import unstaLogo from '../../../assets/img/UNSTA-logo.png'; 
+import { useSetInitialPassword } from '../hooks/useSetInitialPassword'; 
 
 interface RegisterFormProps {
   onLoginClick?: () => void;
@@ -11,9 +12,11 @@ interface RegisterFormProps {
 export const RegisterForm = ({ onLoginClick }: RegisterFormProps) => {
   const [showPassword, setShowPassword] = useState(false);
   const [showRepeatPassword, setShowRepeatPassword] = useState(false);
-  const [loading, setLoading] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const token = searchParams.get('token') || '';
+  const { setInitialPassword, loading, error } = useSetInitialPassword();
   
   const [formData, setFormData] = useState({
     password: '',
@@ -22,21 +25,23 @@ export const RegisterForm = ({ onLoginClick }: RegisterFormProps) => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
     try {
-      // TODO: Implementar lógica de registro real
-      console.log("Registrando usuario...", formData);
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await setInitialPassword({
+        token,
+        password: formData.password,
+        confirmPassword: formData.repeatPassword
+      });
       setIsSuccess(true);
-    } finally {
-      setLoading(false);
+    } catch {
+      // El error se maneja y se muestra mediante el hook (error state)
     }
   };
 
   const isFormValid = 
     formData.password && 
     formData.repeatPassword &&
-    formData.password === formData.repeatPassword;
+    formData.password === formData.repeatPassword &&
+    token;
 
   if (isSuccess) {
     return (
@@ -63,10 +68,11 @@ export const RegisterForm = ({ onLoginClick }: RegisterFormProps) => {
             fullWidth 
             className="hover:bg-[#122b54] py-3.5 mt-4" 
             onClick={() => {
-              // Simulación de login exitoso
-              localStorage.setItem('unstapp_user_token', 'simulated_user_token');
-              localStorage.setItem('unstapp_user_roles', JSON.stringify(['student']));
-              navigate('/feed');
+              if (onLoginClick) {
+                onLoginClick();
+              } else {
+                navigate('/login');
+              }
             }}
           > 
             <span className="flex items-center justify-center gap-2 w-full text-[16px]">
@@ -97,6 +103,17 @@ export const RegisterForm = ({ onLoginClick }: RegisterFormProps) => {
 
         <form className="flex flex-col gap-5" onSubmit={handleSubmit}>
 
+          {error && (
+            <div className="bg-[#FFF8E6] text-[#B38000] p-4 rounded-xl text-[14.5px] leading-snug font-medium text-center border border-[#FFE5B4]">
+              {error}
+            </div>
+          )}
+          
+          {!token && !isSuccess && (
+            <div className="bg-[#FFF8E6] text-[#B38000] p-4 rounded-xl text-[14.5px] leading-snug font-medium text-center border border-[#FFE5B4]">
+              El enlace de registro no es válido o está incompleto. Asegúrate de abrir el enlace completo que recibiste por correo.
+            </div>
+          )}
 
           <div className="flex flex-col">
             <Input
