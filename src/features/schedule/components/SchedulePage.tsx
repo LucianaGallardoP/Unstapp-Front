@@ -1,5 +1,5 @@
-﻿import { useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useState } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import { AlertTriangle, Plus } from 'lucide-react';
 import { BottomNavigation } from '../../../components/common/BottomNavigation';
 import { TopBar } from '../../../components/common/TopBar';
@@ -19,6 +19,7 @@ const getIsCurrentUserAdmin = () => {
 export const SchedulePage = () => {
   const [isCreateSubjectModalOpen, setIsCreateSubjectModalOpen] = useState(false);
   const { careerId } = useParams<{ careerId?: string }>();
+  const navigate = useNavigate();
   const isCurrentUserAdmin = getIsCurrentUserAdmin();
   const {
     studentContext,
@@ -173,20 +174,21 @@ export const SchedulePage = () => {
           </section>
 
           <section className="mt-6 rounded-[14px] bg-[#4c1d95] px-4 py-4 text-center text-white shadow-[0_10px_24px_rgba(76,29,149,0.26)]">
-            <div className="flex items-center justify-center gap-2">
-              <AlertTriangle size={16} />
-              <h2 className="text-[12px] font-black uppercase">
-                ¿Problemas con tu horario?
+            <div className="flex items-center justify-center gap-2 mb-2">
+              <AlertTriangle size={18} />
+              <h2 className="text-[13px] font-black uppercase">
+                ¿PROBLEMAS CON TU HORARIO?
               </h2>
             </div>
-            <p className="mx-auto mt-1 max-w-[320px] text-[8px] font-bold uppercase leading-3 text-white/80">
-              Si notas una inconsistencia, reportala para que administración revise el cronograma.
+            <p className="mx-auto mt-1 max-w-[320px] text-[9.5px] font-bold uppercase leading-snug text-white/90">
+              SI DETECTAS INCONSISTENCIAS EN LAS AULAS O MATERIAS, REPORTALO INMEDIATAMENTE A BEDALÍA PARA SU CORRECIÓN
             </p>
             <button
               type="button"
-              className="mt-3 rounded-full bg-white px-6 py-1.5 text-[9px] font-black uppercase text-[#4c1d95]"
+              onClick={() => navigate('/404')}
+              className="mt-4 rounded-full bg-white px-6 py-2 text-[10px] font-black uppercase text-[#4c1d95] transition-all hover:bg-gray-100 hover:scale-105 hover:shadow-lg active:scale-95"
             >
-              Reportar
+              REPORTAR
             </button>
           </section>
         </section>
