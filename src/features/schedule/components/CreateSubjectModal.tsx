@@ -94,6 +94,7 @@ export const CreateSubjectModal = ({ initialDay, onClose, onCreate }: CreateSubj
             Hora
             <input
               type="time"
+              step={900}
               value={startTime}
               onChange={(event) => setStartTime(event.target.value)}
               className={fieldClass(isStartTimeValid)}

@@ -1,5 +1,6 @@
-import { useEffect, useMemo, useState, useCallback } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { scheduleService } from '../services/scheduleService';
+import type { CareerDto, ScheduleDto } from '../types/schedule.dtos';
 
 export type WeekDayId = 'lun' | 'mar' | 'mie' | 'jue' | 'vie';
 
@@ -38,35 +39,12 @@ export const weekDays: { id: WeekDayId; label: string }[] = [
   { id: 'vie', label: 'VIE' },
 ];
 
-const studentContext: StudentContext = {
+const defaultStudentContext: StudentContext = {
   career: 'Ingenieria de Software',
   year: '2do año',
   commission: 'Comision B',
   campus: 'Sede Yerba Buena',
 };
-
-const adminCareerContexts: Record<string, StudentContext> = {
-  'tec-desarrollo-software': {
-    career: 'Tec. Desarrollo de Software',
-    year: 'Año 3',
-    commission: 'Comision A',
-    campus: 'Sede Yerba Buena',
-  },
-  'ing-inteligencia-artificial': {
-    career: 'Ing. en Inteligencia Artificial',
-    year: 'Año 2',
-    commission: 'Comision A',
-    campus: 'Sede Yerba Buena',
-  },
-  'ing-software': {
-    career: 'Ingenieria de Software',
-    year: '2do año',
-    commission: 'Comision B',
-    campus: 'Sede Yerba Buena',
-  },
-};
-
-// Remove static classes array
 
 const getTodayWeekDay = (): WeekDayId => {
   const day = new Date().getDay();
@@ -79,11 +57,45 @@ const getTodayWeekDay = (): WeekDayId => {
   return 'lun';
 };
 
+const normalizeText = (value: string) =>
+  value
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase();
+
+const normalizeWeekDay = (value: string): WeekDayId => {
+  const day = normalizeText(value);
+
+  if (day.startsWith('mar')) return 'mar';
+  if (day.startsWith('mie') || day.startsWith('wed')) return 'mie';
+  if (day.startsWith('jue') || day.startsWith('thu')) return 'jue';
+  if (day.startsWith('vie') || day.startsWith('fri')) return 'vie';
+
+  return 'lun';
+};
+
+const mapScheduleClass = (schedule: ScheduleDto): ScheduleClass => ({
+  id: schedule.id,
+  day: normalizeWeekDay(schedule.day),
+  startTime: schedule.startTime,
+  durationHours: schedule.durationHours,
+  subject: schedule.subject,
+  teacher: schedule.professor,
+  room: schedule.classroom,
+  color: '#1E4E9D',
+});
+
+const getCareerContext = (career?: CareerDto): StudentContext => ({
+  career: career?.name ?? defaultStudentContext.career,
+  year: 'Año académico',
+  commission: 'Administración',
+  campus: 'Sede Yerba Buena',
+});
+
 export const useWeeklySchedule = (careerId?: string) => {
-  const selectedCareerContext = careerId ? (adminCareerContexts[careerId] ?? studentContext) : studentContext;
   const [selectedDay, setSelectedDay] = useState<WeekDayId>(() => getTodayWeekDay());
   const [scheduleClasses, setScheduleClasses] = useState<ScheduleClass[]>([]);
-  const [currentStudentContext, setCurrentStudentContext] = useState<StudentContext>(selectedCareerContext);
+  const [currentStudentContext, setCurrentStudentContext] = useState<StudentContext>(defaultStudentContext);
   const [isContextLoading, setIsContextLoading] = useState(false);
   const [contextError, setContextError] = useState<string | null>(null);
 
@@ -94,11 +106,21 @@ export const useWeeklySchedule = (careerId?: string) => {
     [scheduleClasses, selectedDay],
   );
 
+  const fetchSchedules = useCallback(async () => {
+    try {
+      const params = careerId ? { careerId } : { dia: selectedDay };
+      const schedules = await scheduleService.getSchedules(params);
+      setScheduleClasses(schedules.map(mapScheduleClass));
+    } catch {
+      setContextError('No se pudieron cargar los horarios.');
+    }
+  }, [careerId, selectedDay]);
+
   const addScheduleClass = async (newClass: CreateScheduleClassInput) => {
     if (!careerId) return;
 
     try {
-      const createdDto = await scheduleService.createSchedule({
+      await scheduleService.createSchedule({
         careerId: Number(careerId),
         subject: newClass.subject,
         day: newClass.day,
@@ -108,58 +130,18 @@ export const useWeeklySchedule = (careerId?: string) => {
         durationHours: newClass.durationHours,
       });
 
-      setScheduleClasses((currentClasses) => [
-        ...currentClasses,
-        {
-          id: createdDto.id ?? Date.now(),
-          day: newClass.day,
-          startTime: newClass.startTime,
-          durationHours: newClass.durationHours,
-          subject: newClass.subject,
-          teacher: newClass.teacher,
-          room: newClass.room,
-          color: '#1E4E9D',
-        },
-      ]);
       setSelectedDay(newClass.day);
-    } catch (e) {
-      console.error("Error al crear la materia", e);
+      await fetchSchedules();
+    } catch {
+      setContextError('No se pudo crear la materia.');
     }
   };
-
-  const fetchSchedules = useCallback(async () => {
-    try {
-      const params = careerId ? { careerId } : { dia: selectedDay };
-      const data = await scheduleService.getSchedules(params);
-      const mappedClasses = data.map(dto => ({
-        id: dto.id,
-        day: dto.day.toLowerCase().substring(0, 3) as WeekDayId,
-        startTime: dto.startTime,
-        durationHours: dto.durationHours,
-        subject: dto.subject,
-        teacher: dto.professor,
-        room: dto.classroom,
-        color: '#1E4E9D',
-      }));
-      setScheduleClasses(mappedClasses);
-    } catch (e) {
-      setContextError('No se pudieron cargar los horarios.');
-    }
-  }, [careerId, selectedDay]);
 
   useEffect(() => {
     fetchSchedules();
   }, [fetchSchedules]);
 
   useEffect(() => {
-    if (careerId) {
-      setCurrentStudentContext(selectedCareerContext);
-      setContextError(null);
-      setIsContextLoading(false);
-
-      return;
-    }
-
     let isMounted = true;
 
     const loadContext = async () => {
@@ -167,6 +149,17 @@ export const useWeeklySchedule = (careerId?: string) => {
       setContextError(null);
 
       try {
+        if (careerId) {
+          const careers = await scheduleService.getCareers();
+          const selectedCareer = careers.find((career) => String(career.id) === String(careerId));
+
+          if (isMounted) {
+            setCurrentStudentContext(getCareerContext(selectedCareer));
+          }
+
+          return;
+        }
+
         const context = await scheduleService.getMyContext();
 
         if (isMounted) {
@@ -175,6 +168,7 @@ export const useWeeklySchedule = (careerId?: string) => {
       } catch {
         if (isMounted) {
           setContextError('No se pudo cargar el contexto académico.');
+          setCurrentStudentContext(careerId ? getCareerContext() : defaultStudentContext);
         }
       } finally {
         if (isMounted) {
@@ -188,7 +182,7 @@ export const useWeeklySchedule = (careerId?: string) => {
     return () => {
       isMounted = false;
     };
-  }, [careerId, selectedCareerContext]);
+  }, [careerId]);
 
   return {
     studentContext: currentStudentContext,

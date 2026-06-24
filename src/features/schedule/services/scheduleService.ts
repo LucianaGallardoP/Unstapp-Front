@@ -18,6 +18,75 @@ const asRecord = (value: unknown): ApiRecord =>
 const asString = (value: unknown, fallback = '') =>
   typeof value === 'string' ? value : fallback;
 
+const asNumber = (value: unknown, fallback = 0) => {
+  if (typeof value === 'number') return value;
+  if (typeof value === 'string' && value.trim() !== '') {
+    const parsedValue = Number(value);
+    return Number.isFinite(parsedValue) ? parsedValue : fallback;
+  }
+
+  return fallback;
+};
+
+const unwrapArray = (value: unknown) => {
+  if (Array.isArray(value)) return value;
+
+  const root = asRecord(value);
+  const candidates = [root.data, root.items, root.value, root.results];
+
+  return candidates.find(Array.isArray) ?? [];
+};
+
+const mapCareerFromApi = (apiCareer: unknown): CareerDto => {
+  const career = asRecord(apiCareer);
+
+  return {
+    id: asNumber(career.id ?? career.careerId ?? career.carreraId),
+    name:
+      asString(career.name) ||
+      asString(career.nombre) ||
+      asString(career.careerName) ||
+      asString(career.carreraNombre) ||
+      'Carrera sin nombre',
+  };
+};
+
+const mapScheduleFromApi = (apiSchedule: unknown): ScheduleDto => {
+  const root = asRecord(apiSchedule);
+  const schedule = asRecord(root.data ?? root.value ?? root.horario ?? root.schedule ?? root);
+
+  return {
+    id: asNumber(schedule.id ?? schedule.scheduleId ?? schedule.horarioId, Date.now()),
+    careerId: asNumber(schedule.careerId ?? schedule.carreraId),
+    subject:
+      asString(schedule.subject) ||
+      asString(schedule.materia) ||
+      asString(schedule.title) ||
+      'Materia sin nombre',
+    day:
+      asString(schedule.day) ||
+      asString(schedule.dia) ||
+      asString(schedule.weekDay) ||
+      'lun',
+    startTime:
+      asString(schedule.startTime) ||
+      asString(schedule.horaInicio) ||
+      asString(schedule.hour) ||
+      '08:00',
+    professor:
+      asString(schedule.professor) ||
+      asString(schedule.profesor) ||
+      asString(schedule.teacher) ||
+      'Profesor a confirmar',
+    classroom:
+      asString(schedule.classroom) ||
+      asString(schedule.aula) ||
+      asString(schedule.room) ||
+      'Aula a confirmar',
+    durationHours: asNumber(schedule.durationHours ?? schedule.duracionHoras ?? schedule.duration, 1),
+  };
+};
+
 const mapContextFromApi = (apiContext: unknown): StudentContext => {
   const root = asRecord(apiContext);
   const data = asRecord(root.data ?? root.value ?? root.context ?? root);
@@ -69,24 +138,27 @@ export const scheduleService = {
   },
 
   getCareers: async (): Promise<CareerDto[]> => {
-    const response = await apiClient.get<CareerDto[]>('/Carreras', {
+    const response = await apiClient.get<unknown>('/Carreras', {
       headers: getAuthHeaders(),
     });
-    return response.data;
+
+    return unwrapArray(response.data).map(mapCareerFromApi).filter((career) => career.id > 0);
   },
 
   getSchedules: async (params?: { careerId?: string | number; dia?: string }): Promise<ScheduleDto[]> => {
-    const response = await apiClient.get<ScheduleDto[]>('/horarios', {
+    const response = await apiClient.get<unknown>('/horarios', {
       params,
       headers: getAuthHeaders(),
     });
-    return response.data;
+
+    return unwrapArray(response.data).map(mapScheduleFromApi);
   },
 
   createSchedule: async (data: CreateScheduleRequest): Promise<ScheduleDto> => {
-    const response = await apiClient.post<ScheduleDto>('/horarios', data, {
+    const response = await apiClient.post<unknown>('/horarios', data, {
       headers: getAuthHeaders(),
     });
-    return response.data;
+
+    return mapScheduleFromApi(response.data);
   },
 };
