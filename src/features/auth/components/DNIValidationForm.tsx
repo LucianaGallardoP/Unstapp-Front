@@ -17,6 +17,7 @@ interface DNIValidationFormProps {
 export const DNIValidationForm = ({ onBackClick }: DNIValidationFormProps) => {
   const [localError, setLocalError] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [successMessage, setSuccessMessage] = useState(false);
 
   
   const [formData, setFormData] = useState({
@@ -25,12 +26,15 @@ export const DNIValidationForm = ({ onBackClick }: DNIValidationFormProps) => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // TODO: Implementar lógica de validación real
     setLoading(true);
+    setLocalError(false);
+    setSuccessMessage(false);
     try {
+      // TODO: Implementar lógica de validación real
       await new Promise(resolve => setTimeout(resolve, 1000));
       console.log("¡DNI validado!");
-      // navigate('/next-step'); 
+      setFormData({ dni: '' });
+      setSuccessMessage(true);
     } catch {
       setLocalError(true);
     } finally {
@@ -49,6 +53,12 @@ export const DNIValidationForm = ({ onBackClick }: DNIValidationFormProps) => {
       <p className="text-gray-500 text-[15px] text-center mb-8 leading-snug">
         Accede a tu comunidad académica y gestiona tu vida universitaria.
       </p>
+
+      {successMessage && (
+        <div className="bg-[#E6F4EA] text-[#137333] p-4 rounded-xl mb-6 text-[14.5px] leading-snug font-medium text-center border border-[#CEEAD6]">
+          Se envió el enlace de registro al correo asociado.
+        </div>
+      )}
 
       <form className="flex flex-col gap-5" onSubmit={handleSubmit}>
         
