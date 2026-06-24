@@ -18,6 +18,7 @@ export const DNIValidationForm = ({ onBackClick }: DNIValidationFormProps) => {
   const [localError, setLocalError] = useState(false);
   const [loading, setLoading] = useState(false);
   const [successMessage, setSuccessMessage] = useState(false);
+  const [registeredMessage, setRegisteredMessage] = useState(false);
 
   
   const [formData, setFormData] = useState({
@@ -29,12 +30,19 @@ export const DNIValidationForm = ({ onBackClick }: DNIValidationFormProps) => {
     setLoading(true);
     setLocalError(false);
     setSuccessMessage(false);
+    setRegisteredMessage(false);
     try {
       // TODO: Implementar lógica de validación real
       await new Promise(resolve => setTimeout(resolve, 1000));
-      console.log("¡DNI validado!");
-      setFormData({ dni: '' });
-      setSuccessMessage(true);
+      
+      // Simulación: Si el DNI es 11111111, mostramos que ya está registrado
+      if (formData.dni === '11111111') {
+        setRegisteredMessage(true);
+      } else {
+        console.log("¡DNI validado!");
+        setFormData({ dni: '' });
+        setSuccessMessage(true);
+      }
     } catch {
       setLocalError(true);
     } finally {
@@ -60,6 +68,12 @@ export const DNIValidationForm = ({ onBackClick }: DNIValidationFormProps) => {
         </div>
       )}
 
+      {registeredMessage && (
+        <div className="bg-[#FFF8E6] text-[#B38000] p-4 rounded-xl mb-6 text-[14.5px] leading-snug font-medium text-center border border-[#FFE5B4]">
+          Este DNI ya se encuentra registrado. Si no recordás tu clave, seleccioná '¿Olvidaste tu contraseña?'.
+        </div>
+      )}
+
       <form className="flex flex-col gap-5" onSubmit={handleSubmit}>
         
         <div className="flex flex-col">
@@ -75,6 +89,8 @@ export const DNIValidationForm = ({ onBackClick }: DNIValidationFormProps) => {
             disabled={loading} 
             onChange={(e: ChangeEvent<HTMLInputElement>) => {
               setLocalError(false);
+              setSuccessMessage(false);
+              setRegisteredMessage(false);
               setFormData({ ...formData, dni: e.target.value.replace(/\D/g, '') });
             }}
           />
