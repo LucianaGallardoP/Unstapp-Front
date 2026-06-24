@@ -1,4 +1,4 @@
-﻿import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, useCallback } from 'react';
 import { scheduleService } from '../services/scheduleService';
 
 export type WeekDayId = 'lun' | 'mar' | 'mie' | 'jue' | 'vie';
@@ -66,21 +66,7 @@ const adminCareerContexts: Record<string, StudentContext> = {
   },
 };
 
-const classes: ScheduleClass[] = [
-  { id: 1, day: 'lun', startTime: '09:00', durationHours: 2, subject: 'Advanced Algorithms', teacher: 'Prof. Matias Rodriguez', room: 'Lab 2', color: '#1E4E9D' },
-  { id: 2, day: 'lun', startTime: '14:15', durationHours: 2, subject: 'Database Systems', teacher: 'Prof. Agustina Gomez', room: 'Lab 1', color: '#ffb000' },
-  { id: 3, day: 'lun', startTime: '17:45', durationHours: 2, subject: 'Software Architecture', teacher: 'Prof. Pedro Gomez', room: 'Aula 4', color: '#E7000B' },
-  { id: 4, day: 'mar', startTime: '10:30', durationHours: 2, subject: 'Database Systems', teacher: 'Prof. Agustina Gomez', room: 'Lab 1', color: '#ffb000' },
-  { id: 5, day: 'mar', startTime: '15:15', durationHours: 2, subject: 'Seminario Informatico', teacher: 'Prof. Roberto Suarez', room: 'Aula 1', color: '#f4ea00' },
-  { id: 6, day: 'mie', startTime: '08:00', durationHours: 2, subject: 'Advanced Algorithms', teacher: 'Prof. Matias Rodriguez', room: 'Lab 2', color: '#1E4E9D' },
-  { id: 7, day: 'mie', startTime: '13:45', durationHours: 2, subject: 'Software Architecture', teacher: 'Prof. Pedro Gomez', room: 'Aula 4', color: '#E7000B' },
-  { id: 8, day: 'mie', startTime: '17:25', durationHours: 2, subject: 'Database Systems', teacher: 'Prof. Agustina Gomez', room: 'Lab 1', color: '#ffb000' },
-  { id: 9, day: 'jue', startTime: '15:15', durationHours: 2, subject: 'Seminario Informatico', teacher: 'Prof. Roberto Suarez', room: 'Aula 1', color: '#f4ea00' },
-  { id: 10, day: 'vie', startTime: '08:35', durationHours: 2, subject: 'Seminario Informatico', teacher: 'Prof. Roberto Suarez', room: 'Aula 1', color: '#f4ea00' },
-  { id: 11, day: 'vie', startTime: '11:20', durationHours: 2, subject: 'Advanced Algorithms', teacher: 'Prof. Matias Rodriguez', room: 'Lab 2', color: '#1E4E9D' },
-  { id: 12, day: 'vie', startTime: '15:00', durationHours: 2, subject: 'Database Systems', teacher: 'Prof. Agustina Gomez', room: 'Lab 1', color: '#ffb000' },
-  { id: 13, day: 'vie', startTime: '17:45', durationHours: 2, subject: 'Software Architecture', teacher: 'Prof. Pedro Gomez', room: 'Aula 4', color: '#E7000B' },
-];
+// Remove static classes array
 
 const getTodayWeekDay = (): WeekDayId => {
   const day = new Date().getDay();
@@ -96,7 +82,7 @@ const getTodayWeekDay = (): WeekDayId => {
 export const useWeeklySchedule = (careerId?: string) => {
   const selectedCareerContext = careerId ? (adminCareerContexts[careerId] ?? studentContext) : studentContext;
   const [selectedDay, setSelectedDay] = useState<WeekDayId>(() => getTodayWeekDay());
-  const [scheduleClasses, setScheduleClasses] = useState<ScheduleClass[]>(classes);
+  const [scheduleClasses, setScheduleClasses] = useState<ScheduleClass[]>([]);
   const [currentStudentContext, setCurrentStudentContext] = useState<StudentContext>(selectedCareerContext);
   const [isContextLoading, setIsContextLoading] = useState(false);
   const [contextError, setContextError] = useState<string | null>(null);
@@ -108,22 +94,62 @@ export const useWeeklySchedule = (careerId?: string) => {
     [scheduleClasses, selectedDay],
   );
 
-  const addScheduleClass = (newClass: CreateScheduleClassInput) => {
-    setScheduleClasses((currentClasses) => [
-      ...currentClasses,
-      {
-        id: Date.now(),
+  const addScheduleClass = async (newClass: CreateScheduleClassInput) => {
+    if (!careerId) return;
+
+    try {
+      const createdDto = await scheduleService.createSchedule({
+        careerId: Number(careerId),
+        subject: newClass.subject,
         day: newClass.day,
         startTime: newClass.startTime,
+        professor: newClass.teacher,
+        classroom: newClass.room,
         durationHours: newClass.durationHours,
-        subject: newClass.subject,
-        teacher: newClass.teacher,
-        room: newClass.room,
-        color: '#1E4E9D',
-      },
-    ]);
-    setSelectedDay(newClass.day);
+      });
+
+      setScheduleClasses((currentClasses) => [
+        ...currentClasses,
+        {
+          id: createdDto.id ?? Date.now(),
+          day: newClass.day,
+          startTime: newClass.startTime,
+          durationHours: newClass.durationHours,
+          subject: newClass.subject,
+          teacher: newClass.teacher,
+          room: newClass.room,
+          color: '#1E4E9D',
+        },
+      ]);
+      setSelectedDay(newClass.day);
+    } catch (e) {
+      console.error("Error al crear la materia", e);
+    }
   };
+
+  const fetchSchedules = useCallback(async () => {
+    try {
+      const params = careerId ? { careerId } : { dia: selectedDay };
+      const data = await scheduleService.getSchedules(params);
+      const mappedClasses = data.map(dto => ({
+        id: dto.id,
+        day: dto.day.toLowerCase().substring(0, 3) as WeekDayId,
+        startTime: dto.startTime,
+        durationHours: dto.durationHours,
+        subject: dto.subject,
+        teacher: dto.professor,
+        room: dto.classroom,
+        color: '#1E4E9D',
+      }));
+      setScheduleClasses(mappedClasses);
+    } catch (e) {
+      setContextError('No se pudieron cargar los horarios.');
+    }
+  }, [careerId, selectedDay]);
+
+  useEffect(() => {
+    fetchSchedules();
+  }, [fetchSchedules]);
 
   useEffect(() => {
     if (careerId) {

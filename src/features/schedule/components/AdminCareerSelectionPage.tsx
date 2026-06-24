@@ -1,38 +1,15 @@
-﻿import { ChevronRight } from 'lucide-react';
+import { ChevronRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { BottomNavigation } from '../../../components/common/BottomNavigation';
 import { TopBar } from '../../../components/common/TopBar';
+import { useCareers } from '../hooks/useCareers';
 
-interface CareerOption {
-  id: string;
-  name: string;
-  year: string;
-  color: string;
-}
-
-const careerOptions: CareerOption[] = [
-  {
-    id: 'tec-desarrollo-software',
-    name: 'Tec. Desarrollo de Software',
-    year: 'Año 3',
-    color: '#f4ea00',
-  },
-  {
-    id: 'ing-inteligencia-artificial',
-    name: 'Ing. en Inteligencia Artificial',
-    year: 'Año 2',
-    color: '#ffb000',
-  },
-  {
-    id: 'ing-software',
-    name: 'Ingeniería de Software',
-    year: 'Año 2',
-    color: '#1E4E9D',
-  },
-];
+const DEFAULT_COLOR = '#1E4E9D';
+const DEFAULT_YEAR = 'Año 1';
 
 export const AdminCareerSelectionPage = () => {
   const navigate = useNavigate();
+  const { careers, loading, error } = useCareers();
 
   return (
     <div className="min-h-screen bg-white pb-20 text-gray-900 md:bg-gray-50">
@@ -46,8 +23,26 @@ export const AdminCareerSelectionPage = () => {
             </h1>
           </header>
 
+          {loading && (
+            <p className="text-center text-[12px] font-bold text-[#526174] py-10">
+              Cargando carreras...
+            </p>
+          )}
+
+          {error && (
+            <div className="rounded-lg bg-[#E7000B]/10 px-4 py-3 text-[12px] font-bold text-[#E7000B] text-center">
+              {error}
+            </div>
+          )}
+
+          {!loading && !error && careers.length === 0 && (
+            <p className="text-center text-[12px] font-bold text-[#526174] py-10">
+              No se encontraron carreras.
+            </p>
+          )}
+
           <div className="flex flex-col gap-4">
-            {careerOptions.map((career) => (
+            {careers.map((career) => (
               <button
                 key={career.id}
                 type="button"
@@ -56,7 +51,7 @@ export const AdminCareerSelectionPage = () => {
               >
                 <span
                   className="h-12 w-1.5 shrink-0 rounded-full"
-                  style={{ backgroundColor: career.color }}
+                  style={{ backgroundColor: DEFAULT_COLOR }}
                   aria-hidden="true"
                 />
 
@@ -65,7 +60,7 @@ export const AdminCareerSelectionPage = () => {
                     {career.name}
                   </h2>
                   <p className="mt-2 text-[9px] font-black uppercase text-[#526174]">
-                    {career.year}
+                    {DEFAULT_YEAR}
                   </p>
                 </div>
 

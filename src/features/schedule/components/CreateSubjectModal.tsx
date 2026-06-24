@@ -1,4 +1,4 @@
-﻿import { useState } from 'react';
+import { useState } from 'react';
 import { X } from 'lucide-react';
 import type { CreateScheduleClassInput, WeekDayId } from '../hooks/useWeeklySchedule';
 import { weekDays } from '../hooks/useWeeklySchedule';
@@ -104,8 +104,9 @@ export const CreateSubjectModal = ({ initialDay, onClose, onCreate }: CreateSubj
             Duración
             <input
               type="number"
-              min={1}
+              min={0.5}
               max={6}
+              step={0.5}
               value={durationHours}
               onChange={(event) => setDurationHours(Number(event.target.value))}
               className={fieldClass(isDurationValid)}

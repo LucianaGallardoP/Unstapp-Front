@@ -1,5 +1,6 @@
-﻿import { apiClient } from '../../../services/apiClient';
+import { apiClient } from '../../../services/apiClient';
 import type { StudentContext } from '../hooks/useWeeklySchedule';
+import type { CareerDto, ScheduleDto, CreateScheduleRequest } from '../types/schedule.dtos';
 
 type ApiRecord = Record<string, unknown>;
 
@@ -65,5 +66,27 @@ export const scheduleService = {
     });
 
     return mapContextFromApi(response.data);
+  },
+
+  getCareers: async (): Promise<CareerDto[]> => {
+    const response = await apiClient.get<CareerDto[]>('/Carreras', {
+      headers: getAuthHeaders(),
+    });
+    return response.data;
+  },
+
+  getSchedules: async (params?: { careerId?: string | number; dia?: string }): Promise<ScheduleDto[]> => {
+    const response = await apiClient.get<ScheduleDto[]>('/horarios', {
+      params,
+      headers: getAuthHeaders(),
+    });
+    return response.data;
+  },
+
+  createSchedule: async (data: CreateScheduleRequest): Promise<ScheduleDto> => {
+    const response = await apiClient.post<ScheduleDto>('/horarios', data, {
+      headers: getAuthHeaders(),
+    });
+    return response.data;
   },
 };
