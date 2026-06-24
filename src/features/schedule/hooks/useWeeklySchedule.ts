@@ -74,16 +74,19 @@ const normalizeWeekDay = (value: string): WeekDayId => {
   return 'lun';
 };
 
-const mapScheduleClass = (schedule: ScheduleDto): ScheduleClass => ({
-  id: schedule.id,
-  day: normalizeWeekDay(schedule.day),
-  startTime: schedule.startTime,
-  durationHours: schedule.durationHours,
-  subject: schedule.subject,
-  teacher: schedule.professor,
-  room: schedule.classroom,
-  color: '#1E4E9D',
-});
+const mapScheduleClass = (schedule: ScheduleDto): ScheduleClass => {
+  console.log('[mapScheduleClass] Campo "day" recibido del servidor:', schedule.day);
+  return {
+    id: schedule.id,
+    day: normalizeWeekDay(schedule.day),
+    startTime: schedule.startTime,
+    durationHours: schedule.durationHours,
+    subject: schedule.subject,
+    teacher: schedule.professor,
+    room: schedule.classroom,
+    color: '#1E4E9D',
+  };
+};
 
 const getCareerContext = (career?: CareerDto): StudentContext => ({
   career: career?.name ?? defaultStudentContext.career,
@@ -101,16 +104,21 @@ export const useWeeklySchedule = (careerId?: string) => {
 
   const selectedClasses = useMemo(
     () => scheduleClasses
-      .filter((scheduleClass) => scheduleClass.day === selectedDay)
-      .sort((firstClass, secondClass) => firstClass.startTime.localeCompare(secondClass.startTime)),
+      .filter((sc) => sc.day === selectedDay)
+      .sort((a, b) => a.startTime.localeCompare(b.startTime)),
     [scheduleClasses, selectedDay],
   );
 
-  const fetchSchedules = useCallback(async () => {
+  const fetchSchedules = useCallback(async (dayOverride?: WeekDayId) => {
+    const day = dayOverride ?? selectedDay;
     try {
-      const params = careerId ? { careerId } : { dia: selectedDay };
+      const params = careerId
+        ? { careerId, dia: day }
+        : { dia: day };
       const schedules = await scheduleService.getSchedules(params);
-      setScheduleClasses(schedules.map(mapScheduleClass));
+      // Forzamos el día en cada resultado, ya que el servidor puede devolver
+      // el campo "day" con un valor incorrecto o inconsistente.
+      setScheduleClasses(schedules.map(s => ({ ...mapScheduleClass(s), day })));
     } catch {
       setContextError('No se pudieron cargar los horarios.');
     }
@@ -130,8 +138,10 @@ export const useWeeklySchedule = (careerId?: string) => {
         durationHours: newClass.durationHours,
       });
 
+      // Actualizamos el día seleccionado y buscamos con el nuevo día explícitamente
+      // para evitar el bug del closure desactualizado en fetchSchedules.
       setSelectedDay(newClass.day);
-      await fetchSchedules();
+      await fetchSchedules(newClass.day);
     } catch {
       setContextError('No se pudo crear la materia.');
     }
@@ -193,5 +203,6 @@ export const useWeeklySchedule = (careerId?: string) => {
     selectedClasses,
     addScheduleClass,
     setSelectedDay,
+    fetchSchedules,
   };
 };

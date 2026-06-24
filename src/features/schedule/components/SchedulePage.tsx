@@ -30,6 +30,7 @@ export const SchedulePage = () => {
     selectedClasses,
     addScheduleClass,
     setSelectedDay,
+    fetchSchedules,
   } = useWeeklySchedule(careerId);
 
   return (
@@ -105,7 +106,10 @@ export const SchedulePage = () => {
                   <li key={day.id}>
                     <button
                       type="button"
-                      onClick={() => setSelectedDay(day.id)}
+                      onClick={() => {
+                        setSelectedDay(day.id);
+                        fetchSchedules(day.id);
+                      }}
                       className={`h-9 w-full rounded-full text-[11px] font-black transition-colors ${
                         isActive
                           ? 'bg-[#1E4E9D] text-white shadow-[0_8px_18px_rgba(30,78,157,0.24)]'

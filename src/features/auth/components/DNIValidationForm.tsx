@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 
 import { Input } from '../../../components/common/Input';
 import { Button } from '../../../components/common/Button';
-import unstaLogo from '../../../assets/img/UNSTA-logo.png'; 
+import unstaLogo from '../../../assets/img/UNSTA-logo.png';
 import { useVerifyFirstTime } from '../hooks/useVerifyFirstTime';
 
 type VerifyFirstTimePayload = {
@@ -45,7 +45,7 @@ export const DNIValidationForm = ({ onBackClick }: DNIValidationFormProps) => {
   const navigate = useNavigate();
   const [successMessage, setSuccessMessage] = useState(false);
   const [missingTokenError, setMissingTokenError] = useState(false);
-  
+
   const [formData, setFormData] = useState({
     dni: ''
   });
@@ -54,21 +54,26 @@ export const DNIValidationForm = ({ onBackClick }: DNIValidationFormProps) => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    console.log('[DNIValidationForm] Se oprimió el botón de enviar. Iniciando verificación para el DNI:', formData.dni);
     setSuccessMessage(false);
     setMissingTokenError(false);
-    
+
     try {
       const response = await verifyFirstTime({ dni: formData.dni });
+      console.log('[DNIValidationForm] Respuesta de verificación exitosa:', response);
       const token = getInitialPasswordToken(response);
+      console.log('[DNIValidationForm] Token obtenido:', token);
 
       if (!token) {
+        console.warn('[DNIValidationForm] Advertencia: No se encontró un token en la respuesta.');
         setMissingTokenError(true);
         return;
       }
 
       setFormData({ dni: '' });
       navigate(`/register?token=${encodeURIComponent(token)}`);
-    } catch {
+    } catch (err) {
+      console.error('[DNIValidationForm] Error en el flujo de verificación:', err);
       // Error is handled by the hook and will be displayed via the error state
     }
   };
@@ -104,7 +109,7 @@ export const DNIValidationForm = ({ onBackClick }: DNIValidationFormProps) => {
       )}
 
       <form className="flex flex-col gap-5" onSubmit={handleSubmit}>
-        
+
         <div className="flex flex-col">
           <Input
             label="DNI"
@@ -114,8 +119,8 @@ export const DNIValidationForm = ({ onBackClick }: DNIValidationFormProps) => {
             pattern="[0-9]*"
             placeholder="Ingresa tu DNI"
             className="placeholder-gray-400"
-            value={formData.dni} 
-            disabled={loading} 
+            value={formData.dni}
+            disabled={loading}
             onChange={(e: ChangeEvent<HTMLInputElement>) => {
               setSuccessMessage(false);
               setMissingTokenError(false);
@@ -125,12 +130,12 @@ export const DNIValidationForm = ({ onBackClick }: DNIValidationFormProps) => {
           {error && !error.toLowerCase().includes('registrado') && <ValidationErrorMessage message={error} />}
         </div>
 
-        <Button 
-          type="submit" 
-          fullWidth 
-          className="mt-2 hover:bg-[#122b54]" 
+        <Button
+          type="submit"
+          fullWidth
+          className="mt-2 hover:bg-[#122b54]"
           disabled={loading || !formData.dni}
-        > 
+        >
           {loading ? (
             <span className="flex items-center gap-2">
               Validando...
@@ -146,9 +151,9 @@ export const DNIValidationForm = ({ onBackClick }: DNIValidationFormProps) => {
             </span>
           )}
         </Button>
-        
+
         <div className="text-center mt-2 flex flex-col gap-2">
-          <button 
+          <button
             type="button"
             onClick={(e) => {
               e.preventDefault();

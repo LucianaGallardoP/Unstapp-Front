@@ -146,19 +146,35 @@ export const scheduleService = {
   },
 
   getSchedules: async (params?: { careerId?: string | number; dia?: string }): Promise<ScheduleDto[]> => {
-    const response = await apiClient.get<unknown>('/horarios', {
-      params,
-      headers: getAuthHeaders(),
-    });
-
-    return unwrapArray(response.data).map(mapScheduleFromApi);
+    try {
+      const response = await apiClient.get<unknown>('/horarios', {
+        params,
+        headers: getAuthHeaders(),
+      });
+      return unwrapArray(response.data).map(mapScheduleFromApi);
+    } catch (error: any) {
+      if (error && error.response && error.response.data) {
+        console.error('[scheduleService.getSchedules] Error del servidor. Detalles de validación:', JSON.stringify(error.response.data, null, 2));
+      } else {
+        console.error('[scheduleService.getSchedules] Error al obtener horarios:', error);
+      }
+      throw error;
+    }
   },
 
   createSchedule: async (data: CreateScheduleRequest): Promise<ScheduleDto> => {
-    const response = await apiClient.post<unknown>('/horarios', data, {
-      headers: getAuthHeaders(),
-    });
-
-    return mapScheduleFromApi(response.data);
+    try {
+      const response = await apiClient.post<unknown>('/horarios', data, {
+        headers: getAuthHeaders(),
+      });
+      return mapScheduleFromApi(response.data);
+    } catch (error: any) {
+      if (error && error.response && error.response.data) {
+        console.error('[scheduleService.createSchedule] Error 400 del servidor. Detalles de validación:', JSON.stringify(error.response.data, null, 2));
+      } else {
+        console.error('[scheduleService.createSchedule] Error al crear horario:', error);
+      }
+      throw error;
+    }
   },
 };

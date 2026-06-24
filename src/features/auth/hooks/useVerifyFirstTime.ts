@@ -26,12 +26,16 @@ export const useVerifyFirstTime = () => {
   const verifyFirstTime = async (data: VerifyFirstTimeRequest) => {
     setLoading(true);
     setError(null);
+    console.log('[useVerifyFirstTime] Iniciando llamada a authService.verifyFirstTime con datos:', data);
 
     try {
       const response = await authService.verifyFirstTime(data);
+      console.log('[useVerifyFirstTime] Respuesta recibida exitosamente de authService.verifyFirstTime:', response);
       return response;
     } catch (err) {
+      console.error('[useVerifyFirstTime] Error capturado en la llamada a authService.verifyFirstTime:', err);
       const errorMessage = getErrorMessage(err);
+      console.error('[useVerifyFirstTime] Mensaje de error formateado para el usuario:', errorMessage);
       setError(errorMessage);
       throw err;
     } finally {
