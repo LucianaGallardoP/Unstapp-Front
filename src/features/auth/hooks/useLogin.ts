@@ -37,6 +37,7 @@ export const useLogin = () => {
       localStorage.setItem('unstapp_user_id', String(response.userId));
       localStorage.setItem('unstapp_user_name', response.fullName);
       localStorage.setItem('unstapp_user_roles', JSON.stringify(response.roles));
+      localStorage.setItem('unstapp_token_expires_at', response.expiresAt);
 
       return response;
     } catch (err) {

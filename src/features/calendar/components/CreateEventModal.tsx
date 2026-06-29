@@ -19,6 +19,13 @@ const formatDateTitle = (date: Date) =>
     month: 'long',
   }).format(date);
 
+const timeOptions = Array.from({ length: 24 * 6 }, (_, index) => {
+  const hours = String(Math.floor(index / 6)).padStart(2, '0');
+  const minutes = String((index % 6) * 10).padStart(2, '0');
+
+  return `${hours}:${minutes}`;
+});
+
 const buildDateTime = (date: Date, time: string) => {
   const [hours, minutes] = time.split(':').map(Number);
   const nextDate = new Date(date);
@@ -54,10 +61,10 @@ export const CreateEventModal: React.FC<CreateEventModalProps> = ({
     }
   })();
 
-  const canSubmit = 
-    title.trim().length > 0 && 
-    description.trim().length > 0 && 
-    time.trim().length > 0 && 
+  const canSubmit =
+    title.trim().length > 0 &&
+    description.trim().length > 0 &&
+    time.trim().length > 0 &&
     !isSubmitting;
 
   const handleSubmit = async (event: React.FormEvent) => {
@@ -93,16 +100,16 @@ export const CreateEventModal: React.FC<CreateEventModalProps> = ({
   return (
     <form
       onSubmit={handleSubmit}
-      className="relative w-full max-w-[420px] rounded-[2.5rem] border border-gray-50 bg-white p-8 font-sans shadow-[0_12px_40px_-10px_rgb(0,0,0,0.15)]"
+      className="relative max-h-[calc(100vh-24px)] w-full max-w-[420px] overflow-y-auto rounded-[2rem] border border-gray-50 bg-white px-5 pb-6 pt-12 font-sans shadow-[0_12px_40px_-10px_rgb(0,0,0,0.15)] sm:rounded-[2.5rem] sm:p-8"
     >
-      <div className="relative mb-9 flex items-center justify-center">
-        <h2 className="text-center text-[1.25rem] font-bold tracking-tight text-[#1f4e99]">
+      <div className="relative mb-7 flex items-center justify-center sm:mb-9">
+        <h2 className="px-7 text-center text-[1.15rem] font-bold tracking-tight text-[#1f4e99] sm:px-0 sm:text-[1.25rem]">
           Crear Evento - {formatDateTitle(selectedDate)}
         </h2>
         <button
           type="button"
           onClick={onClose}
-          className="absolute right-0 top-1/2 -translate-y-1/2 rounded-full p-1.5 text-gray-800 transition-colors hover:bg-gray-100"
+          className="absolute right-0 top-[-2.25rem] rounded-full p-1.5 text-gray-800 transition-colors hover:bg-gray-100 sm:top-1/2 sm:-translate-y-1/2"
           aria-label="Cerrar"
         >
           <X className="h-6 w-6" strokeWidth={1.5} />
@@ -111,12 +118,12 @@ export const CreateEventModal: React.FC<CreateEventModalProps> = ({
 
       <div className="mb-8 flex flex-col gap-5">
         <label className="flex flex-col gap-2 text-[14px] font-[800] text-[#2c2c2c]">
-          Titulo del evento
+          Título del evento
           <input
             type="text"
             value={title}
             onChange={(event) => setTitle(event.target.value)}
-            placeholder="Titulo para el evento"
+            placeholder="Título para el evento"
             className="rounded-full border border-[#1f4e99] px-4 py-2 text-[13px] font-medium text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-[#1f4e99]"
           />
         </label>
@@ -128,16 +135,21 @@ export const CreateEventModal: React.FC<CreateEventModalProps> = ({
 
         <label className="flex flex-col gap-2 text-[14px] font-[800] text-[#2c2c2c]">
           Hora del evento
-          <input
-            type="time"
+          <select
             value={time}
             onChange={(event) => setTime(event.target.value)}
             className="rounded-full border border-[#1f4e99] bg-transparent px-4 py-2 text-[13px] font-medium text-gray-700 focus:outline-none focus:ring-1 focus:ring-[#1f4e99]"
-          />
+          >
+            {timeOptions.map((option) => (
+              <option key={option} value={option}>
+                {option}
+              </option>
+            ))}
+          </select>
         </label>
 
         <label className="flex flex-col gap-2 text-[14px] font-[800] text-[#2c2c2c]">
-          Descripcion
+          Descripción
           <textarea
             value={description}
             onChange={(event) => setDescription(event.target.value)}

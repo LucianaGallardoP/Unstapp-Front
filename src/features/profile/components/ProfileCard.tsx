@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import type { ProfileResponseDTO, ProfileStatsDTO } from '../types/profile.dtos';
 
 const formatCompactNumber = (value: string | number) => {
@@ -19,11 +19,28 @@ const formatCompactNumber = (value: string | number) => {
   return numericValue.toString();
 };
 
+const getStoredRoles = () => {
+  try {
+    const roles = JSON.parse(localStorage.getItem('unstapp_user_roles') ?? '[]');
+
+    return Array.isArray(roles) ? roles.map(String) : [];
+  } catch {
+    return [];
+  }
+};
+
+const formatRoleLabel = (role: string) => {
+  const normalizedRole = role.toLowerCase();
+
+  if (normalizedRole.includes('admin')) return 'Administrador';
+  if (normalizedRole.includes('docente')) return 'Docente';
+  if (normalizedRole.includes('bar')) return 'Bar';
+
+  return 'Alumno';
+};
+
 interface ProfileCardProps {
-  // 1. Reemplazamos los datos sueltos por el DTO estricto
   profile: ProfileResponseDTO;
-  
-  // 2. Mantenemos stats separado temporalmente hasta que el backend lo incluya
   stats?: ProfileStatsDTO;
   onFollowToggle?: (nextIsFollowing: boolean) => Promise<void>;
   onEditProfile?: () => void;
@@ -39,11 +56,16 @@ export const ProfileCard = ({
   onFollowToggle,
   onEditProfile,
 }: ProfileCardProps) => {
-  // Controla el estado visual inmediato del seguimiento.
   const [isFollowing, setIsFollowing] = useState(profile.isFollowing);
   const [followersCount, setFollowersCount] = useState(stats.followers);
   const [isFollowLoading, setIsFollowLoading] = useState(false);
   const [followError, setFollowError] = useState<string | null>(null);
+  const roleLabel = useMemo(() => {
+    const roles = profile.roles?.length ? profile.roles : profile.isOwnProfile ? getStoredRoles() : [];
+    const primaryRole = roles[0];
+
+    return primaryRole ? formatRoleLabel(primaryRole) : null;
+  }, [profile.isOwnProfile, profile.roles]);
 
   useEffect(() => {
     setIsFollowing(profile.isFollowing);
@@ -87,28 +109,23 @@ export const ProfileCard = ({
 
   return (
     <article className="relative mx-auto w-full max-w-[430px] overflow-hidden rounded-[16px] border border-gray-200 bg-white pb-6 shadow-[0_2px_8px_rgba(0,0,0,0.04)] sm:max-w-[560px] md:max-w-[600px]">
-      
-      {/* 3. Foto de Portada (Renderizado condicional) */}
       <div className="h-32 w-full bg-gray-200 sm:h-40">
         {profile.coverUrl && (
-          <img 
-            src={profile.coverUrl} 
-            alt="Portada del perfil" 
-            className="h-full w-full object-cover" 
+          <img
+            src={profile.coverUrl}
+            alt="Portada del perfil"
+            className="h-full w-full object-cover"
           />
         )}
       </div>
 
-      {/* Contenedor del Avatar y Botones de Acción */}
       <div className="px-5 flex items-end justify-between -mt-10 mb-3 sm:-mt-12 sm:mb-4">
-        
-        {/* 4. Foto de Perfil con fallback (letra inicial si no hay foto) */}
         <div className="relative flex items-center justify-center h-[84px] w-[84px] shrink-0 rounded-[18px] border-[3px] border-white bg-gray-300 shadow-sm sm:h-[100px] sm:w-[100px] overflow-hidden">
           {profile.avatarUrl ? (
-            <img 
-              src={profile.avatarUrl} 
-              alt={profile.fullName} 
-              className="h-full w-full object-cover" 
+            <img
+              src={profile.avatarUrl}
+              alt={profile.fullName}
+              className="h-full w-full object-cover"
             />
           ) : (
             <span className="text-3xl font-black text-gray-500">
@@ -117,9 +134,8 @@ export const ProfileCard = ({
           )}
         </div>
 
-        {/* 5. Lógica de Botones (Editar vs Seguir) */}
         {profile.isOwnProfile ? (
-          <button 
+          <button
             type="button"
             onClick={onEditProfile}
             className="mb-1 h-8 rounded-lg bg-[#F0F2F5] px-4 text-[12px] font-bold text-gray-900 transition-colors hover:bg-[#E4E6E9] sm:h-9 sm:px-5 sm:text-[13px]"
@@ -127,14 +143,14 @@ export const ProfileCard = ({
             Editar Perfil
           </button>
         ) : (
-          <button 
+          <button
             type="button"
             onClick={handleFollowClick}
             aria-pressed={isFollowing}
             disabled={isFollowLoading}
             className={`mb-1 h-8 rounded-lg px-4 text-[12px] font-bold transition-colors sm:h-9 sm:px-5 sm:text-[13px] ${
-              isFollowing 
-                ? 'bg-[#F0F2F5] text-gray-900 hover:bg-[#E4E6E9]' 
+              isFollowing
+                ? 'bg-[#F0F2F5] text-gray-900 hover:bg-[#E4E6E9]'
                 : 'bg-[#155DFC] text-white hover:bg-blue-700'
             }`}
           >
@@ -143,11 +159,17 @@ export const ProfileCard = ({
         )}
       </div>
 
-      {/* 6. Información del Perfil mapeada desde el DTO */}
       <div className="px-5">
-        <h2 className="text-[22px] font-black tracking-tight text-black sm:text-[24px]">
-          {profile.fullName}
-        </h2>
+        <div className="flex flex-wrap items-center gap-2">
+          <h2 className="text-[22px] font-black tracking-tight text-black sm:text-[24px]">
+            {profile.fullName}
+          </h2>
+          {roleLabel && (
+            <span className="rounded-full bg-[#EFF6FF] px-3 py-1 text-[10px] font-black uppercase text-[#1E4E9D]">
+              {roleLabel}
+            </span>
+          )}
+        </div>
         <p className="mt-0.5 text-[11px] font-bold uppercase text-[#155DFC] sm:text-[12px]">
           {profile.careers.join(', ')}
         </p>
@@ -165,7 +187,6 @@ export const ProfileCard = ({
         )}
       </div>
 
-      {/* Estadísticas (Mantenidas como estaban originalmente) */}
       <div className="mt-6 flex justify-center gap-6 px-5 sm:gap-10">
         <div className="flex flex-col items-center">
           <span className="text-[18px] font-black leading-none text-black sm:text-[20px]">{formatCompactNumber(stats.posts)}</span>

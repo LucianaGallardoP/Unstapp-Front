@@ -184,7 +184,7 @@ export const CalendarPage = () => {
           <section className="mt-7">
             <header className="flex items-center justify-between gap-3">
               <h2 className="text-[17px] font-black uppercase tracking-tight text-black sm:text-[20px]">
-                Eventos del dia
+                Eventos del día
               </h2>
               {!isAlumno && (
                 <button
@@ -240,7 +240,7 @@ export const CalendarPage = () => {
 
               {!(isEventsLoading || isDailyLoading) && previewEvents.length === 0 && (
                 <p className="rounded-[10px] bg-white px-4 py-5 text-center text-[12px] font-bold text-[#526174] shadow-[0_8px_20px_rgba(15,23,42,0.1)]">
-                  No hay eventos para este dia.
+                  No hay eventos para este día.
                 </p>
               )}
             </div>
@@ -288,7 +288,7 @@ export const CalendarPage = () => {
 
       {/* Modal Overlay para Crear Evento */}
       {isCreateModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-3 backdrop-blur-sm sm:p-4">
           <CreateEventModal
             selectedDate={selectedDate}
             isSubmitting={isCreating}
@@ -302,7 +302,7 @@ export const CalendarPage = () => {
 
       {/* Modal Overlay para Eventos del Día */}
       {isDailyEventsModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-3 backdrop-blur-sm sm:p-4">
           <DailyEventsCard
             selectedDate={selectedDate}
             events={selectedDayEvents}

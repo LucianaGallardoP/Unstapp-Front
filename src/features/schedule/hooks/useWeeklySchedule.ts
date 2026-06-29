@@ -40,9 +40,9 @@ export const weekDays: { id: WeekDayId; label: string }[] = [
 ];
 
 const defaultStudentContext: StudentContext = {
-  career: 'Ingenieria de Software',
+  career: 'Ingeniería de Software',
   year: '2do año',
-  commission: 'Comision B',
+  commission: 'Comisión B',
   campus: 'Sede Yerba Buena',
 };
 
@@ -74,19 +74,28 @@ const normalizeWeekDay = (value: string): WeekDayId => {
   return 'lun';
 };
 
-const mapScheduleClass = (schedule: ScheduleDto): ScheduleClass => {
-  console.log('[mapScheduleClass] Campo "day" recibido del servidor:', schedule.day);
-  return {
-    id: schedule.id,
-    day: normalizeWeekDay(schedule.day),
-    startTime: schedule.startTime,
-    durationHours: schedule.durationHours,
-    subject: schedule.subject,
-    teacher: schedule.professor,
-    room: schedule.classroom,
-    color: '#1E4E9D',
-  };
+const getScheduleColor = (startTime: string) => {
+  const [hourValue] = startTime.split(':');
+  const hour = Number(hourValue);
+
+  if (!Number.isFinite(hour)) return '#1E4E9D';
+  if (hour >= 14 && hour < 16) return '#ffde59';
+  if (hour >= 16 && hour < 18) return '#FF751F';
+  if (hour >= 18 && hour < 20) return '#91210e';
+
+  return '#1E4E9D';
 };
+
+const mapScheduleClass = (schedule: ScheduleDto): ScheduleClass => ({
+  id: schedule.id,
+  day: normalizeWeekDay(schedule.day),
+  startTime: schedule.startTime,
+  durationHours: schedule.durationHours,
+  subject: schedule.subject,
+  teacher: schedule.professor,
+  room: schedule.classroom,
+  color: getScheduleColor(schedule.startTime),
+});
 
 const getCareerContext = (career?: CareerDto): StudentContext => ({
   career: career?.name ?? defaultStudentContext.career,
@@ -111,14 +120,12 @@ export const useWeeklySchedule = (careerId?: string) => {
 
   const fetchSchedules = useCallback(async (dayOverride?: WeekDayId) => {
     const day = dayOverride ?? selectedDay;
+
     try {
-      const params = careerId
-        ? { careerId, dia: day }
-        : { dia: day };
+      const params = careerId ? { careerId, dia: day } : { dia: day };
       const schedules = await scheduleService.getSchedules(params);
-      // Forzamos el día en cada resultado, ya que el servidor puede devolver
-      // el campo "day" con un valor incorrecto o inconsistente.
-      setScheduleClasses(schedules.map(s => ({ ...mapScheduleClass(s), day })));
+
+      setScheduleClasses(schedules.map((schedule) => ({ ...mapScheduleClass(schedule), day })));
     } catch {
       setContextError('No se pudieron cargar los horarios.');
     }
@@ -138,13 +145,35 @@ export const useWeeklySchedule = (careerId?: string) => {
         durationHours: newClass.durationHours,
       });
 
-      // Actualizamos el día seleccionado y buscamos con el nuevo día explícitamente
-      // para evitar el bug del closure desactualizado en fetchSchedules.
       setSelectedDay(newClass.day);
       await fetchSchedules(newClass.day);
     } catch {
       setContextError('No se pudo crear la materia.');
     }
+  };
+
+  const updateScheduleClass = (classId: number, values: CreateScheduleClassInput) => {
+    setScheduleClasses((currentClasses) =>
+      currentClasses.map((scheduleClass) =>
+        scheduleClass.id === classId
+          ? {
+              ...scheduleClass,
+              day: values.day,
+              subject: values.subject,
+              startTime: values.startTime,
+              durationHours: values.durationHours,
+              teacher: values.teacher,
+              room: values.room,
+              color: getScheduleColor(values.startTime),
+            }
+          : scheduleClass,
+      ),
+    );
+    setSelectedDay(values.day);
+  };
+
+  const removeScheduleClass = (classId: number) => {
+    setScheduleClasses((currentClasses) => currentClasses.filter((scheduleClass) => scheduleClass.id !== classId));
   };
 
   useEffect(() => {
@@ -202,6 +231,8 @@ export const useWeeklySchedule = (careerId?: string) => {
     selectedDay,
     selectedClasses,
     addScheduleClass,
+    updateScheduleClass,
+    removeScheduleClass,
     setSelectedDay,
     fetchSchedules,
   };

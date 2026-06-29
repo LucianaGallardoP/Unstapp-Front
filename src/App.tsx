@@ -7,11 +7,13 @@ import { ScheduleEntryPage, SchedulePage } from './features/schedule';
 import { NotFoundPage } from './pages/NotFoundPage';
 import { TestPage } from './pages/TestPage';
 import { NotificationsProvider } from './store/notificationsContext';
+import { AuthProvider } from './store/authContext';
 
 function App() {
   return (
     <NotificationsProvider>
       <BrowserRouter>
+        <AuthProvider>
         <Routes>
           <Route path="/" element={<Navigate to="/login" replace />} />
           <Route path="/login" element={<LoginPage />} />
@@ -26,6 +28,7 @@ function App() {
           <Route path="/perfil/:userId" element={<ProfilePage />} />
           <Route path="*" element={<NotFoundPage />} />
         </Routes>
+        </AuthProvider>
       </BrowserRouter>
     </NotificationsProvider>
   );

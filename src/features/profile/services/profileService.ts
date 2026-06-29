@@ -58,7 +58,8 @@ export const MOCK_PROFILE_DETAILS: ProfileResponseDTO = {
   avatarUrl: "https://i.pravatar.cc/150?img=47", 
   coverUrl: "https://images.unsplash.com/photo-1555066931-4365d14bab8c?q=80&w=1000&auto=format&fit=crop", 
   isOwnProfile: true, // Ponlo en 'false' luego si quieres probar cómo se ve el botón "Seguir"
-  isFollowing: false
+  isFollowing: false,
+  roles: ['Alumno']
 };
 
 // Mock para representar un perfil publico visto por otro usuario.
@@ -70,7 +71,8 @@ export const MOCK_PUBLIC_PROFILE_DETAILS: ProfileResponseDTO = {
   avatarUrl: "https://i.pravatar.cc/150?img=12",
   coverUrl: "https://images.unsplash.com/photo-1523240795612-9a054b0db644?q=80&w=1000&auto=format&fit=crop",
   isOwnProfile: false,
-  isFollowing: false
+  isFollowing: false,
+  roles: ['Alumno']
 };
 
 export const MOCK_PROFILE_STATS: ProfileStatsDTO = {
@@ -125,6 +127,14 @@ const mapProfileFromApi = (
     ...asStringList(rootUser.career),
     ...asStringList(rootUser.carrera),
   ];
+  const roles = [
+    ...asStringList(user.roles),
+    ...asStringList(user.role),
+    ...asStringList(rootUser.roles),
+    ...asStringList(rootUser.role),
+    ...asStringList(data.roles),
+    ...asStringList(data.role),
+  ];
 
   return {
     profile: {
@@ -141,6 +151,7 @@ const mapProfileFromApi = (
         asString(root.username) ||
         fallbackProfile.fullName,
       careers: careers.length ? careers : fallbackProfile.careers,
+      roles: roles.length ? roles : isOwnProfile ? undefined : fallbackProfile.roles,
       bio: asString(user.bio) || asString(user.description) || fallbackProfile.bio,
       avatarUrl:
         asString(user.avatarUrl) ||

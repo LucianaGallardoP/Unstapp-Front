@@ -8,6 +8,9 @@ export interface AppNotification {
   type: NotificationType;
   actor: string;
   avatarUrl?: string;
+  actorId?: number | string;
+  profileId?: number | string;
+  commentId?: number | string;
   action: string;
   target: string;
   postId?: number | string;

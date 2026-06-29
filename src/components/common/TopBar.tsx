@@ -72,6 +72,38 @@ export const TopBar = ({ simple = false }: TopBarProps) => {
     hideUnreadIndicator();
     markAllAsRead();
   };
+  const handleNotificationClick = async (notification: { id: number | string; action: string; type: NotificationType; postId?: number | string; commentId?: number | string; actorId?: number | string; profileId?: number | string }) => {
+    await markNotificationAsRead(notification.id);
+    setIsNotificationsOpen(false);
+
+    const action = notification.action.toLowerCase();
+    const isFollowRequest = action.includes('segu') || action.includes('follow');
+    const profileId = notification.profileId ?? notification.actorId;
+
+    if (isFollowRequest && profileId) {
+      navigate(`/perfil/${profileId}`);
+      return;
+    }
+
+    if (notification.commentId && notification.postId) {
+      navigate(`/feed?postId=${notification.postId}&commentId=${notification.commentId}`);
+      return;
+    }
+
+    if (notification.postId) {
+      navigate(`/feed?postId=${notification.postId}`);
+      return;
+    }
+
+    if (notification.type === 'followedPost') {
+      navigate('/feed');
+      return;
+    }
+
+    if (profileId) {
+      navigate(`/perfil/${profileId}`);
+    }
+  };
 
   return (
     <header className="sticky top-0 left-0 right-0 z-40 h-14 border-b border-gray-100 bg-white px-3 md:h-16">
@@ -180,7 +212,7 @@ export const TopBar = ({ simple = false }: TopBarProps) => {
                         return (
                           <article
                             key={notification.id}
-                            onClick={() => markNotificationAsRead(notification.id)}
+                            onClick={() => handleNotificationClick(notification)}
                             className={`flex min-h-[58px] items-start justify-between gap-3 rounded-[8px] border px-3 py-2 shadow-[0_4px_10px_rgba(15,23,42,0.08)] ${
                               notification.read
                                 ? 'border-transparent bg-[#EFF6FF]/55'
@@ -229,7 +261,7 @@ export const TopBar = ({ simple = false }: TopBarProps) => {
                                 removeNotification(notification.id);
                               }}
                               className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[#808080] transition-colors hover:bg-[#E7000B]/10 hover:text-[#E7000B]"
-                              aria-label="Eliminar notificacion"
+                              aria-label="Eliminar notificación"
                             >
                               <Trash2 size={15} />
                             </button>

@@ -1,21 +1,29 @@
 import { useState } from 'react';
 import { X } from 'lucide-react';
-import type { CreateScheduleClassInput, WeekDayId } from '../hooks/useWeeklySchedule';
+import type { CreateScheduleClassInput, ScheduleClass, WeekDayId } from '../hooks/useWeeklySchedule';
 import { weekDays } from '../hooks/useWeeklySchedule';
 
 interface CreateSubjectModalProps {
   initialDay: WeekDayId;
+  initialValues?: ScheduleClass;
+  mode?: 'create' | 'edit';
   onClose: () => void;
   onCreate: (values: CreateScheduleClassInput) => void;
 }
 
-export const CreateSubjectModal = ({ initialDay, onClose, onCreate }: CreateSubjectModalProps) => {
-  const [selectedDay, setSelectedDay] = useState<WeekDayId>(initialDay);
-  const [subject, setSubject] = useState('');
-  const [startTime, setStartTime] = useState('15:00');
-  const [durationHours, setDurationHours] = useState(2);
-  const [teacher, setTeacher] = useState('');
-  const [room, setRoom] = useState('');
+export const CreateSubjectModal = ({
+  initialDay,
+  initialValues,
+  mode = 'create',
+  onClose,
+  onCreate,
+}: CreateSubjectModalProps) => {
+  const [selectedDay, setSelectedDay] = useState<WeekDayId>(initialValues?.day ?? initialDay);
+  const [subject, setSubject] = useState(initialValues?.subject ?? '');
+  const [startTime, setStartTime] = useState(initialValues?.startTime ?? '15:00');
+  const [durationHours, setDurationHours] = useState(initialValues?.durationHours ?? 2);
+  const [teacher, setTeacher] = useState(initialValues?.teacher ?? '');
+  const [room, setRoom] = useState(initialValues?.room ?? '');
   const [wasSubmitted, setWasSubmitted] = useState(false);
 
   const isSubjectValid = subject.trim().length > 0;
@@ -52,7 +60,7 @@ export const CreateSubjectModal = ({ initialDay, onClose, onCreate }: CreateSubj
       <section className="relative w-full max-w-[390px] rounded-[18px] bg-white px-6 py-5 shadow-[0_20px_48px_rgba(15,23,42,0.28)]">
         <header className="mb-5 flex items-center justify-center">
           <h2 className="text-[15px] font-black text-[#1E4E9D]">
-            Agregar Materia
+            {mode === 'edit' ? 'Editar Materia' : 'Agregar Materia'}
           </h2>
           <button
             type="button"
@@ -137,7 +145,7 @@ export const CreateSubjectModal = ({ initialDay, onClose, onCreate }: CreateSubj
 
         {wasSubmitted && !canSubmit && (
           <p className="mt-3 rounded-lg bg-[#E7000B]/10 px-3 py-2 text-[10px] font-bold text-[#E7000B]">
-            Completá todos los campos para agregar la materia.
+            Completá todos los campos para {mode === 'edit' ? 'editar' : 'agregar'} la materia.
           </p>
         )}
 
@@ -147,7 +155,7 @@ export const CreateSubjectModal = ({ initialDay, onClose, onCreate }: CreateSubj
             onClick={handleSubmit}
             className="h-8 min-w-36 rounded-full bg-[#1E4E9D] px-8 text-[12px] font-black text-white transition-colors hover:bg-[#155DFC]"
           >
-            Agregar
+            {mode === 'edit' ? 'Guardar' : 'Agregar'}
           </button>
         </div>
       </section>

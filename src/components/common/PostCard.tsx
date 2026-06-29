@@ -139,7 +139,7 @@ export const PostCard = ({
       setIsConfirmOpen(false);
       setIsActionsOpen(false);
     } catch {
-      setDeleteError('No se pudo eliminar la publicacion.');
+      setDeleteError('No se pudo eliminar la publicación.');
     } finally {
       setIsDeleteLoading(false);
     }
@@ -213,7 +213,7 @@ export const PostCard = ({
                     type="button"
                     onClick={() => setIsActionsOpen((currentValue) => !currentValue)}
                     className="-mr-1 -mt-1 flex h-7 w-7 items-center justify-center rounded-full text-gray-400 transition-colors hover:bg-gray-100 hover:text-[#1F2937]"
-                    aria-label="Abrir menu de publicacion"
+                    aria-label="Abrir menu de publicación"
                     aria-expanded={isActionsOpen}
                   >
                     <MoreVertical size={16} />
@@ -258,7 +258,7 @@ export const PostCard = ({
         >
           <img
             src={post.media.url}
-            alt={post.media.alt ?? 'Contenido multimedia de la publicacion'}
+            alt={post.media.alt ?? 'Contenido multimedia de la publicación'}
             className="max-h-72 w-full object-cover transition-transform duration-200 hover:scale-[1.01] sm:max-h-80"
           />
         </button>
@@ -352,7 +352,7 @@ export const PostCard = ({
                   }
                 }}
                 placeholder={
-                  isAuthenticated ? 'Escribir comentario' : 'Inicia sesion para comentar'
+                  isAuthenticated ? 'Escribir comentario' : 'Iniciá sesión para comentar'
                 }
                 disabled={!isAuthenticated || commentLoading}
                 className="min-w-0 flex-1 rounded-xl border border-gray-200 bg-white px-3 py-2 text-[12px] text-gray-800 outline-none focus:border-[#1E4E9D] disabled:cursor-not-allowed disabled:bg-gray-100 disabled:text-gray-400"
@@ -409,25 +409,25 @@ export const PostCard = ({
 
       {selectedImageUrl && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 px-3 py-6"
+          className="fixed inset-0 z-[80] flex items-center justify-center bg-black/75 px-3 py-6 backdrop-blur-md"
           onClick={() => setSelectedImageUrl(null)}
         >
           <section
-            className="relative max-h-full w-full max-w-5xl"
+            className="relative flex h-full w-full items-center justify-center"
             onClick={(event) => event.stopPropagation()}
           >
             <button
               type="button"
               onClick={() => setSelectedImageUrl(null)}
-              className="absolute right-2 top-2 z-10 flex h-9 w-9 items-center justify-center rounded-full bg-white/90 text-black shadow-lg transition-colors hover:bg-white"
+              className="absolute right-3 top-3 z-10 flex h-10 w-10 items-center justify-center rounded-full bg-white/90 text-black shadow-lg transition-colors hover:bg-white"
               aria-label="Cerrar imagen"
             >
               <X size={20} />
             </button>
             <img
               src={selectedImageUrl}
-              alt={post.media?.alt ?? 'Imagen de la publicacion'}
-              className="mx-auto max-h-[calc(100vh-48px)] w-auto max-w-full rounded-2xl object-contain shadow-[0_24px_60px_rgba(0,0,0,0.32)]"
+              alt={post.media?.alt ?? 'Imagen de la publicación'}
+              className="max-h-[92vh] max-w-[96vw] rounded-2xl object-contain shadow-[0_24px_60px_rgba(0,0,0,0.32)]"
             />
           </section>
         </div>

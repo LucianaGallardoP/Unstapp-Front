@@ -20,14 +20,18 @@ const asString = (value: unknown, fallback = '') =>
 const asBoolean = (value: unknown, fallback = false) =>
   typeof value === 'boolean' ? value : fallback;
 
+const asId = (value: unknown): number | string | undefined =>
+  typeof value === 'number' || typeof value === 'string' ? value : undefined;
+
 const normalizeNotificationType = (notification: ApiRecord): NotificationType => {
   const action = asString(notification.action).toLowerCase();
+  const type = asString(notification.type).toLowerCase();
 
-  if (asBoolean(notification.isPriority)) {
+  if (asBoolean(notification.isPriority) || type.includes('institutional')) {
     return 'institutional';
   }
 
-  if (action.includes('public')) {
+  if (action.includes('public') || type.includes('follow')) {
     return 'followedPost';
   }
 
@@ -36,23 +40,52 @@ const normalizeNotificationType = (notification: ApiRecord): NotificationType =>
 
 const mapNotificationFromApi = (apiNotification: unknown): AppNotification => {
   const notification = asRecord(apiNotification);
+  const actor = asRecord(notification.actor ?? notification.user ?? notification.fromUser);
+  const target = asRecord(notification.target ?? notification.post ?? notification.comment);
   const id = notification.notificationId ?? notification.id ?? crypto.randomUUID();
+  const actorName =
+    asString(notification.user) ||
+    asString(notification.actor) ||
+    asString(actor.fullName) ||
+    asString(actor.name) ||
+    asString(actor.userName) ||
+    'Unstapp';
 
   return {
-    id: typeof id === 'number' || typeof id === 'string' ? id : crypto.randomUUID(),
+    id: asId(id) ?? crypto.randomUUID(),
     type: normalizeNotificationType(notification),
-    actor: asString(notification.user) || asString(notification.actor, 'Unstapp'),
+    actor: actorName,
+    actorId:
+      asId(notification.actorId) ||
+      asId(notification.userId) ||
+      asId(notification.fromUserId) ||
+      asId(actor.id) ||
+      asId(actor.userId),
+    profileId:
+      asId(notification.profileId) ||
+      asId(notification.targetUserId) ||
+      asId(notification.followerId) ||
+      asId(actor.id) ||
+      asId(actor.userId),
     avatarUrl:
       asString(notification.avatarUrl) ||
       asString(notification.userAvatarUrl) ||
       asString(notification.actorAvatarUrl) ||
+      asString(actor.avatarUrl) ||
+      asString(actor.profileImageUrl) ||
+      asString(actor.photoUrl) ||
       undefined,
     action: asString(notification.action) || asString(notification.message, 'tiene una novedad'),
-    target: asString(notification.message) || asString(notification.target, 'Nueva notificacion'),
+    target: asString(notification.message) || asString(notification.target) || asString(target.title, 'Nueva notificación'),
     postId:
-      typeof notification.postId === 'number' || typeof notification.postId === 'string'
-        ? notification.postId
-        : undefined,
+      asId(notification.postId) ||
+      asId(notification.publicationId) ||
+      asId(target.postId) ||
+      asId(target.id),
+    commentId:
+      asId(notification.commentId) ||
+      asId(notification.responseId) ||
+      asId(target.commentId),
     createdAt:
       asString(notification.createdAt) ||
       asString(notification.date) ||

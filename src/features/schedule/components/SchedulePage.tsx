@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { AlertTriangle, Plus } from 'lucide-react';
+import { AlertTriangle, ChevronLeft, Pencil, Plus, Trash2, X } from 'lucide-react';
 import { BottomNavigation } from '../../../components/common/BottomNavigation';
 import { TopBar } from '../../../components/common/TopBar';
-import { useWeeklySchedule } from '../hooks/useWeeklySchedule';
+import { useWeeklySchedule, type CreateScheduleClassInput, type ScheduleClass } from '../hooks/useWeeklySchedule';
 import { CreateSubjectModal } from './CreateSubjectModal';
 
 const getIsCurrentUserAdmin = () => {
@@ -18,6 +18,8 @@ const getIsCurrentUserAdmin = () => {
 
 export const SchedulePage = () => {
   const [isCreateSubjectModalOpen, setIsCreateSubjectModalOpen] = useState(false);
+  const [editingClass, setEditingClass] = useState<ScheduleClass | null>(null);
+  const [classToDelete, setClassToDelete] = useState<ScheduleClass | null>(null);
   const { careerId } = useParams<{ careerId?: string }>();
   const navigate = useNavigate();
   const isCurrentUserAdmin = getIsCurrentUserAdmin();
@@ -29,9 +31,24 @@ export const SchedulePage = () => {
     selectedDay,
     selectedClasses,
     addScheduleClass,
+    updateScheduleClass,
+    removeScheduleClass,
     setSelectedDay,
     fetchSchedules,
   } = useWeeklySchedule(careerId);
+
+  const handleEdit = (values: CreateScheduleClassInput) => {
+    if (!editingClass) return;
+
+    updateScheduleClass(editingClass.id, values);
+  };
+
+  const handleDelete = () => {
+    if (!classToDelete) return;
+
+    removeScheduleClass(classToDelete.id);
+    setClassToDelete(null);
+  };
 
   return (
     <div className="min-h-screen bg-white pb-20 text-gray-900 md:bg-gray-50">
@@ -39,6 +56,17 @@ export const SchedulePage = () => {
 
       <main className="mx-auto flex w-full max-w-[430px] flex-col px-3 py-4 sm:max-w-[560px] sm:px-5 md:max-w-2xl md:py-6 lg:max-w-3xl">
         <section className="mx-auto w-full max-w-[430px] sm:max-w-[560px] md:max-w-[600px]">
+          {isCurrentUserAdmin && careerId && (
+            <button
+              type="button"
+              onClick={() => navigate('/horario')}
+              className="mb-3 inline-flex items-center gap-1 rounded-full bg-white px-3 py-2 text-[11px] font-black uppercase text-[#1E4E9D] shadow-sm transition-colors hover:bg-[#EFF6FF]"
+            >
+              <ChevronLeft size={15} />
+              Volver a Carreras
+            </button>
+          )}
+
           <article className="relative rounded-[16px] bg-white px-4 py-4 shadow-[0_8px_22px_rgba(15,23,42,0.13)]">
             {isCurrentUserAdmin && (
               <button
@@ -166,6 +194,27 @@ export const SchedulePage = () => {
                       </p>
                     </div>
                   </div>
+
+                  {isCurrentUserAdmin && (
+                    <div className="flex shrink-0 flex-col gap-1">
+                      <button
+                        type="button"
+                        onClick={() => setEditingClass(scheduleClass)}
+                        className="flex h-8 w-8 items-center justify-center rounded-full text-[#1E4E9D] transition-colors hover:bg-[#EFF6FF]"
+                        aria-label="Editar materia"
+                      >
+                        <Pencil size={15} />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setClassToDelete(scheduleClass)}
+                        className="flex h-8 w-8 items-center justify-center rounded-full text-[#E7000B] transition-colors hover:bg-[#E7000B]/10"
+                        aria-label="Eliminar materia"
+                      >
+                        <Trash2 size={15} />
+                      </button>
+                    </div>
+                  )}
                 </article>
               ))}
 
@@ -181,18 +230,18 @@ export const SchedulePage = () => {
             <div className="flex items-center justify-center gap-2 mb-2">
               <AlertTriangle size={18} />
               <h2 className="text-[13px] font-black uppercase">
-                ¿PROBLEMAS CON TU HORARIO?
+                ¿Problemas con tu horario?
               </h2>
             </div>
             <p className="mx-auto mt-1 max-w-[320px] text-[9.5px] font-bold uppercase leading-snug text-white/90">
-              SI DETECTAS INCONSISTENCIAS EN LAS AULAS O MATERIAS, REPORTALO INMEDIATAMENTE A BEDALÍA PARA SU CORRECIÓN
+              Si detectás inconsistencias en las aulas o materias, reportalo inmediatamente a bedelía para su corrección.
             </p>
             <button
               type="button"
               onClick={() => navigate('/404')}
               className="mt-4 rounded-full bg-white px-6 py-2 text-[10px] font-black uppercase text-[#4c1d95] transition-all hover:bg-gray-100 hover:scale-105 hover:shadow-lg active:scale-95"
             >
-              REPORTAR
+              Reportar
             </button>
           </section>
         </section>
@@ -204,6 +253,53 @@ export const SchedulePage = () => {
           onClose={() => setIsCreateSubjectModalOpen(false)}
           onCreate={addScheduleClass}
         />
+      )}
+
+      {editingClass && (
+        <CreateSubjectModal
+          mode="edit"
+          initialDay={selectedDay}
+          initialValues={editingClass}
+          onClose={() => setEditingClass(null)}
+          onCreate={handleEdit}
+        />
+      )}
+
+      {classToDelete && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/45 px-4 py-6">
+          <section className="relative w-full max-w-[340px] rounded-[18px] bg-white px-6 py-5 text-center shadow-[0_20px_48px_rgba(15,23,42,0.28)]">
+            <button
+              type="button"
+              onClick={() => setClassToDelete(null)}
+              className="absolute right-4 top-4 flex h-7 w-7 items-center justify-center rounded-full text-black transition-colors hover:bg-gray-100"
+              aria-label="Cerrar confirmación"
+            >
+              <X size={16} />
+            </button>
+            <h2 className="text-[15px] font-black text-[#1F2937]">
+              ¿Estás seguro?
+            </h2>
+            <p className="mt-3 text-[12px] font-semibold leading-5 text-[#526174]">
+              Se eliminará la materia {classToDelete.subject} del cronograma visible.
+            </p>
+            <div className="mt-5 flex justify-center gap-3">
+              <button
+                type="button"
+                onClick={() => setClassToDelete(null)}
+                className="h-8 rounded-full bg-gray-100 px-5 text-[11px] font-black text-[#526174] transition-colors hover:bg-gray-200"
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                onClick={handleDelete}
+                className="h-8 rounded-full bg-[#E7000B] px-5 text-[11px] font-black text-white transition-colors hover:bg-[#b80009]"
+              >
+                Eliminar
+              </button>
+            </div>
+          </section>
+        </div>
       )}
 
       <BottomNavigation activeTab="horario" />
