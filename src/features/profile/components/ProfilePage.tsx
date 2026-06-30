@@ -6,6 +6,7 @@ import { PostCard } from '../../../components/common/PostCard';
 import { useParams } from 'react-router-dom';
 import { useProfile } from '../hooks/useProfile';
 import { useState } from 'react';
+import { useAuth } from '../../../store/authContext';
 
 export const ProfilePage = () => {
   const { userId } = useParams<{ userId?: string }>();
@@ -21,6 +22,7 @@ export const ProfilePage = () => {
     updateProfile,
   } = useProfile(userId);
   const [isEditProfileModalOpen, setIsEditProfileModalOpen] = useState(false);
+  const { handleLogout } = useAuth();
 
   const postsTitle = isPublicProfile ? 'Publicaciones' : 'Mis Publicaciones';
 
@@ -47,6 +49,7 @@ export const ProfilePage = () => {
             stats={profileData.stats}
             onFollowToggle={isPublicProfile ? handleFollowToggle : undefined}
             onEditProfile={!isPublicProfile ? () => setIsEditProfileModalOpen(true) : undefined}
+            onLogout={!isPublicProfile ? handleLogout : undefined}
           />
         )}
 

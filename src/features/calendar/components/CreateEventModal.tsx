@@ -61,11 +61,7 @@ export const CreateEventModal: React.FC<CreateEventModalProps> = ({
     }
   })();
 
-  const canSubmit =
-    title.trim().length > 0 &&
-    description.trim().length > 0 &&
-    time.trim().length > 0 &&
-    !isSubmitting;
+  const canSubmit = title.trim().length > 0 && time.trim().length > 0 && !isSubmitting;
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -149,7 +145,7 @@ export const CreateEventModal: React.FC<CreateEventModalProps> = ({
         </label>
 
         <label className="flex flex-col gap-2 text-[14px] font-[800] text-[#2c2c2c]">
-          Descripción
+          Descripción <span className="text-[11px] font-semibold text-gray-400">Opcional</span>
           <textarea
             value={description}
             onChange={(event) => setDescription(event.target.value)}

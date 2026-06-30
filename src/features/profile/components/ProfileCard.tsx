@@ -44,6 +44,7 @@ interface ProfileCardProps {
   stats?: ProfileStatsDTO;
   onFollowToggle?: (nextIsFollowing: boolean) => Promise<void>;
   onEditProfile?: () => void;
+  onLogout?: () => void;
 }
 
 export const ProfileCard = ({
@@ -55,6 +56,7 @@ export const ProfileCard = ({
   },
   onFollowToggle,
   onEditProfile,
+  onLogout,
 }: ProfileCardProps) => {
   const [isFollowing, setIsFollowing] = useState(profile.isFollowing);
   const [followersCount, setFollowersCount] = useState(stats.followers);
@@ -135,13 +137,22 @@ export const ProfileCard = ({
         </div>
 
         {profile.isOwnProfile ? (
-          <button
-            type="button"
-            onClick={onEditProfile}
-            className="mb-1 h-8 rounded-lg bg-[#F0F2F5] px-4 text-[12px] font-bold text-gray-900 transition-colors hover:bg-[#E4E6E9] sm:h-9 sm:px-5 sm:text-[13px]"
-          >
-            Editar Perfil
-          </button>
+          <div className="mb-1 flex flex-wrap justify-end gap-2">
+            <button
+              type="button"
+              onClick={onEditProfile}
+              className="h-8 rounded-lg bg-[#F0F2F5] px-4 text-[12px] font-bold text-gray-900 transition-colors hover:bg-[#E4E6E9] sm:h-9 sm:px-5 sm:text-[13px]"
+            >
+              Editar Perfil
+            </button>
+            <button
+              type="button"
+              onClick={onLogout}
+              className="h-8 rounded-lg bg-[#E7000B] px-4 text-[12px] font-bold text-white transition-colors hover:bg-[#b80009] sm:h-9 sm:px-5 sm:text-[13px]"
+            >
+              Cerrar Sesión
+            </button>
+          </div>
         ) : (
           <button
             type="button"

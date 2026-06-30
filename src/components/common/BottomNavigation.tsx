@@ -1,7 +1,7 @@
-import { LayoutGrid, Users, Calendar, Clock, User } from 'lucide-react';
+import { LayoutGrid, Calendar, Clock, User } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
-export type TabType = 'feed' | 'comunidad' | 'calendario' | 'horario' | 'perfil';
+export type TabType = 'feed' | 'calendario' | 'horario' | 'perfil';
 
 interface BottomNavigationProps {
   activeTab: TabType;
@@ -13,7 +13,6 @@ export const BottomNavigation = ({ activeTab, onTabChange }: BottomNavigationPro
   // Secciones principales de la app.
   const tabs = [
     { id: 'feed', label: 'FEED', icon: LayoutGrid },
-    { id: 'comunidad', label: 'COMUNIDAD', icon: Users },
     { id: 'calendario', label: 'CALENDARIO', icon: Calendar },
     { id: 'horario', label: 'HORARIO', icon: Clock },
     { id: 'perfil', label: 'PERFIL', icon: User },

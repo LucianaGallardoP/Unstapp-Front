@@ -5,7 +5,6 @@ import { ProfilePage } from './features/profile';
 import { CalendarPage } from './features/calendar';
 import { ScheduleEntryPage, SchedulePage } from './features/schedule';
 import { NotFoundPage } from './pages/NotFoundPage';
-import { TestPage } from './pages/TestPage';
 import { NotificationsProvider } from './store/notificationsContext';
 import { AuthProvider } from './store/authContext';
 
@@ -20,7 +19,6 @@ function App() {
           <Route path="/register" element={<RegisterPage />} />
           <Route path="/register/:token" element={<RegisterPage />} />
           <Route path="/feed" element={<FeedPage />} />
-          <Route path="/comunidad" element={<TestPage activeTab="comunidad" />} />
           <Route path="/calendario" element={<CalendarPage />} />
           <Route path="/horario" element={<ScheduleEntryPage />} />
           <Route path="/admin/horarios/:careerId" element={<SchedulePage />} />

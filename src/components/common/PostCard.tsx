@@ -108,6 +108,17 @@ export const PostCard = ({
     return () => window.clearInterval(intervalId);
   }, []);
 
+  useEffect(() => {
+    if (!selectedImageUrl) return;
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [selectedImageUrl]);
+
   // Fecha completa para mostrar al pasar el mouse.
   const formattedDate = new Intl.DateTimeFormat('es-AR', {
     dateStyle: 'medium',
@@ -409,7 +420,7 @@ export const PostCard = ({
 
       {selectedImageUrl && (
         <div
-          className="fixed inset-0 z-[80] flex items-center justify-center bg-black/75 px-3 py-6 backdrop-blur-md"
+          className="fixed inset-0 z-[80] flex touch-none items-center justify-center overflow-hidden bg-black/75 px-3 py-6 backdrop-blur-md"
           onClick={() => setSelectedImageUrl(null)}
         >
           <section
