@@ -18,6 +18,60 @@ const asString = (value: unknown, fallback = '') =>
 const asOptionalId = (value: unknown) =>
   typeof value === 'number' || typeof value === 'string' ? value : undefined;
 
+const getProfileAvatarFromApi = async (authorId: number | string) => {
+  try {
+    const response = await apiClient.get<unknown>(`/profile/${authorId}`, {
+      headers: getAuthHeaders(),
+    });
+    const root = asRecord(response.data);
+    const data = asRecord(root.data ?? root.value ?? root.profile ?? root);
+    const user = asRecord(data.user ?? data.profile ?? data.person ?? data);
+    const rootUser = asRecord(root.user ?? root.profile ?? root.person);
+
+    return (
+      asString(user.avatarUrl) ||
+      asString(user.profileImageUrl) ||
+      asString(user.profilePictureUrl) ||
+      asString(user.profilePhotoUrl) ||
+      asString(user.photoUrl) ||
+      asString(rootUser.avatarUrl) ||
+      asString(rootUser.profileImageUrl) ||
+      asString(rootUser.profilePictureUrl) ||
+      asString(rootUser.profilePhotoUrl) ||
+      asString(rootUser.photoUrl) ||
+      asString(root.avatarUrl) ||
+      asString(root.profileImageUrl) ||
+      asString(root.profilePictureUrl) ||
+      asString(root.profilePhotoUrl) ||
+      asString(root.photoUrl) ||
+      undefined
+    );
+  } catch {
+    return undefined;
+  }
+};
+
+const hydrateCommentAvatars = async (comments: PostComment[]) => {
+  const uniqueAuthorIds = Array.from(
+    new Set(
+      comments
+        .map((comment) => comment.author.id)
+        .filter((authorId): authorId is number | string => typeof authorId === 'number' || typeof authorId === 'string'),
+    ),
+  );
+  const avatarEntries = await Promise.all(
+    uniqueAuthorIds.map(async (authorId) => [String(authorId), await getProfileAvatarFromApi(authorId)] as const),
+  );
+  const avatarsByAuthorId = new Map(avatarEntries);
+
+  return comments.map((comment) => ({
+    ...comment,
+    author: {
+      ...comment.author,
+      avatarUrl: comment.author.avatarUrl || avatarsByAuthorId.get(String(comment.author.id)),
+    },
+  }));
+};
 const mapCommentFromApi = (apiComment: unknown, fallbackContent: string): PostComment => {
   const comment = asRecord(apiComment);
   const author = asRecord(comment.author ?? comment.user ?? comment.createdBy ?? comment.person ?? comment.autor);
@@ -97,7 +151,7 @@ const mapCommentFromApi = (apiComment: unknown, fallbackContent: string): PostCo
 };
 
 export const commentService = {
-  // Trae comentarios reales de una publicacion.
+  // Trae comentarios reales de una publicación.
   getByPostIdFromApi: async (postId: number | string) => {
     const response = await apiClient.get<unknown>(`/posts/${postId}/comments`, {
       headers: getAuthHeaders(),
@@ -106,7 +160,7 @@ export const commentService = {
     const comments = Array.isArray(data) ? data : asRecord(data).items ?? asRecord(data).data;
 
     return Array.isArray(comments)
-      ? comments.map((comment) => mapCommentFromApi(comment, ''))
+      ? hydrateCommentAvatars(comments.map((comment) => mapCommentFromApi(comment, '')))
       : [];
   },
 
@@ -118,7 +172,17 @@ export const commentService = {
       { headers: getAuthHeaders() },
     );
 
-    return mapCommentFromApi(response.data, content);
+    const createdComment = mapCommentFromApi(response.data, content);
+
+    if (!createdComment.author.id) {
+      createdComment.author.id = localStorage.getItem('unstapp_user_id') || undefined;
+    }
+
+    if (createdComment.author.id && !createdComment.author.avatarUrl) {
+      createdComment.author.avatarUrl = await getProfileAvatarFromApi(createdComment.author.id);
+    }
+
+    return createdComment;
   },
 
   remove: async (commentId: number | string) => {

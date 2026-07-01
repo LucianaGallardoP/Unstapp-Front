@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { TopBar } from '../../../components/common/TopBar';
 import { BottomNavigation, type TabType } from '../../../components/common/BottomNavigation';
 import { AddNewBottom } from '../../../components/common/AddNewBottom';
@@ -6,6 +6,7 @@ import { usePosts } from '../hooks/usePosts';
 import type { PostAudience } from '../types/post.types';
 import { CreatePostModal } from './CreatePostModal';
 import { PostCard } from '../../../components/common/PostCard';
+import { useSearchParams } from 'react-router-dom';
 
 type FeedFilter = 'todo' | 'carrera' | 'administrativo';
 
@@ -27,13 +28,50 @@ export const FeedPage = () => {
   const [activeTab, setActiveTab] = useState<TabType>('feed');
   const [activeFilter, setActiveFilter] = useState<FeedFilter>('todo');
   const [isCreatePostModalOpen, setIsCreatePostModalOpen] = useState(false);
-  const { posts, removingPostIds, loading, error, createPost, deletePost, refreshPosts } = usePosts();
+  const [searchParams] = useSearchParams();
+  const requestedPostId = searchParams.get('postId');
+  const requestedCommentId = searchParams.get('commentId');
+  const { posts, removingPostIds, loading, error, createPost, deletePost, refreshPosts, loadPostById } = usePosts();
 
   const handleFilterClick = (filterId: FeedFilter) => {
     setActiveFilter(filterId);
     refreshPosts();
   };
 
+  useEffect(() => {
+    if (requestedPostId) {
+      setActiveFilter('todo');
+    }
+  }, [requestedPostId]);
+
+  useEffect(() => {
+    if (!requestedPostId || loading) return;
+
+    const exists = posts.some((post) => String(post.id) === String(requestedPostId));
+
+    if (!exists) {
+      loadPostById(requestedPostId);
+    }
+  }, [loadPostById, loading, posts, requestedPostId]);
+
+  useEffect(() => {
+    if (requestedPostId) {
+      setActiveFilter('todo');
+    }
+  }, [requestedPostId]);
+
+  useEffect(() => {
+    if (!requestedPostId || loading) return;
+
+    const timeoutId = window.setTimeout(() => {
+      document.getElementById(`post-${requestedPostId}`)?.scrollIntoView({
+        behavior: 'smooth',
+        block: 'center',
+      });
+    }, 120);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [loading, requestedPostId, posts]);
   // Filtra publicaciones segun la pestaña elegida.
   const visiblePosts = useMemo(() => {
     const visibleCategories = visibleByFilter[activeFilter];
@@ -98,6 +136,9 @@ export const FeedPage = () => {
               post={post}
               isRemoving={removingPostIds.has(String(post.id))}
               onDelete={deletePost}
+              domId={'post-' + String(post.id)}
+              highlighted={String(post.id) === String(requestedPostId)}
+              initialCommentsOpen={String(post.id) === String(requestedPostId) && Boolean(requestedCommentId)}
             />
           ))}
         </section>

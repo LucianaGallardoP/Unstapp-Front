@@ -251,6 +251,28 @@ export const postService = {
     );
   },
 
+  getById: async (postId: number | string): Promise<Post> => {
+    const response = await apiClient.get<unknown>(`/posts/${postId}`, {
+      headers: getAuthHeaders(),
+    });
+    const data = response.data;
+    const root = asRecord(data);
+    const postData = root.data ?? root.value ?? root.post ?? data;
+    const [post] = await hydrateAuthorAvatars([mapPostFromApi(postData)]);
+
+    try {
+      const comments = await commentService.getByPostIdFromApi(post.id);
+
+      return {
+        ...post,
+        comments,
+        commentsCount: comments.length || post.commentsCount,
+      };
+    } catch {
+      return post;
+    }
+  },
+
   create: async (content: string, mediaFile?: File): Promise<Post> => {
     const formData = new FormData();
     

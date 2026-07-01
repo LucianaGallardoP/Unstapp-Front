@@ -26,12 +26,13 @@ const asId = (value: unknown): number | string | undefined =>
 const normalizeNotificationType = (notification: ApiRecord): NotificationType => {
   const action = asString(notification.action).toLowerCase();
   const type = asString(notification.type).toLowerCase();
+  const entityType = asString(notification.entityType).toLowerCase();
 
-  if (asBoolean(notification.isPriority) || type.includes('institutional')) {
+  if (asBoolean(notification.isPriority) || type.includes('institutional') || entityType.includes('institutional')) {
     return 'institutional';
   }
 
-  if (action.includes('public') || type.includes('follow')) {
+  if (action.includes('public') || type.includes('followed') || entityType.includes('post')) {
     return 'followedPost';
   }
 
@@ -41,7 +42,10 @@ const normalizeNotificationType = (notification: ApiRecord): NotificationType =>
 const mapNotificationFromApi = (apiNotification: unknown): AppNotification => {
   const notification = asRecord(apiNotification);
   const actor = asRecord(notification.actor ?? notification.user ?? notification.fromUser);
-  const target = asRecord(notification.target ?? notification.post ?? notification.comment);
+  const data = asRecord(notification.data ?? notification.metadata ?? notification.payload ?? notification.extraData);
+  const post = asRecord(notification.post ?? data.post ?? notification.publication ?? data.publication);
+  const comment = asRecord(notification.comment ?? data.comment ?? notification.response ?? data.response);
+  const target = asRecord(notification.target ?? data.target ?? post ?? comment);
   const id = notification.notificationId ?? notification.id ?? crypto.randomUUID();
   const actorName =
     asString(notification.user) ||
@@ -59,20 +63,31 @@ const mapNotificationFromApi = (apiNotification: unknown): AppNotification => {
       asId(notification.actorId) ||
       asId(notification.userId) ||
       asId(notification.fromUserId) ||
+      asId(data.actorId) ||
+      asId(data.userId) ||
+      asId(data.fromUserId) ||
       asId(actor.id) ||
       asId(actor.userId),
     profileId:
       asId(notification.profileId) ||
       asId(notification.targetUserId) ||
       asId(notification.followerId) ||
+      asId(data.profileId) ||
+      asId(data.targetUserId) ||
+      asId(data.followerId) ||
       asId(actor.id) ||
       asId(actor.userId),
     avatarUrl:
       asString(notification.avatarUrl) ||
       asString(notification.userAvatarUrl) ||
       asString(notification.actorAvatarUrl) ||
+      asString(data.avatarUrl) ||
+      asString(data.userAvatarUrl) ||
+      asString(data.actorAvatarUrl) ||
       asString(actor.avatarUrl) ||
       asString(actor.profileImageUrl) ||
+      asString(actor.profilePictureUrl) ||
+      asString(actor.profilePhotoUrl) ||
       asString(actor.photoUrl) ||
       undefined,
     action: asString(notification.action) || asString(notification.message, 'tiene una novedad'),
@@ -80,12 +95,27 @@ const mapNotificationFromApi = (apiNotification: unknown): AppNotification => {
     postId:
       asId(notification.postId) ||
       asId(notification.publicationId) ||
+      asId(notification.targetId) ||
+      asId(notification.entityId) ||
+      asId(data.postId) ||
+      asId(data.publicationId) ||
+      asId(data.targetId) ||
+      asId(data.entityId) ||
+      asId(post.postId) ||
+      asId(post.id) ||
+      asId(comment.postId) ||
       asId(target.postId) ||
+      asId(target.publicationId) ||
       asId(target.id),
     commentId:
       asId(notification.commentId) ||
       asId(notification.responseId) ||
-      asId(target.commentId),
+      asId(data.commentId) ||
+      asId(data.responseId) ||
+      asId(comment.commentId) ||
+      asId(comment.id) ||
+      asId(target.commentId) ||
+      asId(target.responseId),
     createdAt:
       asString(notification.createdAt) ||
       asString(notification.date) ||

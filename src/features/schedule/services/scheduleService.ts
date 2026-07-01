@@ -1,6 +1,6 @@
 import { apiClient } from '../../../services/apiClient';
 import type { StudentContext } from '../hooks/useWeeklySchedule';
-import type { CareerDto, ScheduleDto, CreateScheduleRequest } from '../types/schedule.dtos';
+import type { CareerDto, ScheduleDto, CreateScheduleRequest, UpdateScheduleRequest } from '../types/schedule.dtos';
 
 type ApiRecord = Record<string, unknown>;
 
@@ -102,7 +102,7 @@ const mapContextFromApi = (apiContext: unknown): StudentContext => {
       asString(career.nombre) ||
       asString(data.career) ||
       asString(data.carrera) ||
-      'Ingenieria de Software',
+      'Ingeniería de Software',
     year:
       asString(data.yearName) ||
       asString(data.academicYear) ||
@@ -116,7 +116,7 @@ const mapContextFromApi = (apiContext: unknown): StudentContext => {
       asString(commission.nombre) ||
       asString(data.commission) ||
       asString(data.comision) ||
-      'Comision B',
+      'Comisión B',
     campus:
       asString(data.campusName) ||
       asString(data.sedeNombre) ||
@@ -170,9 +170,40 @@ export const scheduleService = {
       return mapScheduleFromApi(response.data);
     } catch (error: any) {
       if (error && error.response && error.response.data) {
-        console.error('[scheduleService.createSchedule] Error 400 del servidor. Detalles de validación:', JSON.stringify(error.response.data, null, 2));
+        console.error('[scheduleService.createSchedule] Error del servidor. Detalles de validación:', JSON.stringify(error.response.data, null, 2));
       } else {
         console.error('[scheduleService.createSchedule] Error al crear horario:', error);
+      }
+      throw error;
+    }
+  },
+
+  updateSchedule: async (scheduleId: number | string, data: UpdateScheduleRequest): Promise<ScheduleDto> => {
+    try {
+      const response = await apiClient.patch<unknown>(`/horarios/${scheduleId}`, data, {
+        headers: getAuthHeaders(),
+      });
+      return mapScheduleFromApi(response.data);
+    } catch (error: any) {
+      if (error && error.response && error.response.data) {
+        console.error('[scheduleService.updateSchedule] Error del servidor. Detalles de validación:', JSON.stringify(error.response.data, null, 2));
+      } else {
+        console.error('[scheduleService.updateSchedule] Error al actualizar horario:', error);
+      }
+      throw error;
+    }
+  },
+
+  deleteSchedule: async (scheduleId: number | string): Promise<void> => {
+    try {
+      await apiClient.delete(`/horarios/${scheduleId}`, {
+        headers: getAuthHeaders(),
+      });
+    } catch (error: any) {
+      if (error && error.response && error.response.data) {
+        console.error('[scheduleService.deleteSchedule] Error del servidor. Detalles de validación:', JSON.stringify(error.response.data, null, 2));
+      } else {
+        console.error('[scheduleService.deleteSchedule] Error al eliminar horario:', error);
       }
       throw error;
     }

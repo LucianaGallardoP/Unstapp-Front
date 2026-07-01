@@ -23,3 +23,5 @@ export interface CreateScheduleRequest {
   classroom: string;
   durationHours: number;
 }
+
+export type UpdateScheduleRequest = CreateScheduleRequest;

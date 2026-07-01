@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 import { commentService } from '../services/commentService';
 import { likeService } from '../services/likeService';
 import type { PostComment } from '../types/post.types';
@@ -9,6 +9,7 @@ interface UsePostInteractionsParams {
   initialLiked: boolean;
   initialComments: PostComment[];
   initialCommentsCount?: number;
+  initialCommentsOpen?: boolean;
 }
 
 // Maneja likes y comentarios de una publicacion.
@@ -18,12 +19,13 @@ export const usePostInteractions = ({
   initialLiked,
   initialComments,
   initialCommentsCount,
+  initialCommentsOpen = false,
 }: UsePostInteractionsParams) => {
   const [liked, setLiked] = useState(initialLiked);
   const [likesCount, setLikesCount] = useState(initialLikes);
   const [likeLoading, setLikeLoading] = useState(false);
   const [likeError, setLikeError] = useState<string | null>(null);
-  const [commentsOpen, setCommentsOpen] = useState(false);
+  const [commentsOpen, setCommentsOpen] = useState(initialCommentsOpen);
   const [comments, setComments] = useState(initialComments);
   const [commentsCount, setCommentsCount] = useState(
     initialCommentsCount ?? initialComments.length
@@ -46,6 +48,7 @@ export const usePostInteractions = ({
     setLikesCount(initialLikes);
     setComments(initialComments);
     setCommentsCount(initialCommentsCount ?? initialComments.length);
+    setCommentsOpen(initialCommentsOpen);
   }
 
   const handleLike = async () => {
@@ -153,6 +156,10 @@ export const usePostInteractions = ({
     setCommentsOpen((isOpen) => !isOpen);
   };
 
+  const openComments = useCallback(() => {
+    setCommentsOpen(true);
+  }, []);
+
   return {
     liked,
     likesCount,
@@ -170,5 +177,6 @@ export const usePostInteractions = ({
     handleAddComment,
     handleDeleteComment,
     toggleComments,
+    openComments,
   };
 };

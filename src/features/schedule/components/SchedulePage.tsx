@@ -37,16 +37,16 @@ export const SchedulePage = () => {
     fetchSchedules,
   } = useWeeklySchedule(careerId);
 
-  const handleEdit = (values: CreateScheduleClassInput) => {
+  const handleEdit = async (values: CreateScheduleClassInput) => {
     if (!editingClass) return;
 
-    updateScheduleClass(editingClass.id, values);
+    await updateScheduleClass(editingClass.id, values);
   };
 
-  const handleDelete = () => {
+  const handleDelete = async () => {
     if (!classToDelete) return;
 
-    removeScheduleClass(classToDelete.id);
+    await removeScheduleClass(classToDelete.id);
     setClassToDelete(null);
   };
 

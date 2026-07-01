@@ -35,6 +35,25 @@ export const usePosts = () => {
     return () => clearTimeout(timeoutId);
   }, [refreshPosts]);
 
+  const loadPostById = useCallback(async (postId: number | string) => {
+    setError(null);
+
+    try {
+      const requestedPost = await postService.getById(postId);
+
+      setPosts((currentPosts) => {
+        const exists = currentPosts.some((post) => String(post.id) === String(requestedPost.id));
+
+        return exists
+          ? currentPosts.map((post) => String(post.id) === String(requestedPost.id) ? requestedPost : post)
+          : [requestedPost, ...currentPosts];
+      });
+    } catch {
+      setError('No se pudo cargar la publicación solicitada.');
+    }
+ 
+  }, []);
+
   const createPost = async (content: string, mediaFile?: File) => {
     const createdPost = await postService.create(content, mediaFile);
     setPosts((currentPosts) => [createdPost, ...currentPosts]);
@@ -63,5 +82,6 @@ export const usePosts = () => {
     createPost,
     deletePost,
     refreshPosts,
+    loadPostById,
   };
 };

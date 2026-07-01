@@ -21,6 +21,9 @@ interface PostCardProps {
   canDelete?: boolean;
   isRemoving?: boolean;
   onDelete?: (postId: number | string) => Promise<void>;
+  domId?: string;
+  highlighted?: boolean;
+  initialCommentsOpen?: boolean;
 }
 
 const categoryStyles: Record<PostCategory, string> = {
@@ -65,6 +68,9 @@ export const PostCard = ({
   canDelete,
   isRemoving = false,
   onDelete,
+  domId,
+  highlighted = false,
+  initialCommentsOpen = false,
 }: PostCardProps) => {
   const navigate = useNavigate();
   // Estados de interaccion local.
@@ -85,12 +91,14 @@ export const PostCard = ({
     handleAddComment,
     handleDeleteComment,
     toggleComments,
+    openComments,
   } = usePostInteractions({
     postId: post.id,
     initialLikes: post.likes,
     initialLiked: Boolean(post.likedByCurrentUser),
     initialComments: post.comments,
     initialCommentsCount: post.commentsCount,
+    initialCommentsOpen,
   });
   const [currentDate, setCurrentDate] = useState(() => new Date());
   const [isActionsOpen, setIsActionsOpen] = useState(false);
@@ -118,6 +126,12 @@ export const PostCard = ({
       document.body.style.overflow = previousOverflow;
     };
   }, [selectedImageUrl]);
+
+  useEffect(() => {
+    if (initialCommentsOpen) {
+      openComments();
+    }
+  }, [initialCommentsOpen, openComments]);
 
   // Fecha completa para mostrar al pasar el mouse.
   const formattedDate = new Intl.DateTimeFormat('es-AR', {
@@ -158,7 +172,8 @@ export const PostCard = ({
 
   return (
     <article
-      className={`w-full rounded-[22px] border border-gray-100 bg-white px-4 py-4 shadow-[0_10px_30px_rgba(15,23,42,0.08)] transition-all duration-200 sm:px-5 sm:py-5 md:h-full ${
+      id={domId}
+      className={`w-full rounded-[22px] border ${highlighted ? 'border-[#155DFC] ring-2 ring-[#155DFC]/20' : 'border-gray-100'} bg-white px-4 py-4 shadow-[0_10px_30px_rgba(15,23,42,0.08)] transition-all duration-200 sm:px-5 sm:py-5 md:h-full ${
         isRemoving ? 'scale-[0.98] opacity-0' : 'scale-100 opacity-100'
       }`}
     >

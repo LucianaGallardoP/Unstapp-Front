@@ -8,7 +8,7 @@ interface CreateSubjectModalProps {
   initialValues?: ScheduleClass;
   mode?: 'create' | 'edit';
   onClose: () => void;
-  onCreate: (values: CreateScheduleClassInput) => void;
+  onCreate: (values: CreateScheduleClassInput) => void | Promise<void>;
 }
 
 export const CreateSubjectModal = ({
@@ -39,7 +39,7 @@ export const CreateSubjectModal = ({
       : 'border-[#1E4E9D] focus:ring-[#1E4E9D]'
   }`;
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     setWasSubmitted(true);
 
     if (!canSubmit) return;

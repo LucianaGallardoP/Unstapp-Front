@@ -152,28 +152,51 @@ export const useWeeklySchedule = (careerId?: string) => {
     }
   };
 
-  const updateScheduleClass = (classId: number, values: CreateScheduleClassInput) => {
-    setScheduleClasses((currentClasses) =>
-      currentClasses.map((scheduleClass) =>
-        scheduleClass.id === classId
-          ? {
-              ...scheduleClass,
-              day: values.day,
-              subject: values.subject,
-              startTime: values.startTime,
-              durationHours: values.durationHours,
-              teacher: values.teacher,
-              room: values.room,
-              color: getScheduleColor(values.startTime),
-            }
-          : scheduleClass,
-      ),
-    );
-    setSelectedDay(values.day);
+  const updateScheduleClass = async (classId: number, values: CreateScheduleClassInput) => {
+    if (!careerId) return;
+
+    try {
+      await scheduleService.updateSchedule(classId, {
+        careerId: Number(careerId),
+        subject: values.subject,
+        day: values.day,
+        startTime: values.startTime,
+        professor: values.teacher,
+        classroom: values.room,
+        durationHours: values.durationHours,
+      });
+
+      setScheduleClasses((currentClasses) =>
+        currentClasses.map((scheduleClass) =>
+          scheduleClass.id === classId
+            ? {
+                ...scheduleClass,
+                day: values.day,
+                subject: values.subject,
+                startTime: values.startTime,
+                durationHours: values.durationHours,
+                teacher: values.teacher,
+                room: values.room,
+                color: getScheduleColor(values.startTime),
+              }
+            : scheduleClass,
+        ),
+      );
+      setSelectedDay(values.day);
+    } catch {
+      setContextError('No se pudo actualizar la materia.');
+      throw new Error('No se pudo actualizar la materia.');
+    }
   };
 
-  const removeScheduleClass = (classId: number) => {
-    setScheduleClasses((currentClasses) => currentClasses.filter((scheduleClass) => scheduleClass.id !== classId));
+  const removeScheduleClass = async (classId: number) => {
+    try {
+      await scheduleService.deleteSchedule(classId);
+      setScheduleClasses((currentClasses) => currentClasses.filter((scheduleClass) => scheduleClass.id !== classId));
+    } catch {
+      setContextError('No se pudo eliminar la materia.');
+      throw new Error('No se pudo eliminar la materia.');
+    }
   };
 
   useEffect(() => {
