@@ -17,6 +17,12 @@ const eventTypeStyles: Record<CalendarEventType, string> = {
   3: 'bg-[#ffde59]/30 text-[#91210e]',
   4: 'bg-[#7ed957]/20 text-[#1d8c57]',
 };
+const eventTypeColors: Record<CalendarEventType, string> = {
+  1: '#91210e',
+  2: '#4bedb6',
+  3: '#ffde59',
+  4: '#7ed957',
+};
 
 const viewFilterBase = [
   {
@@ -152,7 +158,13 @@ export const CalendarPage = () => {
                 const month = String(day.date.getMonth() + 1).padStart(2, '0');
                 const date = String(day.date.getDate()).padStart(2, '0');
                 const dateString = `${year}-${month}-${date}`;
-                const hasEvents = events.some((event) => event.startDate.startsWith(dateString));
+                const eventTypesForDay = Array.from(
+                  new Set(
+                    events
+                      .filter((event) => event.startDate.startsWith(dateString))
+                      .map((event) => event.type),
+                  ),
+                );
 
                 return (
                   <button
@@ -174,8 +186,17 @@ export const CalendarPage = () => {
                     aria-label={`Seleccionar dia ${day.dayNumber}`}
                   >
                     <span>{day.dayNumber}</span>
-                    {hasEvents && !day.isSelected && (
-                      <span className={`absolute bottom-1 h-1 w-1 rounded-full ${day.isToday ? 'bg-white' : 'bg-[#155DFC]'}`} />
+                    {eventTypesForDay.length > 0 && (
+                      <span className="absolute bottom-1 left-1/2 flex max-w-[28px] -translate-x-1/2 items-center justify-center gap-0.5">
+                        {eventTypesForDay.slice(0, 4).map((eventType) => (
+                          <span
+                            key={eventType}
+                            className={`h-1.5 w-1.5 rounded-full ${day.isToday ? 'ring-1 ring-white/80' : ''}`}
+                            style={{ backgroundColor: eventTypeColors[eventType] }}
+                            aria-hidden="true"
+                          />
+                        ))}
+                      </span>
                     )}
                   </button>
                 );

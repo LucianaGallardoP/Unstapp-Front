@@ -21,10 +21,17 @@ const asRecord = (value: unknown): ApiRecord =>
 const asString = (value: unknown, fallback = '') =>
   typeof value === 'string' ? value : fallback;
 
-const asEventType = (value: unknown): CalendarEventType => {
-  const numericValue = typeof value === 'number' ? value : Number(value);
+const asNumber = (value: unknown) =>
+  typeof value === 'number'
+    ? value
+    : typeof value === 'string' && value.trim() && Number.isFinite(Number(value))
+      ? Number(value)
+      : undefined;
 
-  if ([1, 2, 3, 4].includes(numericValue)) {
+const asEventType = (value: unknown): CalendarEventType => {
+  const numericValue = asNumber(value);
+
+  if (numericValue && [1, 2, 3, 4].includes(numericValue)) {
     return numericValue as CalendarEventType;
   }
 
@@ -45,7 +52,16 @@ const mapEventFromApi = (apiEvent: unknown): CalendarEvent => {
     id: typeof id === 'number' || typeof id === 'string' ? id : crypto.randomUUID(),
     title: asString(event.title, 'Evento sin titulo'),
     description: asString(event.description),
-    type: asEventType(event.type),
+    type: asEventType(
+      event.type ??
+      event.Type ??
+      event.eventType ??
+      event.EventType ??
+      event.calendarEventType ??
+      event.CalendarEventType ??
+      event.categoryType ??
+      event.CategoryType,
+    ),
     startDate:
       asString(event.startDate) ||
       asString(event.start) ||
@@ -81,10 +97,22 @@ export const calendarService = {
   },
 
   createEvent: async (payload: CreateCalendarEventPayload): Promise<CalendarEvent> => {
-    const response = await apiClient.post<unknown>('/calendar/events', payload, {
+    const requestPayload = {
+      title: payload.title,
+      description: payload.description,
+      type: payload.type,
+      Type: payload.type,
+      startDate: payload.startDate,
+      endDate: payload.endDate,
+    };
+    const response = await apiClient.post<unknown>('/calendar/events', requestPayload, {
       headers: getAuthHeaders(),
     });
+    const createdEvent = mapEventFromApi(response.data);
 
-    return mapEventFromApi(response.data);
+    return {
+      ...createdEvent,
+      type: createdEvent.type === 3 && payload.type !== 3 ? payload.type : createdEvent.type,
+    };
   },
 };
