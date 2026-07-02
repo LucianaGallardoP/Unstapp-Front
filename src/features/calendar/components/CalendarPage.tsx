@@ -6,6 +6,7 @@ import { useMonthlyCalendar } from '../hooks/useMonthlyCalendar';
 import { useCalendarEvents } from '../hooks/useCalendarEvents';
 import { CreateEventModal } from './CreateEventModal';
 import { DailyEventsCard } from './DailyEventsCard';
+import { EventDetailModal } from './EventDetailModal';
 import type { CalendarEvent, CalendarEventType } from '../types/calendar.types';
 
 const weekDays = ['Lun', 'Mar', 'Mie', 'Jue', 'Vie', 'Sab', 'Dom'];
@@ -59,6 +60,7 @@ const formatTime = (date: string) =>
 export const CalendarPage = () => {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isDailyEventsModalOpen, setIsDailyEventsModalOpen] = useState(false);
+  const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
   const {
     calendarDays,
     monthTitle,
@@ -206,9 +208,11 @@ export const CalendarPage = () => {
               )}
 
               {!(isEventsLoading || isDailyLoading) && previewEvents.map((event) => (
-                <article
+                <button
                   key={event.id}
-                  className="flex min-h-[70px] items-center gap-3 rounded-[10px] bg-white px-3 py-3 shadow-[0_8px_20px_rgba(15,23,42,0.14)]"
+                  type="button"
+                  onClick={() => setSelectedEvent(event)}
+                  className="flex min-h-[70px] w-full items-center gap-3 rounded-[10px] bg-white px-3 py-3 text-left shadow-[0_8px_20px_rgba(15,23,42,0.14)] transition-transform hover:scale-[1.01]"
                 >
                   {(() => {
                     const eventDate = new Date(event.startDate);
@@ -235,7 +239,7 @@ export const CalendarPage = () => {
                       {formatTime(event.startDate)}
                     </p>
                   </div>
-                </article>
+                </button>
               ))}
 
               {!(isEventsLoading || isDailyLoading) && previewEvents.length === 0 && (
@@ -312,8 +316,16 @@ export const CalendarPage = () => {
               setIsDailyEventsModalOpen(false);
               setIsCreateModalOpen(true);
             }}
+            onEventClick={(event) => setSelectedEvent(event)}
           />
         </div>
+      )}
+
+      {selectedEvent && (
+        <EventDetailModal
+          event={selectedEvent}
+          onClose={() => setSelectedEvent(null)}
+        />
       )}
     </div>
   );

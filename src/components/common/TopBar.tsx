@@ -72,12 +72,18 @@ export const TopBar = ({ simple = false }: TopBarProps) => {
     hideUnreadIndicator();
     markAllAsRead();
   };
-  const handleNotificationClick = async (notification: { id: number | string; action: string; type: NotificationType; postId?: number | string; commentId?: number | string; actorId?: number | string; profileId?: number | string }) => {
+  const handleNotificationClick = async (notification: { id: number | string; action: string; target: string; type: NotificationType; postId?: number | string; commentId?: number | string; actorId?: number | string; profileId?: number | string }) => {
     await markNotificationAsRead(notification.id);
     setIsNotificationsOpen(false);
 
-    const action = notification.action.toLowerCase();
-    const isFollowRequest = action.includes('segu') || action.includes('follow');
+    const notificationText = `${notification.action} ${notification.target} ${notification.type}`
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .toLowerCase();
+    const isFollowRequest =
+      notificationText.includes('segu') ||
+      notificationText.includes('follow') ||
+      notificationText.includes('follower');
     const profileId = notification.profileId ?? notification.actorId;
 
     if (isFollowRequest && profileId) {
@@ -95,13 +101,13 @@ export const TopBar = ({ simple = false }: TopBarProps) => {
       return;
     }
 
-    if (notification.type === 'followedPost') {
-      navigate('/feed');
+    if (profileId) {
+      navigate(`/perfil/${profileId}`);
       return;
     }
 
-    if (profileId) {
-      navigate(`/perfil/${profileId}`);
+    if (notification.type === 'followedPost') {
+      navigate('/feed');
     }
   };
 

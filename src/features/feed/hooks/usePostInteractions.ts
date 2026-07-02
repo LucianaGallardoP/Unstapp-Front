@@ -160,6 +160,10 @@ export const usePostInteractions = ({
     setCommentsOpen(true);
   }, []);
 
+  const closeComments = useCallback(() => {
+    setCommentsOpen(false);
+  }, []);
+
   return {
     liked,
     likesCount,
@@ -178,5 +182,6 @@ export const usePostInteractions = ({
     handleDeleteComment,
     toggleComments,
     openComments,
+    closeComments,
   };
 };

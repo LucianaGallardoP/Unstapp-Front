@@ -55,12 +55,6 @@ export const FeedPage = () => {
   }, [loadPostById, loading, posts, requestedPostId]);
 
   useEffect(() => {
-    if (requestedPostId) {
-      setActiveFilter('todo');
-    }
-  }, [requestedPostId]);
-
-  useEffect(() => {
     if (!requestedPostId || loading) return;
 
     const timeoutId = window.setTimeout(() => {
@@ -139,6 +133,7 @@ export const FeedPage = () => {
               domId={'post-' + String(post.id)}
               highlighted={String(post.id) === String(requestedPostId)}
               initialCommentsOpen={String(post.id) === String(requestedPostId) && Boolean(requestedCommentId)}
+              focusedCommentId={String(post.id) === String(requestedPostId) ? requestedCommentId : null}
             />
           ))}
         </section>

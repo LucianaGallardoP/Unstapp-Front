@@ -8,6 +8,7 @@ interface DailyEventsCardProps {
   isLoading?: boolean;
   onClose?: () => void;
   onAddEventClick?: () => void;
+  onEventClick?: (event: CalendarEvent) => void;
 }
 
 const typeThemes: Record<CalendarEventType, string> = {
@@ -42,6 +43,7 @@ export const DailyEventsCard: React.FC<DailyEventsCardProps> = ({
   isLoading = false,
   onClose,
   onAddEventClick,
+  onEventClick,
 }) => {
   const isAlumno = (() => {
     try {
@@ -81,9 +83,11 @@ export const DailyEventsCard: React.FC<DailyEventsCardProps> = ({
           const eventDate = new Date(event.startDate);
 
           return (
-            <article
+            <button
               key={event.id}
-              className="flex items-center justify-between rounded-[100px] border border-gray-50 bg-white p-2 pr-6 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.1)]"
+              type="button"
+              onClick={() => onEventClick?.(event)}
+              className="flex w-full items-center justify-between rounded-[100px] border border-gray-50 bg-white p-2 pr-6 text-left shadow-[0_4px_20px_-4px_rgba(0,0,0,0.1)] transition-transform hover:scale-[1.01]"
             >
               <div className="flex min-w-0 flex-1 items-center gap-4">
                 <div
@@ -112,7 +116,7 @@ export const DailyEventsCard: React.FC<DailyEventsCardProps> = ({
               <span className="ml-3 whitespace-nowrap text-[15px] font-bold text-black">
                 {formatTime(event.startDate)}
               </span>
-            </article>
+            </button>
           );
         })}
 

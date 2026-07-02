@@ -23,16 +23,31 @@ const asBoolean = (value: unknown, fallback = false) =>
 const asId = (value: unknown): number | string | undefined =>
   typeof value === 'number' || typeof value === 'string' ? value : undefined;
 
-const normalizeNotificationType = (notification: ApiRecord): NotificationType => {
-  const action = asString(notification.action).toLowerCase();
-  const type = asString(notification.type).toLowerCase();
-  const entityType = asString(notification.entityType).toLowerCase();
+const normalizeText = (value: string) =>
+  value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
 
-  if (asBoolean(notification.isPriority) || type.includes('institutional') || entityType.includes('institutional')) {
+const getNotificationText = (notification: ApiRecord) =>
+  normalizeText([
+    asString(notification.action),
+    asString(notification.type),
+    asString(notification.entityType),
+    asString(notification.message),
+  ].join(' '));
+
+const isFollowNotification = (notification: ApiRecord) => {
+  const text = getNotificationText(notification);
+
+  return text.includes('segu') || text.includes('follow') || text.includes('follower');
+};
+
+const normalizeNotificationType = (notification: ApiRecord): NotificationType => {
+  const text = getNotificationText(notification);
+
+  if (asBoolean(notification.isPriority) || text.includes('institutional') || text.includes('institucional')) {
     return 'institutional';
   }
 
-  if (action.includes('public') || type.includes('followed') || entityType.includes('post')) {
+  if (!isFollowNotification(notification) && (text.includes('public') || text.includes('post'))) {
     return 'followedPost';
   }
 
@@ -54,29 +69,48 @@ const mapNotificationFromApi = (apiNotification: unknown): AppNotification => {
     asString(actor.name) ||
     asString(actor.userName) ||
     'Unstapp';
+  const isFollow = isFollowNotification(notification);
+  const actorId =
+    asId(notification.actorId) ||
+    asId(notification.userId) ||
+    asId(notification.fromUserId) ||
+    asId(data.actorId) ||
+    asId(data.userId) ||
+    asId(data.fromUserId) ||
+    asId(actor.id) ||
+    asId(actor.userId);
+  const profileId =
+    asId(notification.profileId) ||
+    asId(notification.targetUserId) ||
+    asId(notification.followerId) ||
+    asId(data.profileId) ||
+    asId(data.targetUserId) ||
+    asId(data.followerId) ||
+    (isFollow ? asId(notification.targetId) || asId(notification.entityId) || asId(data.targetId) || asId(data.entityId) : undefined) ||
+    actorId;
+  const postId = isFollow
+    ? undefined
+    : asId(notification.postId) ||
+      asId(notification.publicationId) ||
+      asId(notification.targetId) ||
+      asId(notification.entityId) ||
+      asId(data.postId) ||
+      asId(data.publicationId) ||
+      asId(data.targetId) ||
+      asId(data.entityId) ||
+      asId(post.postId) ||
+      asId(post.id) ||
+      asId(comment.postId) ||
+      asId(target.postId) ||
+      asId(target.publicationId) ||
+      asId(target.id);
 
   return {
     id: asId(id) ?? crypto.randomUUID(),
     type: normalizeNotificationType(notification),
     actor: actorName,
-    actorId:
-      asId(notification.actorId) ||
-      asId(notification.userId) ||
-      asId(notification.fromUserId) ||
-      asId(data.actorId) ||
-      asId(data.userId) ||
-      asId(data.fromUserId) ||
-      asId(actor.id) ||
-      asId(actor.userId),
-    profileId:
-      asId(notification.profileId) ||
-      asId(notification.targetUserId) ||
-      asId(notification.followerId) ||
-      asId(data.profileId) ||
-      asId(data.targetUserId) ||
-      asId(data.followerId) ||
-      asId(actor.id) ||
-      asId(actor.userId),
+    actorId,
+    profileId,
     avatarUrl:
       asString(notification.avatarUrl) ||
       asString(notification.userAvatarUrl) ||
@@ -92,21 +126,7 @@ const mapNotificationFromApi = (apiNotification: unknown): AppNotification => {
       undefined,
     action: asString(notification.action) || asString(notification.message, 'tiene una novedad'),
     target: asString(notification.message) || asString(notification.target) || asString(target.title, 'Nueva notificación'),
-    postId:
-      asId(notification.postId) ||
-      asId(notification.publicationId) ||
-      asId(notification.targetId) ||
-      asId(notification.entityId) ||
-      asId(data.postId) ||
-      asId(data.publicationId) ||
-      asId(data.targetId) ||
-      asId(data.entityId) ||
-      asId(post.postId) ||
-      asId(post.id) ||
-      asId(comment.postId) ||
-      asId(target.postId) ||
-      asId(target.publicationId) ||
-      asId(target.id),
+    postId,
     commentId:
       asId(notification.commentId) ||
       asId(notification.responseId) ||

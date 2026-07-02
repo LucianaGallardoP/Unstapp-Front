@@ -24,6 +24,7 @@ interface PostCardProps {
   domId?: string;
   highlighted?: boolean;
   initialCommentsOpen?: boolean;
+  focusedCommentId?: number | string | null;
 }
 
 const categoryStyles: Record<PostCategory, string> = {
@@ -71,6 +72,7 @@ export const PostCard = ({
   domId,
   highlighted = false,
   initialCommentsOpen = false,
+  focusedCommentId = null,
 }: PostCardProps) => {
   const navigate = useNavigate();
   // Estados de interaccion local.
@@ -92,6 +94,7 @@ export const PostCard = ({
     handleDeleteComment,
     toggleComments,
     openComments,
+    closeComments,
   } = usePostInteractions({
     postId: post.id,
     initialLikes: post.likes,
@@ -133,6 +136,19 @@ export const PostCard = ({
     }
   }, [initialCommentsOpen, openComments]);
 
+  useEffect(() => {
+    if (!commentsOpen || !focusedCommentId) return;
+
+    const timeoutId = window.setTimeout(() => {
+      document.getElementById('comment-' + String(post.id) + '-' + String(focusedCommentId))?.scrollIntoView({
+        behavior: 'smooth',
+        block: 'center',
+      });
+    }, 160);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [commentsOpen, focusedCommentId, post.id]);
+
   // Fecha completa para mostrar al pasar el mouse.
   const formattedDate = new Intl.DateTimeFormat('es-AR', {
     dateStyle: 'medium',
@@ -171,6 +187,7 @@ export const PostCard = ({
   };
 
   return (
+    <>
     <article
       id={domId}
       className={`w-full rounded-[22px] border ${highlighted ? 'border-[#155DFC] ring-2 ring-[#155DFC]/20' : 'border-gray-100'} bg-white px-4 py-4 shadow-[0_10px_30px_rgba(15,23,42,0.08)] transition-all duration-200 sm:px-5 sm:py-5 md:h-full ${
@@ -347,59 +364,99 @@ export const PostCard = ({
           <p className="mt-2 text-[11px] font-semibold text-[#E7000B]">{deleteError}</p>
         )}
 
-        {/* Hilo de comentarios */}
-        {commentsOpen && (
-          <section className="mt-3 rounded-2xl bg-gray-50 p-3">
-            <div className="flex max-h-56 flex-col gap-3 overflow-y-auto pr-1">
-              {comments.map((comment) => {
-                const isCommentAuthor = currentUserId && comment.author.id && String(currentUserId) === String(comment.author.id);
-                const isPostAuthor = currentUserId && post.author.id && String(currentUserId) === String(post.author.id);
+      </footer>
+    </article>
 
-                return (
-                  <CommentItem
-                    key={comment.id}
-                    comment={comment}
-                    currentDate={currentDate}
-                    canDelete={Boolean(isCommentAuthor || isPostAuthor || isCurrentUserAdmin)}
-                    onDelete={handleDeleteComment}
-                  />
-                );
-              })}
-            </div>
-
-            <div className="mt-3 flex gap-2">
-              <input
-                value={newComment}
-                onChange={(event) => setNewComment(event.target.value)}
-                onKeyDown={(event) => {
-                  if (event.key === 'Enter' && canSendComment) {
-                    event.preventDefault();
-                    handleAddComment();
-                  }
-                }}
-                placeholder={
-                  isAuthenticated ? 'Escribir comentario' : 'Iniciá sesión para comentar'
-                }
-                disabled={!isAuthenticated || commentLoading}
-                className="min-w-0 flex-1 rounded-xl border border-gray-200 bg-white px-3 py-2 text-[12px] text-gray-800 outline-none focus:border-[#1E4E9D] disabled:cursor-not-allowed disabled:bg-gray-100 disabled:text-gray-400"
-              />
+      {commentsOpen && (
+        <div
+          className="fixed inset-0 z-[90] flex items-end bg-black/35 backdrop-blur-[2px]"
+          onClick={closeComments}
+        >
+          <section
+            className="max-h-[82vh] w-full rounded-t-[28px] bg-white px-4 pb-[max(16px,env(safe-area-inset-bottom))] pt-3 shadow-[0_-18px_45px_rgba(15,23,42,0.28)] sm:mx-auto sm:max-w-[560px] sm:rounded-[28px] sm:mb-5 md:max-w-2xl"
+            aria-label="Comentarios de la publicación"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="mx-auto mb-3 h-1.5 w-12 rounded-full bg-gray-200" />
+            <header className="flex items-start justify-between gap-3 border-b border-gray-100 pb-3">
+              <div className="min-w-0">
+                <h3 className="text-[15px] font-black uppercase text-[#1F2937] sm:text-[16px]">
+                  Comentarios
+                </h3>
+                <p className="mt-1 truncate text-[12px] font-semibold text-gray-400">
+                  {post.author.name}: {post.content}
+                </p>
+              </div>
               <button
                 type="button"
-                onClick={handleAddComment}
-                disabled={!canSendComment}
-                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#1E4E9D] text-white transition-colors hover:bg-[#155DFC] disabled:cursor-not-allowed disabled:bg-gray-200 disabled:text-gray-400"
-                aria-label="Enviar comentario"
+                onClick={closeComments}
+                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-gray-500 transition-colors hover:bg-gray-100 hover:text-[#1F2937]"
+                aria-label="Cerrar comentarios"
               >
-                <Send size={15} />
+                <X size={18} />
               </button>
+            </header>
+
+            <div className="mt-3 flex max-h-[46vh] flex-col gap-3 overflow-y-auto pr-1">
+              {comments.length > 0 ? comments.map((comment) => {
+                const isCommentAuthor = currentUserId && comment.author.id && String(currentUserId) === String(comment.author.id);
+                const isPostAuthor = currentUserId && post.author.id && String(currentUserId) === String(post.author.id);
+                const isFocusedComment = focusedCommentId && String(comment.id) === String(focusedCommentId);
+
+                return (
+                  <div
+                    id={'comment-' + String(post.id) + '-' + String(comment.id)}
+                    key={comment.id}
+                    className={`rounded-2xl transition-colors ${isFocusedComment ? 'bg-[#155DFC]/10 ring-2 ring-[#155DFC]/25' : ''}`}
+                  >
+                    <CommentItem
+                      comment={comment}
+                      currentDate={currentDate}
+                      canDelete={Boolean(isCommentAuthor || isPostAuthor || isCurrentUserAdmin)}
+                      onDelete={handleDeleteComment}
+                    />
+                  </div>
+                );
+              }) : (
+                <p className="rounded-2xl bg-gray-50 px-4 py-6 text-center text-[12px] font-semibold text-gray-400">
+                  Todavía no hay comentarios.
+                </p>
+              )}
             </div>
 
-            {commentError && (
-              <p className="mt-2 text-[11px] font-semibold text-[#E7000B]">{commentError}</p>
-            )}
+            <div className="mt-3 rounded-2xl bg-white pt-2">
+              <div className="flex gap-2">
+                <input
+                  value={newComment}
+                  onChange={(event) => setNewComment(event.target.value)}
+                  onKeyDown={(event) => {
+                    if (event.key === 'Enter' && canSendComment) {
+                      event.preventDefault();
+                      handleAddComment();
+                    }
+                  }}
+                  placeholder={isAuthenticated ? 'Escribir comentario' : 'Iniciá sesión para comentar'}
+                  disabled={!isAuthenticated || commentLoading}
+                  className="min-w-0 flex-1 rounded-xl border border-gray-200 bg-white px-3 py-2 text-[12px] text-gray-800 outline-none focus:border-[#1E4E9D] disabled:cursor-not-allowed disabled:bg-gray-100 disabled:text-gray-400"
+                />
+                <button
+                  type="button"
+                  onClick={handleAddComment}
+                  disabled={!canSendComment}
+                  className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#1E4E9D] text-white transition-colors hover:bg-[#155DFC] disabled:cursor-not-allowed disabled:bg-gray-200 disabled:text-gray-400"
+                  aria-label="Enviar comentario"
+                >
+                  <Send size={15} />
+                </button>
+              </div>
+
+              {commentError && (
+                <p className="mt-2 text-[11px] font-semibold text-[#E7000B]">{commentError}</p>
+              )}
+            </div>
           </section>
-        )}
-      </footer>
+        </div>
+      )}
 
       {isConfirmOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/35 px-4">
@@ -435,29 +492,28 @@ export const PostCard = ({
 
       {selectedImageUrl && (
         <div
-          className="fixed inset-0 z-[80] flex touch-none items-center justify-center overflow-hidden bg-black/75 px-3 py-6 backdrop-blur-md"
+          className="fixed inset-0 z-[100] flex touch-none items-center justify-center overflow-hidden bg-black/95 px-3 py-16"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Imagen de la publicación"
           onClick={() => setSelectedImageUrl(null)}
         >
-          <section
-            className="relative flex h-full w-full items-center justify-center"
-            onClick={(event) => event.stopPropagation()}
+          <button
+            type="button"
+            onClick={() => setSelectedImageUrl(null)}
+            className="fixed left-4 top-4 z-[101] flex h-11 w-11 items-center justify-center rounded-full bg-black/40 text-white transition-colors hover:bg-white/15 focus:outline-none focus:ring-2 focus:ring-white/70"
+            aria-label="Cerrar imagen"
           >
-            <button
-              type="button"
-              onClick={() => setSelectedImageUrl(null)}
-              className="absolute right-3 top-3 z-10 flex h-10 w-10 items-center justify-center rounded-full bg-white/90 text-black shadow-lg transition-colors hover:bg-white"
-              aria-label="Cerrar imagen"
-            >
-              <X size={20} />
-            </button>
-            <img
-              src={selectedImageUrl}
-              alt={post.media?.alt ?? 'Imagen de la publicación'}
-              className="max-h-[92vh] max-w-[96vw] rounded-2xl object-contain shadow-[0_24px_60px_rgba(0,0,0,0.32)]"
-            />
-          </section>
+            <X size={24} strokeWidth={2.2} />
+          </button>
+          <img
+            src={selectedImageUrl}
+            alt={post.media?.alt ?? 'Imagen de la publicación'}
+            className="max-h-[calc(100vh-96px)] max-w-[min(100vw-24px,980px)] select-none object-contain"
+            onClick={(event) => event.stopPropagation()}
+          />
         </div>
       )}
-    </article>
+    </>
   );
 };
