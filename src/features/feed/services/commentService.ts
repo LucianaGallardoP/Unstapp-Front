@@ -91,6 +91,7 @@ const mapCommentFromApi = (apiComment: unknown, fallbackContent: string): PostCo
     author.id ??
     author.userId ??
     author.user_id ??
+    author.profileId ??
     author.idUsuario ??
     author.usuarioId ??
     author.autorId ??
@@ -100,13 +101,18 @@ const mapCommentFromApi = (apiComment: unknown, fallbackContent: string): PostCo
     comment.userId ??
     comment.user_id ??
     comment.authorId ??
+    comment.authorUserId ??
+    comment.profileId ??
+    comment.createdByUserId ??
+    comment.createdById ??
+    comment.ownerId ??
+    comment.ownerUserId ??
     comment.idUsuario ??
     comment.usuarioId ??
     comment.autorId ??
     comment.idAutor ??
     comment.personId ??
-    comment.idPerson ??
-    comment.createdById
+    comment.idPerson
   );
 
   // Fallback heurístico: si la API no manda el ID pero sí el nombre, 

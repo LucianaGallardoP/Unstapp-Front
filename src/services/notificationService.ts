@@ -56,8 +56,9 @@ const normalizeNotificationType = (notification: ApiRecord): NotificationType =>
 
 const mapNotificationFromApi = (apiNotification: unknown): AppNotification => {
   const notification = asRecord(apiNotification);
-  const actor = asRecord(notification.actor ?? notification.user ?? notification.fromUser);
   const data = asRecord(notification.data ?? notification.metadata ?? notification.payload ?? notification.extraData);
+  const actor = asRecord(notification.actor ?? data.actor ?? notification.fromUser ?? data.fromUser ?? notification.sender ?? data.sender ?? notification.user ?? data.user);
+  const follower = asRecord(notification.follower ?? data.follower ?? notification.followedBy ?? data.followedBy);
   const post = asRecord(notification.post ?? data.post ?? notification.publication ?? data.publication);
   const comment = asRecord(notification.comment ?? data.comment ?? notification.response ?? data.response);
   const target = asRecord(notification.target ?? data.target ?? post ?? comment);
@@ -73,19 +74,39 @@ const mapNotificationFromApi = (apiNotification: unknown): AppNotification => {
   const isCommentNotification = getNotificationText(notification).includes('coment') || getNotificationText(notification).includes('comment');
   const actorId =
     asId(notification.actorId) ||
-    asId(notification.userId) ||
+    asId(notification.triggeredByUserId) ||
+    asId(notification.senderId) ||
+    asId(notification.sourceUserId) ||
     asId(notification.fromUserId) ||
+    asId(notification.userId) ||
     asId(data.actorId) ||
-    asId(data.userId) ||
+    asId(data.triggeredByUserId) ||
+    asId(data.senderId) ||
+    asId(data.sourceUserId) ||
     asId(data.fromUserId) ||
+    asId(data.userId) ||
     asId(actor.id) ||
-    asId(actor.userId);
+    asId(actor.userId) ||
+    asId(actor.profileId);
+  const followerId =
+    actorId ||
+    asId(notification.followerId) ||
+    asId(notification.followedByUserId) ||
+    asId(notification.relatedUserId) ||
+    asId(notification.profileId) ||
+    asId(data.followerId) ||
+    asId(data.followedByUserId) ||
+    asId(data.relatedUserId) ||
+    asId(data.profileId) ||
+    asId(follower.id) ||
+    asId(follower.userId) ||
+    asId(follower.profileId) ||
+    asId(notification.targetId) ||
+    asId(notification.entityId) ||
+    asId(data.targetId) ||
+    asId(data.entityId);
   const profileId = isFollow
-    ? actorId ||
-      asId(notification.followerId) ||
-      asId(data.followerId) ||
-      asId(notification.profileId) ||
-      asId(data.profileId)
+    ? followerId
     : asId(notification.profileId) ||
       asId(notification.targetUserId) ||
       asId(data.profileId) ||
@@ -95,18 +116,17 @@ const mapNotificationFromApi = (apiNotification: unknown): AppNotification => {
     ? undefined
     : asId(notification.postId) ||
       asId(notification.publicationId) ||
-      asId(notification.targetId) ||
-      asId(notification.entityId) ||
       asId(data.postId) ||
       asId(data.publicationId) ||
-      asId(data.targetId) ||
-      asId(data.entityId) ||
+      asId(data.targetPostId) ||
+      asId(data.targetPublicationId) ||
       asId(post.postId) ||
       asId(post.id) ||
       asId(comment.postId) ||
+      asId(comment.publicationId) ||
       asId(target.postId) ||
       asId(target.publicationId) ||
-      (isCommentNotification ? undefined : asId(target.id));
+      (isCommentNotification ? undefined : asId(notification.targetId) || asId(notification.entityId) || asId(data.targetId) || asId(data.entityId) || asId(target.id));
 
   return {
     id: asId(id) ?? crypto.randomUUID(),
@@ -139,7 +159,7 @@ const mapNotificationFromApi = (apiNotification: unknown): AppNotification => {
       asId(comment.id) ||
       asId(target.commentId) ||
       asId(target.responseId) ||
-      (isCommentNotification ? asId(target.id) : undefined),
+      (isCommentNotification ? asId(notification.targetId) || asId(notification.entityId) || asId(data.targetId) || asId(data.entityId) || asId(target.id) : undefined),
     createdAt:
       asString(notification.createdAt) ||
       asString(notification.date) ||

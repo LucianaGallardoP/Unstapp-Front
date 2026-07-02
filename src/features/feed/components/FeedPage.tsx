@@ -31,6 +31,7 @@ export const FeedPage = () => {
   const [searchParams] = useSearchParams();
   const requestedPostId = searchParams.get('postId');
   const requestedCommentId = searchParams.get('commentId');
+  const shouldOpenComments = searchParams.get('comments') === 'open' || Boolean(requestedCommentId);
   const loadedNotificationTargetRef = useRef<string | null>(null);
   const { posts, removingPostIds, loading, error, createPost, deletePost, refreshPosts, loadPostById } = usePosts();
 
@@ -48,15 +49,15 @@ export const FeedPage = () => {
   useEffect(() => {
     if (!requestedPostId || loading) return;
 
-    const targetKey = `${requestedPostId}:${requestedCommentId ?? ''}`;
+    const targetKey = `${requestedPostId}:${requestedCommentId ?? ''}:${shouldOpenComments ? 'comments' : 'post'}`;
     const exists = posts.some((post) => String(post.id) === String(requestedPostId));
-    const shouldReloadForComment = Boolean(requestedCommentId) && loadedNotificationTargetRef.current !== targetKey;
+    const shouldReloadForComment = shouldOpenComments && loadedNotificationTargetRef.current !== targetKey;
 
     if (!exists || shouldReloadForComment) {
       loadedNotificationTargetRef.current = targetKey;
       loadPostById(requestedPostId);
     }
-  }, [loadPostById, loading, posts, requestedCommentId, requestedPostId]);
+  }, [loadPostById, loading, posts, requestedCommentId, requestedPostId, shouldOpenComments]);
 
   useEffect(() => {
     if (!requestedPostId || loading) return;
@@ -136,7 +137,7 @@ export const FeedPage = () => {
               onDelete={deletePost}
               domId={'post-' + String(post.id)}
               highlighted={String(post.id) === String(requestedPostId)}
-              initialCommentsOpen={String(post.id) === String(requestedPostId) && Boolean(requestedCommentId)}
+              initialCommentsOpen={String(post.id) === String(requestedPostId) && shouldOpenComments}
               focusedCommentId={String(post.id) === String(requestedPostId) ? requestedCommentId : null}
             />
           ))}

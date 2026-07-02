@@ -84,6 +84,10 @@ export const TopBar = ({ simple = false }: TopBarProps) => {
       notificationText.includes('segu') ||
       notificationText.includes('follow') ||
       notificationText.includes('follower');
+    const isCommentNotification =
+      notificationText.includes('coment') ||
+      notificationText.includes('comment') ||
+      notificationText.includes('respuesta');
     const profileId = notification.profileId ?? notification.actorId;
 
     if (isFollowRequest && profileId) {
@@ -91,8 +95,17 @@ export const TopBar = ({ simple = false }: TopBarProps) => {
       return;
     }
 
-    if (notification.commentId && notification.postId) {
-      navigate(`/feed?postId=${notification.postId}&commentId=${notification.commentId}`);
+    if (isCommentNotification && notification.postId) {
+      const params = new URLSearchParams({
+        postId: String(notification.postId),
+        comments: 'open',
+      });
+
+      if (notification.commentId) {
+        params.set('commentId', String(notification.commentId));
+      }
+
+      navigate(`/feed?${params.toString()}`);
       return;
     }
 
