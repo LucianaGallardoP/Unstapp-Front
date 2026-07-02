@@ -83,7 +83,7 @@ export const ProfilePage = () => {
         />
       )}
 
-      <BottomNavigation activeTab="perfil" />
+      <BottomNavigation activeTab={isPublicProfile ? null : 'perfil'} />
     </div>
   );
 };

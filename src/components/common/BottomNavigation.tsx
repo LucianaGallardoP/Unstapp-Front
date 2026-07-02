@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 export type TabType = 'feed' | 'calendario' | 'horario' | 'perfil';
 
 interface BottomNavigationProps {
-  activeTab: TabType;
+  activeTab: TabType | null;
   onTabChange?: (tab: TabType) => void;
 }
 
