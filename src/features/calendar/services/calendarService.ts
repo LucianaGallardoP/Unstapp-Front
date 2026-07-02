@@ -31,8 +31,14 @@ const asEventType = (value: unknown): CalendarEventType => {
   return 3;
 };
 
+const unwrapEvent = (apiEvent: unknown) => {
+  const root = asRecord(apiEvent);
+
+  return asRecord(root.data ?? root.value ?? root.event ?? root.item ?? root);
+};
+
 const mapEventFromApi = (apiEvent: unknown): CalendarEvent => {
-  const event = asRecord(apiEvent);
+  const event = unwrapEvent(apiEvent);
   const id = event.id ?? event.eventId ?? crypto.randomUUID();
 
   return {
@@ -67,18 +73,11 @@ export const calendarService = {
     return Array.isArray(events) ? events.map(mapEventFromApi) : [];
   },
 
-  getDailyEvents: async (date: string, isToday: boolean = false): Promise<CalendarEvent[]> => {
-    const endpoint = isToday ? '/calendar/daily' : '/calendar/day';
-    const response = await apiClient.get<unknown>(endpoint, {
-      params: { date },
-      headers: getAuthHeaders(),
-    });
-    const data = response.data;
-    const events = Array.isArray(data) 
-      ? data 
-      : asRecord(data).events ?? asRecord(data).items ?? asRecord(data).value ?? asRecord(data).data;
+  getDailyEvents: async (date: string): Promise<CalendarEvent[]> => {
+    const start = new Date(`${date}T00:00:00`);
+    const end = new Date(`${date}T23:59:59.999`);
 
-    return Array.isArray(events) ? events.map(mapEventFromApi) : [];
+    return calendarService.getEvents(start.toISOString(), end.toISOString());
   },
 
   createEvent: async (payload: CreateCalendarEventPayload): Promise<CalendarEvent> => {

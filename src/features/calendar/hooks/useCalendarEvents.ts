@@ -6,11 +6,6 @@ import type {
   CreateCalendarEventPayload,
 } from '../types/calendar.types';
 
-const isSameDay = (firstDate: Date, secondDate: Date) =>
-  firstDate.getFullYear() === secondDate.getFullYear() &&
-  firstDate.getMonth() === secondDate.getMonth() &&
-  firstDate.getDate() === secondDate.getDate();
-
 const getMonthRange = (visibleDate: Date) => {
   const start = new Date(visibleDate.getFullYear(), visibleDate.getMonth(), 1, 0, 0, 0, 0);
   const end = new Date(visibleDate.getFullYear(), visibleDate.getMonth() + 1, 0, 23, 59, 59, 999);
@@ -23,6 +18,14 @@ const getMonthRange = (visibleDate: Date) => {
 
 const countByType = (events: CalendarEvent[], type: CalendarEventType) =>
   events.filter((event) => event.type === type).length;
+
+const formatLocalDate = (date: Date) => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+
+  return `${year}-${month}-${day}`;
+};
 
 export const useCalendarEvents = (visibleDate: Date, selectedDate: Date) => {
   const [events, setEvents] = useState<CalendarEvent[]>([]);
@@ -73,13 +76,9 @@ export const useCalendarEvents = (visibleDate: Date, selectedDate: Date) => {
       setIsDailyLoading(true);
       
       try {
-        const year = selectedDate.getFullYear();
-        const month = String(selectedDate.getMonth() + 1).padStart(2, '0');
-        const day = String(selectedDate.getDate()).padStart(2, '0');
-        const formattedDate = `${year}-${month}-${day}`;
-        const isToday = isSameDay(selectedDate, new Date());
+        const formattedDate = formatLocalDate(selectedDate);
 
-        const response = await calendarService.getDailyEvents(formattedDate, isToday);
+        const response = await calendarService.getDailyEvents(formattedDate);
 
         if (isMounted) {
           // Confiamos en el filtro del backend (que ya recibe el parámetro date).
@@ -91,10 +90,7 @@ export const useCalendarEvents = (visibleDate: Date, selectedDate: Date) => {
         if (isMounted) {
           // Fallback en caso de error: filtramos localmente los eventos mensuales.
           // Comparamos el string YYYY-MM-DD directamente para evitar que el navegador cambie de día por la zona horaria.
-          const year = selectedDate.getFullYear();
-          const month = String(selectedDate.getMonth() + 1).padStart(2, '0');
-          const day = String(selectedDate.getDate()).padStart(2, '0');
-          const dateString = `${year}-${month}-${day}`;
+          const dateString = formatLocalDate(selectedDate);
           
           setDailyEvents(events.filter((event) => event.startDate.startsWith(dateString)));
         }
@@ -128,7 +124,14 @@ export const useCalendarEvents = (visibleDate: Date, selectedDate: Date) => {
 
     try {
       const createdEvent = await calendarService.createEvent(payload);
+      const selectedDateString = formatLocalDate(selectedDate);
+
       setEvents((currentEvents) => [...currentEvents, createdEvent]);
+
+      if (createdEvent.startDate.startsWith(selectedDateString)) {
+        setDailyEvents((currentEvents) => [...currentEvents, createdEvent]);
+      }
+
       return createdEvent;
     } catch (err) {
       setError('No se pudo crear el evento.');
