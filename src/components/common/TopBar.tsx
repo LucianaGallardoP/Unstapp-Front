@@ -12,6 +12,7 @@ import {
 import { useNavigate } from 'react-router-dom';
 import { formatRelativeTime } from '../../features/feed/utils/formatRelativeTime';
 import { GlobalSearch } from '../../features/search';
+import { searchService } from '../../features/search/services/searchService';
 import { useNotifications, type NotificationType } from '../../store/notificationsContext';
 
 interface TopBarProps {
@@ -43,6 +44,31 @@ const getInitials = (name: string) => {
   return initials.toUpperCase() || 'U';
 };
 
+const normalizeSearchText = (value: string) =>
+  value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
+
+const resolveProfileIdByActorName = async (actorName: string) => {
+  const cleanName = actorName.trim();
+
+  if (!cleanName || cleanName === 'Unstapp') {
+    return undefined;
+  }
+
+  try {
+    const results = await searchService.globalSearch(cleanName);
+    const normalizedActorName = normalizeSearchText(cleanName);
+    const matchedUser = results.users.find((user) => {
+      const displayName = user.fullName || user.userName || user.name || user.username || user.FullName || user.UserName || '';
+
+      return normalizeSearchText(displayName) === normalizedActorName;
+    }) ?? results.users[0];
+
+    return matchedUser?.id ?? matchedUser?.userId;
+  } catch {
+    return undefined;
+  }
+};
+
 export const TopBar = ({ simple = false }: TopBarProps) => {
   const [isMoonIcon, setIsMoonIcon] = useState(true);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
@@ -72,7 +98,7 @@ export const TopBar = ({ simple = false }: TopBarProps) => {
     hideUnreadIndicator();
     markAllAsRead();
   };
-  const handleNotificationClick = async (notification: { id: number | string; action: string; target: string; type: NotificationType; postId?: number | string; commentId?: number | string; actorId?: number | string; profileId?: number | string }) => {
+  const handleNotificationClick = async (notification: { id: number | string; actor: string; action: string; target: string; type: NotificationType; postId?: number | string; commentId?: number | string; actorId?: number | string; profileId?: number | string }) => {
     await markNotificationAsRead(notification.id);
     setIsNotificationsOpen(false);
 
@@ -88,10 +114,15 @@ export const TopBar = ({ simple = false }: TopBarProps) => {
       notificationText.includes('coment') ||
       notificationText.includes('comment') ||
       notificationText.includes('respuesta');
-    const profileId = notification.profileId ?? notification.actorId;
+    let profileId = notification.profileId ?? notification.actorId;
 
-    if (isFollowRequest && profileId) {
-      navigate(`/perfil/${profileId}`);
+    if (isFollowRequest) {
+      profileId = profileId ?? await resolveProfileIdByActorName(notification.actor);
+
+      if (profileId) {
+        navigate(`/perfil/${profileId}`);
+      }
+
       return;
     }
 
