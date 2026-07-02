@@ -5,6 +5,7 @@ import {
   Trash2,
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { searchService } from '../../features/search/services/searchService';
 import type { PostAuthorRole, PostComment } from '../../features/feed/types/post.types';
 import { formatRelativeTime } from '../../features/feed/utils/formatRelativeTime';
 
@@ -22,6 +23,30 @@ const roleIconStyles: Record<PostAuthorRole, string> = {
   Alumno: 'bg-[#FF751F]/10 text-[#FF751F]',
 };
 
+const normalizeSearchText = (value: string) =>
+  value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
+
+const resolveProfileIdByName = async (name: string) => {
+  const cleanName = name.trim();
+
+  if (!cleanName) {
+    return undefined;
+  }
+
+  try {
+    const results = await searchService.globalSearch(cleanName);
+    const normalizedName = normalizeSearchText(cleanName);
+    const matchedUser = results.users.find((user) => {
+      const displayName = user.fullName || user.userName || user.name || user.username || user.FullName || user.UserName || '';
+
+      return normalizeSearchText(displayName) === normalizedName;
+    }) ?? results.users[0];
+
+    return matchedUser?.id ?? matchedUser?.userId;
+  } catch {
+    return undefined;
+  }
+};
 const defaultProfileAvatar =
   'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 96 96%22%3E%3Crect width=%2296%22 height=%2296%22 rx=%2248%22 fill=%22%23EFF6FF%22/%3E%3Ccircle cx=%2248%22 cy=%2237%22 r=%2215%22 fill=%22none%22 stroke=%22%231E4E9D%22 stroke-width=%226%22/%3E%3Cpath d=%22M25 78c3-16 15-25 23-25s20 9 23 25%22 fill=%22none%22 stroke=%22%231E4E9D%22 stroke-width=%226%22 stroke-linecap=%22round%22/%3E%3C/svg%3E';
 
@@ -32,7 +57,7 @@ export const CommentItem = ({ comment, currentDate, onDelete, canDelete = false 
   const buttonRef = useRef<HTMLButtonElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
 
-  const canOpenAuthorProfile = Boolean(comment.author.id);
+  const canOpenAuthorProfile = Boolean(comment.author.id || comment.author.name);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -74,12 +99,13 @@ export const CommentItem = ({ comment, currentDate, onDelete, canDelete = false 
     }
   };
 
-  const handleOpenAuthorProfile = () => {
-    if (!comment.author.id) return;
+  const handleOpenAuthorProfile = async () => {
+    const profileId = comment.author.id ?? await resolveProfileIdByName(comment.author.name);
 
-    navigate(`/perfil/${comment.author.id}`);
+    if (!profileId) return;
+
+    navigate(`/perfil/${profileId}`);
   };
-
   return (
     <article className="flex gap-2 rounded-xl bg-white px-3 py-2">
       <button
