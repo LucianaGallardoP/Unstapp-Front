@@ -177,6 +177,15 @@ export const useProfile = (userId: string | undefined) => {
 
   const updateProfile = async (values: ProfileEditValues) => {
     const updatedProfile = await profileService.updateProfile(values);
+    const nextAvatarUrl = values.removeAvatar && !values.avatarFile
+      ? undefined
+      : updatedProfile.avatarUrl ?? values.avatarUrl;
+
+    if (nextAvatarUrl) {
+      localStorage.setItem('unstapp_user_avatar_url', nextAvatarUrl);
+    } else if (values.removeAvatar && !values.avatarFile) {
+      localStorage.removeItem('unstapp_user_avatar_url');
+    }
 
     // Refleja el cambio del perfil sin recargar toda la pagina.
     setProfileData((prev) => ({

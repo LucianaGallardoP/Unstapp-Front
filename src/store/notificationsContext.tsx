@@ -32,6 +32,21 @@ interface NotificationsContextValue {
 }
 
 const NotificationsContext = createContext<NotificationsContextValue | null>(null);
+const REMOVED_NOTIFICATIONS_KEY = 'unstapp_removed_notification_ids';
+
+const readRemovedNotificationIds = () => {
+  try {
+    const parsedIds = JSON.parse(localStorage.getItem(REMOVED_NOTIFICATIONS_KEY) ?? '[]');
+
+    return Array.isArray(parsedIds) ? new Set(parsedIds.map((id) => String(id))) : new Set<string>();
+  } catch {
+    return new Set<string>();
+  }
+};
+
+const saveRemovedNotificationIds = (ids: Set<string>) => {
+  localStorage.setItem(REMOVED_NOTIFICATIONS_KEY, JSON.stringify([...ids]));
+};
 
 export const NotificationsProvider = ({ children }: { children: ReactNode }) => {
   const [notifications, setNotifications] = useState<AppNotification[]>([]);
@@ -51,10 +66,18 @@ export const NotificationsProvider = ({ children }: { children: ReactNode }) => 
         notificationService.getAll(),
         notificationService.hasUnread(),
       ]);
+      const removedIds = readRemovedNotificationIds();
+      const visibleNotifications = apiNotifications.filter(
+        (notification) => !removedIds.has(String(notification.id)),
+      );
+      const visibleHasUnread = visibleNotifications.some((notification) => !notification.read);
 
-      setNotifications(apiNotifications);
-      setHasUnreadFromApi(hasUnread);
-      setIsUnreadIndicatorHidden(false);
+      setNotifications(visibleNotifications);
+      setHasUnreadFromApi(hasUnread && visibleHasUnread);
+
+      if (hasUnread && visibleHasUnread) {
+        setIsUnreadIndicatorHidden(false);
+      }
     } catch {
       setNotifications([]);
       setHasUnreadFromApi(false);
@@ -65,6 +88,12 @@ export const NotificationsProvider = ({ children }: { children: ReactNode }) => 
 
   useEffect(() => {
     refreshNotifications();
+
+    const intervalId = window.setInterval(() => {
+      refreshNotifications();
+    }, 60000);
+
+    return () => window.clearInterval(intervalId);
   }, [refreshNotifications]);
 
   const markNotificationAsRead = useCallback(async (notificationId: number | string) => {
@@ -76,11 +105,15 @@ export const NotificationsProvider = ({ children }: { children: ReactNode }) => 
 
     try {
       await notificationService.markAsRead(notificationId);
-      setHasUnreadFromApi(await notificationService.hasUnread());
+      const hasUnread = await notificationService.hasUnread();
+      const hasLocalUnread = notifications.some(
+        (notification) => notification.id !== notificationId && !notification.read,
+      );
+      setHasUnreadFromApi(hasUnread && hasLocalUnread);
     } catch {
       refreshNotifications();
     }
-  }, [refreshNotifications]);
+  }, [notifications, refreshNotifications]);
 
   const markAllAsRead = useCallback(async () => {
     setNotifications((currentNotifications) =>
@@ -97,19 +130,31 @@ export const NotificationsProvider = ({ children }: { children: ReactNode }) => 
   }, [refreshNotifications]);
 
   const removeNotification = useCallback(async (notificationId: number | string) => {
+    const removedIds = readRemovedNotificationIds();
+    removedIds.add(String(notificationId));
+    saveRemovedNotificationIds(removedIds);
+
     setNotifications((currentNotifications) =>
       currentNotifications.filter((notification) => notification.id !== notificationId),
     );
 
     try {
       await notificationService.remove(notificationId);
-      setHasUnreadFromApi(await notificationService.hasUnread());
+      const hasUnread = await notificationService.hasUnread();
+      const hasVisibleUnread = notifications.some(
+        (notification) => notification.id !== notificationId && !notification.read,
+      );
+      setHasUnreadFromApi(hasUnread && hasVisibleUnread);
     } catch {
       refreshNotifications();
     }
-  }, [refreshNotifications]);
+  }, [notifications, refreshNotifications]);
 
   const removeAllNotifications = useCallback(async () => {
+    const removedIds = readRemovedNotificationIds();
+    notifications.forEach((notification) => removedIds.add(String(notification.id)));
+    saveRemovedNotificationIds(removedIds);
+
     setNotifications([]);
     setHasUnreadFromApi(false);
     setIsUnreadIndicatorHidden(true);
@@ -119,7 +164,7 @@ export const NotificationsProvider = ({ children }: { children: ReactNode }) => 
     } catch {
       refreshNotifications();
     }
-  }, [refreshNotifications]);
+  }, [notifications, refreshNotifications]);
 
   const value = useMemo<NotificationsContextValue>(
     () => ({

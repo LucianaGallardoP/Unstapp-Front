@@ -6,6 +6,7 @@ const clearStoredSession = () => {
   localStorage.removeItem('unstapp_user_id');
   localStorage.removeItem('unstapp_user_name');
   localStorage.removeItem('unstapp_user_roles');
+  localStorage.removeItem('unstapp_user_avatar_url');
 };
 
 export const apiClient = axios.create({

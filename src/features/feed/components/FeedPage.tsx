@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { TopBar } from '../../../components/common/TopBar';
 import { BottomNavigation, type TabType } from '../../../components/common/BottomNavigation';
 import { AddNewBottom } from '../../../components/common/AddNewBottom';
@@ -31,6 +31,7 @@ export const FeedPage = () => {
   const [searchParams] = useSearchParams();
   const requestedPostId = searchParams.get('postId');
   const requestedCommentId = searchParams.get('commentId');
+  const loadedNotificationTargetRef = useRef<string | null>(null);
   const { posts, removingPostIds, loading, error, createPost, deletePost, refreshPosts, loadPostById } = usePosts();
 
   const handleFilterClick = (filterId: FeedFilter) => {
@@ -47,12 +48,15 @@ export const FeedPage = () => {
   useEffect(() => {
     if (!requestedPostId || loading) return;
 
+    const targetKey = `${requestedPostId}:${requestedCommentId ?? ''}`;
     const exists = posts.some((post) => String(post.id) === String(requestedPostId));
+    const shouldReloadForComment = Boolean(requestedCommentId) && loadedNotificationTargetRef.current !== targetKey;
 
-    if (!exists) {
+    if (!exists || shouldReloadForComment) {
+      loadedNotificationTargetRef.current = targetKey;
       loadPostById(requestedPostId);
     }
-  }, [loadPostById, loading, posts, requestedPostId]);
+  }, [loadPostById, loading, posts, requestedCommentId, requestedPostId]);
 
   useEffect(() => {
     if (!requestedPostId || loading) return;

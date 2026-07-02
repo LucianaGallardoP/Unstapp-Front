@@ -16,6 +16,7 @@ export const CreatePostModal = ({ isOpen, onClose, onPublish }: CreatePostModalP
   const [publishError, setPublishError] = useState<string | null>(null);
   const trimmedContent = content.trim();
   const isVideo = selectedFile?.type.startsWith('video/');
+  const currentUserAvatarUrl = localStorage.getItem('unstapp_user_avatar_url');
 
   // Libera la URL temporal de previsualizacion.
   useEffect(() => {
@@ -104,10 +105,18 @@ export const CreatePostModal = ({ isOpen, onClose, onPublish }: CreatePostModalP
 
         <div className="mt-3 flex gap-3 min-[360px]:gap-4 md:mt-4 md:gap-5">
           <div
-            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#EFF6FF] text-[#1E4E9D] min-[360px]:h-12 min-[360px]:w-12 md:h-14 md:w-14"
+            className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-full bg-[#EFF6FF] text-[#1E4E9D] min-[360px]:h-12 min-[360px]:w-12 md:h-14 md:w-14"
             aria-label="Foto del usuario actual"
           >
-            <UserRound className="h-5 w-5 md:h-6 md:w-6" strokeWidth={2.2} />
+            {currentUserAvatarUrl ? (
+              <img
+                src={currentUserAvatarUrl}
+                alt="Foto del usuario actual"
+                className="h-full w-full object-cover"
+              />
+            ) : (
+              <UserRound className="h-5 w-5 md:h-6 md:w-6" strokeWidth={2.2} />
+            )}
           </div>
 
           <div className="flex-1 relative">

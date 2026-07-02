@@ -70,6 +70,7 @@ const mapNotificationFromApi = (apiNotification: unknown): AppNotification => {
     asString(actor.userName) ||
     'Unstapp';
   const isFollow = isFollowNotification(notification);
+  const isCommentNotification = getNotificationText(notification).includes('coment') || getNotificationText(notification).includes('comment');
   const actorId =
     asId(notification.actorId) ||
     asId(notification.userId) ||
@@ -103,7 +104,7 @@ const mapNotificationFromApi = (apiNotification: unknown): AppNotification => {
       asId(comment.postId) ||
       asId(target.postId) ||
       asId(target.publicationId) ||
-      asId(target.id);
+      (isCommentNotification ? undefined : asId(target.id));
 
   return {
     id: asId(id) ?? crypto.randomUUID(),
@@ -135,7 +136,8 @@ const mapNotificationFromApi = (apiNotification: unknown): AppNotification => {
       asId(comment.commentId) ||
       asId(comment.id) ||
       asId(target.commentId) ||
-      asId(target.responseId),
+      asId(target.responseId) ||
+      (isCommentNotification ? asId(target.id) : undefined),
     createdAt:
       asString(notification.createdAt) ||
       asString(notification.date) ||

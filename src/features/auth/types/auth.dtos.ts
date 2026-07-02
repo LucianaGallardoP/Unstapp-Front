@@ -9,6 +9,7 @@ export interface LoginResponse {
   roles: string[];
   token: string;
   expiresAt: string;
+  avatarUrl?: string | null;
 }
 
 export interface RegisterRequest {

@@ -13,6 +13,7 @@ const clearStoredAuth = () => {
   localStorage.removeItem('unstapp_user_id');
   localStorage.removeItem('unstapp_user_name');
   localStorage.removeItem('unstapp_user_roles');
+  localStorage.removeItem('unstapp_user_avatar_url');
 };
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {

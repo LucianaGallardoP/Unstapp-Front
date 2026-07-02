@@ -39,11 +39,18 @@ export const usePostInteractions = ({
   const [prevPostId, setPrevPostId] = useState(postId);
   const [prevInitialLiked, setPrevInitialLiked] = useState(initialLiked);
   const [prevInitialLikes, setPrevInitialLikes] = useState(initialLikes);
+  const [prevInitialCommentsCount, setPrevInitialCommentsCount] = useState(initialCommentsCount ?? initialComments.length);
 
-  if (postId !== prevPostId || initialLiked !== prevInitialLiked || initialLikes !== prevInitialLikes) {
+  if (
+    postId !== prevPostId ||
+    initialLiked !== prevInitialLiked ||
+    initialLikes !== prevInitialLikes ||
+    (initialCommentsCount ?? initialComments.length) !== prevInitialCommentsCount
+  ) {
     setPrevPostId(postId);
     setPrevInitialLiked(initialLiked);
     setPrevInitialLikes(initialLikes);
+    setPrevInitialCommentsCount(initialCommentsCount ?? initialComments.length);
     setLiked(initialLiked);
     setLikesCount(initialLikes);
     setComments(initialComments);
