@@ -1,5 +1,6 @@
 import { ImagePlus, LoaderCircle, Trash2, UserRound, X } from 'lucide-react';
 import { useEffect, useRef, useState, type ChangeEvent } from 'react';
+import { profileService } from '../../profile/services/profileService';
 
 interface CreatePostModalProps {
   isOpen: boolean;
@@ -14,10 +15,47 @@ export const CreatePostModal = ({ isOpen, onClose, onPublish }: CreatePostModalP
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [isPublishing, setIsPublishing] = useState(false);
   const [publishError, setPublishError] = useState<string | null>(null);
+  const [profileAvatarUrl, setProfileAvatarUrl] = useState(() => localStorage.getItem('unstapp_user_avatar_url'));
   const trimmedContent = content.trim();
   const isVideo = selectedFile?.type.startsWith('video/');
-  const currentUserAvatarUrl = localStorage.getItem('unstapp_user_avatar_url');
+  const currentUserAvatarUrl = profileAvatarUrl || localStorage.getItem('unstapp_user_avatar_url');
 
+  // Carga la foto real del usuario si la sesion local no la tiene todavia.
+  useEffect(() => {
+    if (!isOpen) {
+      return;
+    }
+
+    const storedAvatarUrl = localStorage.getItem('unstapp_user_avatar_url');
+
+    if (storedAvatarUrl) {
+      setProfileAvatarUrl(storedAvatarUrl);
+      return;
+    }
+
+    const currentUserId = localStorage.getItem('unstapp_user_id');
+
+    if (!currentUserId) {
+      return;
+    }
+
+    let isMounted = true;
+
+    profileService.getById(currentUserId, true)
+      .then(({ profile }) => {
+        if (!isMounted || !profile.avatarUrl) {
+          return;
+        }
+
+        localStorage.setItem('unstapp_user_avatar_url', profile.avatarUrl);
+        setProfileAvatarUrl(profile.avatarUrl);
+      })
+      .catch(() => undefined);
+
+    return () => {
+      isMounted = false;
+    };
+  }, [isOpen]);
   // Libera la URL temporal de previsualizacion.
   useEffect(() => {
     return () => {

@@ -80,15 +80,17 @@ const mapNotificationFromApi = (apiNotification: unknown): AppNotification => {
     asId(data.fromUserId) ||
     asId(actor.id) ||
     asId(actor.userId);
-  const profileId =
-    asId(notification.profileId) ||
-    asId(notification.targetUserId) ||
-    asId(notification.followerId) ||
-    asId(data.profileId) ||
-    asId(data.targetUserId) ||
-    asId(data.followerId) ||
-    (isFollow ? asId(notification.targetId) || asId(notification.entityId) || asId(data.targetId) || asId(data.entityId) : undefined) ||
-    actorId;
+  const profileId = isFollow
+    ? actorId ||
+      asId(notification.followerId) ||
+      asId(data.followerId) ||
+      asId(notification.profileId) ||
+      asId(data.profileId)
+    : asId(notification.profileId) ||
+      asId(notification.targetUserId) ||
+      asId(data.profileId) ||
+      asId(data.targetUserId) ||
+      actorId;
   const postId = isFollow
     ? undefined
     : asId(notification.postId) ||

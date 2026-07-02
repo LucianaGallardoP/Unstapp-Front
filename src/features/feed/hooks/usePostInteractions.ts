@@ -34,23 +34,30 @@ export const usePostInteractions = ({
   const [commentLoading, setCommentLoading] = useState(false);
   const [commentError, setCommentError] = useState<string | null>(null);
   const isAuthenticated = Boolean(localStorage.getItem('unstapp_token'));
+  const initialCommentsKey = initialComments.map((comment) => String(comment.id)).join('|');
 
   // Sincroniza el estado cuando el feed refresca datos desde backend (evitando cascadas de renders).
   const [prevPostId, setPrevPostId] = useState(postId);
   const [prevInitialLiked, setPrevInitialLiked] = useState(initialLiked);
   const [prevInitialLikes, setPrevInitialLikes] = useState(initialLikes);
   const [prevInitialCommentsCount, setPrevInitialCommentsCount] = useState(initialCommentsCount ?? initialComments.length);
+  const [prevInitialCommentsOpen, setPrevInitialCommentsOpen] = useState(initialCommentsOpen);
+  const [prevInitialCommentsKey, setPrevInitialCommentsKey] = useState(initialCommentsKey);
 
   if (
     postId !== prevPostId ||
     initialLiked !== prevInitialLiked ||
     initialLikes !== prevInitialLikes ||
-    (initialCommentsCount ?? initialComments.length) !== prevInitialCommentsCount
+    (initialCommentsCount ?? initialComments.length) !== prevInitialCommentsCount ||
+    initialCommentsOpen !== prevInitialCommentsOpen ||
+    initialCommentsKey !== prevInitialCommentsKey
   ) {
     setPrevPostId(postId);
     setPrevInitialLiked(initialLiked);
     setPrevInitialLikes(initialLikes);
     setPrevInitialCommentsCount(initialCommentsCount ?? initialComments.length);
+    setPrevInitialCommentsOpen(initialCommentsOpen);
+    setPrevInitialCommentsKey(initialCommentsKey);
     setLiked(initialLiked);
     setLikesCount(initialLikes);
     setComments(initialComments);

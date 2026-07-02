@@ -101,6 +101,10 @@ export const useProfile = (userId: string | undefined) => {
         if (isMounted) {
           setProfileData(response);
           setHasLoadedProfile(true);
+
+          if (!isPublicProfile && response.profile.avatarUrl) {
+            localStorage.setItem('unstapp_user_avatar_url', response.profile.avatarUrl);
+          }
         }
       } catch {
         if (isMounted) {
