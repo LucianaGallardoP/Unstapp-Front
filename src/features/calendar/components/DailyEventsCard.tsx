@@ -122,7 +122,7 @@ export const DailyEventsCard: React.FC<DailyEventsCardProps> = ({
 
         {!isLoading && events.length === 0 && (
           <p className="rounded-2xl bg-[#EFF6FF] px-4 py-5 text-center text-[13px] font-bold text-[#526174]">
-            No hay eventos para este dia.
+            No hay eventos para este día.
           </p>
         )}
       </div>

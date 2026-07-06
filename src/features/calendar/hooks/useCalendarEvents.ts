@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { calendarService } from '../services/calendarService';
 import type {
   CalendarEvent,
@@ -37,6 +37,12 @@ const eventMatchesDate = (event: CalendarEvent, dateString: string) => {
   return !Number.isNaN(eventDate.getTime()) && formatLocalDate(eventDate) === dateString;
 };
 
+const getEventsForDate = (events: CalendarEvent[], date: Date) => {
+  const dateString = formatLocalDate(date);
+
+  return events.filter((event) => eventMatchesDate(event, dateString));
+};
+
 export const useCalendarEvents = (visibleDate: Date, selectedDate: Date) => {
   const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -47,6 +53,25 @@ export const useCalendarEvents = (visibleDate: Date, selectedDate: Date) => {
   const [isDailyLoading, setIsDailyLoading] = useState(false);
 
   const monthRange = useMemo(() => getMonthRange(visibleDate), [visibleDate]);
+
+  const loadMonthEvents = useCallback(async () => {
+    const response = await calendarService.getEvents(monthRange.start, monthRange.end);
+    setEvents(response);
+    return response;
+  }, [monthRange.start, monthRange.end]);
+
+  const loadSelectedDayEvents = useCallback(async (monthlyEvents = events) => {
+    const formattedDate = formatLocalDate(selectedDate);
+    const fallbackEvents = monthlyEvents.filter((event) => eventMatchesDate(event, formattedDate));
+
+    try {
+      const response = await calendarService.getDailyEvents(formattedDate);
+      const responseEventsForDate = response.filter((event) => eventMatchesDate(event, formattedDate));
+      setDailyEvents(responseEventsForDate.length > 0 ? responseEventsForDate : fallbackEvents);
+    } catch {
+      setDailyEvents(fallbackEvents);
+    }
+  }, [events, selectedDate]);
 
   useEffect(() => {
     let isMounted = true;
@@ -87,15 +112,16 @@ export const useCalendarEvents = (visibleDate: Date, selectedDate: Date) => {
       
       try {
         const formattedDate = formatLocalDate(selectedDate);
+        const fallbackEvents = getEventsForDate(events, selectedDate);
         const response = await calendarService.getDailyEvents(formattedDate);
+        const responseEventsForDate = response.filter((event) => eventMatchesDate(event, formattedDate));
 
         if (isMounted) {
-          setDailyEvents(response);
+          setDailyEvents(responseEventsForDate.length > 0 ? responseEventsForDate : fallbackEvents);
         }
       } catch {
         if (isMounted) {
-          const dateString = formatLocalDate(selectedDate);
-          setDailyEvents(events.filter((event) => eventMatchesDate(event, dateString)));
+          setDailyEvents(getEventsForDate(events, selectedDate));
         }
       } finally {
         if (isMounted) {
@@ -133,6 +159,13 @@ export const useCalendarEvents = (visibleDate: Date, selectedDate: Date) => {
 
       if (eventMatchesDate(createdEvent, selectedDateString)) {
         setDailyEvents((currentEvents) => [...currentEvents, createdEvent]);
+      }
+
+      try {
+        const refreshedEvents = await loadMonthEvents();
+        await loadSelectedDayEvents(refreshedEvents);
+      } catch {
+        // Si el refresco falla, mantenemos la actualización optimista ya aplicada.
       }
 
       return createdEvent;

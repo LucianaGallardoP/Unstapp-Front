@@ -27,6 +27,8 @@ function App() {
             <Route path="/crear-contrasena/:token" element={<RegisterPage />} />
             <Route path="/crear-contraseña" element={<RegisterPage />} />
             <Route path="/crear-contraseña/:token" element={<RegisterPage />} />
+            <Route path="/crear-clave" element={<RegisterPage />} />
+            <Route path="/crear-clave/:token" element={<RegisterPage />} />
             <Route path="/auth/set-initial-password" element={<RegisterPage />} />
             <Route path="/Auth/set-initial-password" element={<RegisterPage />} />
             <Route path="/feed" element={<FeedPage />} />

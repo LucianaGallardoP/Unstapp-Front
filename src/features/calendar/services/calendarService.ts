@@ -68,15 +68,22 @@ const unwrapEvents = (data: unknown): unknown[] => {
   return [];
 };
 
+const getEventStartDate = (event: ApiRecord) =>
+  asString(event.startDate) ||
+  asString(event.StartDate) ||
+  asString(event.start) ||
+  asString(event.date);
+
+const getEventEndDate = (event: ApiRecord, fallback: string) =>
+  asString(event.endDate) ||
+  asString(event.EndDate) ||
+  asString(event.end) ||
+  fallback;
+
 const mapEventFromApi = (apiEvent: unknown): CalendarEvent => {
   const event = unwrapEvent(apiEvent);
   const id = event.id ?? event.eventId ?? event.calendarEventId ?? crypto.randomUUID();
-  const startDate =
-    asString(event.startDate) ||
-    asString(event.StartDate) ||
-    asString(event.start) ||
-    asString(event.date) ||
-    new Date().toISOString();
+  const startDate = getEventStartDate(event) || new Date().toISOString();
 
   return {
     id: typeof id === 'number' || typeof id === 'string' ? id : crypto.randomUUID(),
@@ -97,15 +104,33 @@ const mapEventFromApi = (apiEvent: unknown): CalendarEvent => {
       event.CategoryType,
     ),
     startDate,
-    endDate:
-      asString(event.endDate) ||
-      asString(event.EndDate) ||
-      asString(event.end) ||
-      startDate,
+    endDate: getEventEndDate(event, startDate),
   };
 };
 
 const mapCreatedEvent = (data: unknown, payload: CreateCalendarEventPayload): CalendarEvent => {
+  const eventRecord = unwrapEvent(data);
+  const hasEventShape = Boolean(
+    getEventStartDate(eventRecord) ||
+    eventRecord.title ||
+    eventRecord.Title ||
+    eventRecord.type ||
+    eventRecord.Type ||
+    eventRecord.typeId ||
+    eventRecord.eventTypeId,
+  );
+
+  if (!hasEventShape) {
+    return {
+      id: crypto.randomUUID(),
+      title: payload.title,
+      description: payload.description,
+      type: payload.type,
+      startDate: payload.startDate,
+      endDate: payload.endDate,
+    };
+  }
+
   const event = mapEventFromApi(data);
 
   return {
@@ -113,8 +138,8 @@ const mapCreatedEvent = (data: unknown, payload: CreateCalendarEventPayload): Ca
     title: event.title || payload.title,
     description: event.description || payload.description,
     type: event.type === 3 && payload.type !== 3 ? payload.type : event.type,
-    startDate: event.startDate || payload.startDate,
-    endDate: event.endDate || payload.endDate,
+    startDate: getEventStartDate(eventRecord) || payload.startDate,
+    endDate: getEventEndDate(eventRecord, payload.endDate),
   };
 };
 
