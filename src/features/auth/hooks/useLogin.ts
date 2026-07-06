@@ -18,7 +18,7 @@ const getLoginErrorMessage = (error: unknown) => {
     }
   }
 
-  return 'Error al iniciar sesion';
+  return 'Error al iniciar sesión';
 };
 
 export const useLogin = () => {

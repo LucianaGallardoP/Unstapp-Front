@@ -59,7 +59,7 @@ export const LoginForm = ({ onFirstTimeClick }: LoginFormProps) => {
           type="text"
           inputMode="numeric"
           pattern="[0-9]*"
-          placeholder="Ingresa tu DNI"
+          placeholder="Ingresá tu DNI"
           className={inputStyles}
           value={formData.dni}
           disabled={loading}

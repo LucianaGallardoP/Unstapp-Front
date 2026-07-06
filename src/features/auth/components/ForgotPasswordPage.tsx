@@ -1,4 +1,4 @@
-import { useState, type ChangeEvent } from 'react';
+﻿import { useState, type ChangeEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { TopBar } from '../../../components/common/TopBar';
 import { LegalTermsFooter } from '../../../components/common/LegalTermsFooter';
@@ -7,43 +7,12 @@ import { Button } from '../../../components/common/Button';
 import unstaLogo from '../../../assets/img/UNSTA-logo.png';
 import { authService } from '../services/authService';
 
-type TokenPayload = Record<string, unknown>;
+const getResponseMessage = (response: unknown): string => {
+  if (response && typeof response === 'object' && 'message' in response && typeof response.message === 'string') {
+    return response.message;
+  }
 
-const tokenKeys = new Set([
-  'token',
-  'resettoken',
-  'passwordtoken',
-  'setpasswordtoken',
-]);
-
-const getResetToken = (response: unknown): string => {
-  const visitedObjects = new Set<object>();
-
-  const findToken = (value: unknown): string => {
-    if (!value || typeof value !== 'object' || visitedObjects.has(value)) {
-      return '';
-    }
-
-    visitedObjects.add(value);
-
-    for (const [key, entryValue] of Object.entries(value as TokenPayload)) {
-      if (typeof entryValue === 'string' && tokenKeys.has(key.toLowerCase()) && entryValue.trim()) {
-        return entryValue.trim();
-      }
-    }
-
-    for (const entryValue of Object.values(value as TokenPayload)) {
-      const nestedToken = findToken(entryValue);
-
-      if (nestedToken) {
-        return nestedToken;
-      }
-    }
-
-    return '';
-  };
-
-  return findToken(response);
+  return 'Te enviamos un enlace al correo asociado a tu DNI.';
 };
 
 export const ForgotPasswordPage = () => {
@@ -51,6 +20,7 @@ export const ForgotPasswordPage = () => {
   const [dni, setDni] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -61,19 +31,14 @@ export const ForgotPasswordPage = () => {
 
     setLoading(true);
     setError(null);
+    setSuccessMessage(null);
 
     try {
       const response = await authService.forgotPassword({ dni });
-      const token = getResetToken(response);
-
-      if (!token) {
-        setError('No se recibio el token para recuperar la contrasena.');
-        return;
-      }
-
-      navigate(`/register?token=${encodeURIComponent(token)}`);
+      setSuccessMessage(getResponseMessage(response));
+      setDni('');
     } catch {
-      setError('No se pudo iniciar la recuperacion de contrasena.');
+      setError('No se pudo iniciar la recuperación de contraseña.');
     } finally {
       setLoading(false);
     }
@@ -89,11 +54,17 @@ export const ForgotPasswordPage = () => {
           </div>
 
           <h1 className="mb-2 text-center text-[28px] font-bold leading-tight text-black">
-            Recuperar contrasena
+            Recuperar contraseña
           </h1>
           <p className="mx-auto mb-6 max-w-[250px] text-center text-[13px] leading-snug text-gray-500">
-            Ingresa tu DNI para validar tu cuenta y crear una nueva contrasena.
+            Ingresá tu DNI para validar tu cuenta y crear una nueva contraseña.
           </p>
+
+          {successMessage && (
+            <div className="mb-5 rounded-xl border border-[#1d8c57]/20 bg-[#1d8c57]/10 px-4 py-3 text-center text-[12px] font-bold text-[#1d8c57]">
+              {successMessage}
+            </div>
+          )}
 
           {error && (
             <div className="mb-5 rounded-xl border border-[#E7000B]/20 bg-[#E7000B]/10 px-4 py-3 text-center text-[12px] font-bold text-[#E7000B]">
@@ -108,11 +79,12 @@ export const ForgotPasswordPage = () => {
               type="text"
               inputMode="numeric"
               pattern="[0-9]*"
-              placeholder="Ingresa tu DNI"
+              placeholder="Ingresá tu DNI"
               value={dni}
               disabled={loading}
               onChange={(event: ChangeEvent<HTMLInputElement>) => {
                 setError(null);
+                setSuccessMessage(null);
                 setDni(event.target.value.replace(/\D/g, ''));
               }}
             />
@@ -131,7 +103,7 @@ export const ForgotPasswordPage = () => {
               onClick={() => navigate('/login')}
               className="mt-2 text-[12px] font-medium text-[#1E4E9D] transition-all hover:text-[#122b54] hover:underline"
             >
-              Volver al inicio de sesion
+              Volver al inicio de sesión
             </button>
           </form>
         </section>

@@ -1,4 +1,4 @@
-import { apiClient } from '../../../services/apiClient';
+﻿import { apiClient } from '../../../services/apiClient';
 import type { 
   LoginRequest, 
   LoginResponse,
@@ -28,26 +28,8 @@ export const authService = {
   },
 
   forgotPassword: async (data: ForgotPasswordRequest): Promise<ForgotPasswordResponse> => {
-    const endpoints = [
-      '/Auth/forgot-password',
-      '/auth/forgot-password',
-      '/Auth/request-password-reset',
-      '/auth/request-password-reset',
-      '/Auth/recover-password',
-      '/auth/recover-password',
-    ];
-    let lastError: unknown;
-
-    for (const endpoint of endpoints) {
-      try {
-        const response = await apiClient.post<ForgotPasswordResponse>(endpoint, data);
-        return response.data;
-      } catch (error) {
-        lastError = error;
-      }
-    }
-
-    throw lastError;
+    const response = await apiClient.post<ForgotPasswordResponse>('/Auth/verify-first-time', data);
+    return response.data;
   },
   setInitialPassword: async (data: SetInitialPasswordRequest) => {
     const response = await apiClient.post('/Auth/set-initial-password', data);

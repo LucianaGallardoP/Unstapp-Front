@@ -16,7 +16,8 @@ function App() {
         <Routes>
           <Route path="/" element={<Navigate to="/login" replace />} />
           <Route path="/login" element={<LoginPage />} />
-          <Route path="/register" element={<RegisterPage />} />`r`n          <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+          <Route path="/register" element={<RegisterPage />} />
+          <Route path="/forgot-password" element={<ForgotPasswordPage />} />
           <Route path="/register/:token" element={<RegisterPage />} />
           <Route path="/feed" element={<FeedPage />} />
           <Route path="/calendario" element={<CalendarPage />} />
