@@ -6,13 +6,7 @@ import { Button } from '../../../components/common/Button';
 import unstaLogo from '../../../assets/img/UNSTA-logo.png';
 import { useVerifyFirstTime } from '../hooks/useVerifyFirstTime';
 
-type VerifyFirstTimePayload = {
-  token?: string;
-  resetToken?: string;
-  registrationToken?: string;
-  data?: VerifyFirstTimePayload;
-  value?: VerifyFirstTimePayload;
-};
+type VerifyFirstTimePayload = Record<string, unknown>;
 
 const ValidationErrorMessage = ({ message = "DNI incorrecto" }: { message?: string }) => (
   <p className="text-[#E7000B] text-[13px] font-medium mt-1 text-center">
@@ -20,21 +14,47 @@ const ValidationErrorMessage = ({ message = "DNI incorrecto" }: { message?: stri
   </p>
 );
 
-const getInitialPasswordToken = (response: unknown): string => {
-  const payload = response as VerifyFirstTimePayload;
+const tokenKeys = new Set([
+  'token',
+  'resettoken',
+  'registrationtoken',
+  'initialpasswordtoken',
+  'passwordtoken',
+  'setpasswordtoken',
+]);
 
-  return (
-    payload?.token ||
-    payload?.resetToken ||
-    payload?.registrationToken ||
-    payload?.data?.token ||
-    payload?.data?.resetToken ||
-    payload?.data?.registrationToken ||
-    payload?.value?.token ||
-    payload?.value?.resetToken ||
-    payload?.value?.registrationToken ||
-    ''
-  );
+const getInitialPasswordToken = (response: unknown): string => {
+  const visitedObjects = new Set<object>();
+
+  const findToken = (value: unknown): string => {
+    if (!value || typeof value !== 'object') {
+      return '';
+    }
+
+    if (visitedObjects.has(value)) {
+      return '';
+    }
+
+    visitedObjects.add(value);
+
+    for (const [key, entryValue] of Object.entries(value as VerifyFirstTimePayload)) {
+      if (typeof entryValue === 'string' && tokenKeys.has(key.toLowerCase()) && entryValue.trim()) {
+        return entryValue.trim();
+      }
+    }
+
+    for (const entryValue of Object.values(value as VerifyFirstTimePayload)) {
+      const nestedToken = findToken(entryValue);
+
+      if (nestedToken) {
+        return nestedToken;
+      }
+    }
+
+    return '';
+  };
+
+  return findToken(response);
 };
 
 interface DNIValidationFormProps {
@@ -54,18 +74,14 @@ export const DNIValidationForm = ({ onBackClick }: DNIValidationFormProps) => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('[DNIValidationForm] Se oprimió el botón de enviar. Iniciando verificación para el DNI:', formData.dni);
     setSuccessMessage(false);
     setMissingTokenError(false);
 
     try {
       const response = await verifyFirstTime({ dni: formData.dni });
-      console.log('[DNIValidationForm] Respuesta de verificación exitosa:', response);
       const token = getInitialPasswordToken(response);
-      console.log('[DNIValidationForm] Token obtenido:', token);
 
       if (!token) {
-        console.warn('[DNIValidationForm] Advertencia: No se encontró un token en la respuesta.');
         setMissingTokenError(true);
         return;
       }
@@ -73,7 +89,6 @@ export const DNIValidationForm = ({ onBackClick }: DNIValidationFormProps) => {
       setFormData({ dni: '' });
       navigate(`/register?token=${encodeURIComponent(token)}`);
     } catch (err) {
-      console.error('[DNIValidationForm] Error en el flujo de verificación:', err);
       // Error is handled by the hook and will be displayed via the error state
     }
   };

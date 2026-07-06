@@ -5,7 +5,9 @@ import type {
   RegisterRequest,
   VerifyFirstTimeRequest,
   SetInitialPasswordRequest,
-  VerifyFirstTimeResponse
+  VerifyFirstTimeResponse,
+  ForgotPasswordRequest,
+  ForgotPasswordResponse
 } from '../types/auth.dtos';
 
 export const authService = {
@@ -25,6 +27,28 @@ export const authService = {
     return response.data;
   },
 
+  forgotPassword: async (data: ForgotPasswordRequest): Promise<ForgotPasswordResponse> => {
+    const endpoints = [
+      '/Auth/forgot-password',
+      '/auth/forgot-password',
+      '/Auth/request-password-reset',
+      '/auth/request-password-reset',
+      '/Auth/recover-password',
+      '/auth/recover-password',
+    ];
+    let lastError: unknown;
+
+    for (const endpoint of endpoints) {
+      try {
+        const response = await apiClient.post<ForgotPasswordResponse>(endpoint, data);
+        return response.data;
+      } catch (error) {
+        lastError = error;
+      }
+    }
+
+    throw lastError;
+  },
   setInitialPassword: async (data: SetInitialPasswordRequest) => {
     const response = await apiClient.post('/Auth/set-initial-password', data);
     return response.data;

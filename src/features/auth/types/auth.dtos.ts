@@ -28,13 +28,32 @@ export interface VerifyFirstTimeRequest {
 
 export interface VerifyFirstTimeResponse {
   token?: string;
+  resetToken?: string;
+  registrationToken?: string;
+  initialPasswordToken?: string;
+  passwordToken?: string;
   message?: string;
-  data?: { token?: string };
-  value?: { token?: string };
+  data?: VerifyFirstTimeResponse;
+  value?: VerifyFirstTimeResponse;
+  result?: VerifyFirstTimeResponse;
 }
 
 export interface SetInitialPasswordRequest {
   token: string;
   password: string;
   confirmPassword: string;
+}
+export interface ForgotPasswordRequest {
+  dni: string;
+}
+
+export interface ForgotPasswordResponse {
+  token?: string;
+  resetToken?: string;
+  passwordToken?: string;
+  setPasswordToken?: string;
+  message?: string;
+  data?: ForgotPasswordResponse;
+  value?: ForgotPasswordResponse;
+  result?: ForgotPasswordResponse;
 }
