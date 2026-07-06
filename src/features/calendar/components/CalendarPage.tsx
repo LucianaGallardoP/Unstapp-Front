@@ -11,6 +11,24 @@ import type { CalendarEvent, CalendarEventType } from '../types/calendar.types';
 
 const weekDays = ['Lun', 'Mar', 'Mie', 'Jue', 'Vie', 'Sab', 'Dom'];
 
+const formatLocalDate = (date: Date) => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+
+  return `${year}-${month}-${day}`;
+};
+
+const eventMatchesDate = (event: CalendarEvent, dateString: string) => {
+  if (event.startDate.startsWith(dateString)) {
+    return true;
+  }
+
+  const eventDate = new Date(event.startDate);
+
+  return !Number.isNaN(eventDate.getTime()) && formatLocalDate(eventDate) === dateString;
+};
+
 const eventTypeStyles: Record<CalendarEventType, string> = {
   1: 'bg-[#91210e]/15 text-[#91210e]',
   2: 'bg-[#4bedb6]/20 text-[#1d8c57]',
@@ -27,7 +45,7 @@ const eventTypeColors: Record<CalendarEventType, string> = {
 const viewFilterBase = [
   {
     id: 'exams',
-    label: 'Examenes',
+    label: 'Exámenes',
     color: '#91210e',
     count: 0,
   },
@@ -161,7 +179,7 @@ export const CalendarPage = () => {
                 const eventTypesForDay = Array.from(
                   new Set(
                     events
-                      .filter((event) => event.startDate.startsWith(dateString))
+                      .filter((event) => eventMatchesDate(event, dateString))
                       .map((event) => event.type),
                   ),
                 );
@@ -183,7 +201,7 @@ export const CalendarPage = () => {
                             : 'text-gray-200'
                       }`}
                     aria-current={day.isToday ? 'date' : undefined}
-                    aria-label={`Seleccionar dia ${day.dayNumber}`}
+                    aria-label={`Seleccionar día ${day.dayNumber}`}
                   >
                     <span>{day.dayNumber}</span>
                     {eventTypesForDay.length > 0 && (

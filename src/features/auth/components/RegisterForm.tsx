@@ -1,14 +1,27 @@
 import { useState, type ChangeEvent } from 'react';
-import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
+import { useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { Input } from '../../../components/common/Input';
 import { Button } from '../../../components/common/Button';
-import unstaLogo from '../../../assets/img/UNSTA-logo.png'; 
-import { useSetInitialPassword } from '../hooks/useSetInitialPassword'; 
+import unstaLogo from '../../../assets/img/UNSTA-logo.png';
+import { useSetInitialPassword } from '../hooks/useSetInitialPassword';
 import type { LoginResponse } from '../types/auth.dtos';
 
 interface RegisterFormProps {
   onLoginClick?: () => void;
 }
+
+const tokenParamNames = [
+  'token',
+  'Token',
+  'resetToken',
+  'ResetToken',
+  'registrationToken',
+  'RegistrationToken',
+  'passwordToken',
+  'PasswordToken',
+  'setPasswordToken',
+  'SetPasswordToken',
+];
 
 const isLoginResponse = (response: unknown): response is LoginResponse => {
   return Boolean(
@@ -34,14 +47,40 @@ const saveSessionIfPresent = (response: unknown) => {
     localStorage.removeItem('unstapp_user_avatar_url');
   }
 };
+
+const readTokenFromParams = (searchParams: URLSearchParams, hash: string, pathToken?: string) => {
+  for (const name of tokenParamNames) {
+    const value = searchParams.get(name);
+
+    if (value) {
+      return value;
+    }
+  }
+
+  const cleanHash = hash.startsWith('#') ? hash.slice(1) : hash;
+  const hashQuery = cleanHash.includes('?') ? cleanHash.slice(cleanHash.indexOf('?') + 1) : cleanHash;
+  const hashParams = new URLSearchParams(hashQuery);
+
+  for (const name of tokenParamNames) {
+    const value = hashParams.get(name);
+
+    if (value) {
+      return value;
+    }
+  }
+
+  return pathToken ? decodeURIComponent(pathToken) : '';
+};
+
 export const RegisterForm = ({ onLoginClick }: RegisterFormProps) => {
   const [showPassword, setShowPassword] = useState(false);
   const [showRepeatPassword, setShowRepeatPassword] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
   const [searchParams] = useSearchParams();
   const params = useParams<{ token?: string }>();
-  const token = searchParams.get('token') || params.token || '';
+  const token = readTokenFromParams(searchParams, location.hash, params.token);
   const { setInitialPassword, loading, error } = useSetInitialPassword();
   
   const [formData, setFormData] = useState({
@@ -60,7 +99,7 @@ export const RegisterForm = ({ onLoginClick }: RegisterFormProps) => {
       saveSessionIfPresent(response);
       setIsSuccess(true);
     } catch {
-      // El error se maneja y se muestra mediante el hook (error state)
+      // El error se maneja y se muestra mediante el hook.
     }
   };
 
@@ -74,7 +113,6 @@ export const RegisterForm = ({ onLoginClick }: RegisterFormProps) => {
     return (
       <div className="flex flex-col items-center w-full max-w-[400px]">
         <div className="w-full p-10 md:p-12 bg-white border border-gray-200 rounded-[2.5rem] flex flex-col items-center">
-          
           <div className="mb-8 mt-4">
             <svg width="140" height="140" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
               <circle cx="60" cy="60" r="60" fill="#3B82F6"/>
@@ -84,7 +122,7 @@ export const RegisterForm = ({ onLoginClick }: RegisterFormProps) => {
           </div>
 
           <h1 className="text-[2.5rem] font-extrabold text-black text-center leading-tight mb-3">
-            ¡Todo Listo!
+            ¡Todo listo!
           </h1>
           <p className="text-gray-500 text-[16px] text-center mb-10 leading-snug">
             Ya podés empezar a disfrutar de tu experiencia en Unstapp.
@@ -121,11 +159,10 @@ export const RegisterForm = ({ onLoginClick }: RegisterFormProps) => {
           Bienvenido
         </h1>
         <p className="text-gray-500 text-[15px] text-center mb-8 leading-snug">
-          Crea tu cuenta y comienza a formar parte de tu comunidad académica.
+          Creá tu cuenta y comenzá a formar parte de tu comunidad académica.
         </p>
 
         <form className="flex flex-col gap-5" onSubmit={handleSubmit}>
-
           {error && (
             <div className="bg-[#FFF8E6] text-[#B38000] p-4 rounded-xl text-[14.5px] leading-snug font-medium text-center border border-[#FFE5B4]">
               {error}
@@ -134,7 +171,7 @@ export const RegisterForm = ({ onLoginClick }: RegisterFormProps) => {
           
           {!token && !isSuccess && (
             <div className="bg-[#FFF8E6] text-[#B38000] p-4 rounded-xl text-[14.5px] leading-snug font-medium text-center border border-[#FFE5B4]">
-              El enlace de registro no es válido o está incompleto. Asegúrate de abrir el enlace completo que recibiste por correo.
+              El enlace de registro no es válido o está incompleto. Asegurate de abrir el enlace completo que recibiste por correo.
             </div>
           )}
 
@@ -142,9 +179,9 @@ export const RegisterForm = ({ onLoginClick }: RegisterFormProps) => {
             <Input
               label="Contraseña"
               id="password"
-              type={showPassword ? "text" : "password"}
+              type={showPassword ? 'text' : 'password'}
               placeholder="********"
-              className={showPassword ? "placeholder-gray-400" : "placeholder-gray-300 text-lg tracking-widest"}
+              className={showPassword ? 'placeholder-gray-400' : 'placeholder-gray-300 text-lg tracking-widest'}
               value={formData.password} 
               disabled={loading} 
               onChange={(e: ChangeEvent<HTMLInputElement>) => {
@@ -177,9 +214,9 @@ export const RegisterForm = ({ onLoginClick }: RegisterFormProps) => {
             <Input
               label="Repetir contraseña"
               id="repeatPassword"
-              type={showRepeatPassword ? "text" : "password"}
+              type={showRepeatPassword ? 'text' : 'password'}
               placeholder="********"
-              className={showRepeatPassword ? "placeholder-gray-400" : "placeholder-gray-300 text-lg tracking-widest"}
+              className={showRepeatPassword ? 'placeholder-gray-400' : 'placeholder-gray-300 text-lg tracking-widest'}
               value={formData.repeatPassword} 
               disabled={loading} 
               onChange={(e: ChangeEvent<HTMLInputElement>) => {
@@ -229,12 +266,11 @@ export const RegisterForm = ({ onLoginClick }: RegisterFormProps) => {
               </span>
             )}
           </Button>
-
         </form>
       </div>
 
       <div className="text-center mt-6">
-        <span className="text-gray-500 text-[15px]">¿Ya tienes cuenta? </span>
+        <span className="text-gray-500 text-[15px]">¿Ya tenés cuenta? </span>
         <button 
           type="button"
           onClick={(e) => {
@@ -247,7 +283,7 @@ export const RegisterForm = ({ onLoginClick }: RegisterFormProps) => {
           }}
           className="text-[#1E4E9D] font-bold text-[15px] hover:text-[#122b54] hover:underline transition-all"
         >
-          Inicia Sesión
+          Iniciá sesión
         </button>
       </div>
     </div>

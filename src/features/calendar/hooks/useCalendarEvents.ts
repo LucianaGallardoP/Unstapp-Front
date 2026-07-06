@@ -6,25 +6,35 @@ import type {
   CreateCalendarEventPayload,
 } from '../types/calendar.types';
 
-const getMonthRange = (visibleDate: Date) => {
-  const start = new Date(visibleDate.getFullYear(), visibleDate.getMonth(), 1, 0, 0, 0, 0);
-  const end = new Date(visibleDate.getFullYear(), visibleDate.getMonth() + 1, 0, 23, 59, 59, 999);
-
-  return {
-    start: start.toISOString(),
-    end: end.toISOString(),
-  };
-};
-
-const countByType = (events: CalendarEvent[], type: CalendarEventType) =>
-  events.filter((event) => event.type === type).length;
-
 const formatLocalDate = (date: Date) => {
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, '0');
   const day = String(date.getDate()).padStart(2, '0');
 
   return `${year}-${month}-${day}`;
+};
+
+const getMonthRange = (visibleDate: Date) => {
+  const start = new Date(visibleDate.getFullYear(), visibleDate.getMonth(), 1);
+  const end = new Date(visibleDate.getFullYear(), visibleDate.getMonth() + 1, 0);
+
+  return {
+    start: formatLocalDate(start),
+    end: formatLocalDate(end),
+  };
+};
+
+const countByType = (events: CalendarEvent[], type: CalendarEventType) =>
+  events.filter((event) => event.type === type).length;
+
+const eventMatchesDate = (event: CalendarEvent, dateString: string) => {
+  if (event.startDate.startsWith(dateString)) {
+    return true;
+  }
+
+  const eventDate = new Date(event.startDate);
+
+  return !Number.isNaN(eventDate.getTime()) && formatLocalDate(eventDate) === dateString;
 };
 
 export const useCalendarEvents = (visibleDate: Date, selectedDate: Date) => {
@@ -77,22 +87,15 @@ export const useCalendarEvents = (visibleDate: Date, selectedDate: Date) => {
       
       try {
         const formattedDate = formatLocalDate(selectedDate);
-
         const response = await calendarService.getDailyEvents(formattedDate);
 
         if (isMounted) {
-          // Confiamos en el filtro del backend (que ya recibe el parámetro date).
-          // Filtrar localmente con new Date() puede causar bugs de zona horaria 
-          // si los eventos vienen en formato UTC de medianoche.
           setDailyEvents(response);
         }
       } catch {
         if (isMounted) {
-          // Fallback en caso de error: filtramos localmente los eventos mensuales.
-          // Comparamos el string YYYY-MM-DD directamente para evitar que el navegador cambie de día por la zona horaria.
           const dateString = formatLocalDate(selectedDate);
-          
-          setDailyEvents(events.filter((event) => event.startDate.startsWith(dateString)));
+          setDailyEvents(events.filter((event) => eventMatchesDate(event, dateString)));
         }
       } finally {
         if (isMounted) {
@@ -128,7 +131,7 @@ export const useCalendarEvents = (visibleDate: Date, selectedDate: Date) => {
 
       setEvents((currentEvents) => [...currentEvents, createdEvent]);
 
-      if (createdEvent.startDate.startsWith(selectedDateString)) {
+      if (eventMatchesDate(createdEvent, selectedDateString)) {
         setDailyEvents((currentEvents) => [...currentEvents, createdEvent]);
       }
 

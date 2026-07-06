@@ -44,17 +44,51 @@ const unwrapEvent = (apiEvent: unknown) => {
   return asRecord(root.data ?? root.value ?? root.event ?? root.item ?? root);
 };
 
+const unwrapEvents = (data: unknown): unknown[] => {
+  if (Array.isArray(data)) {
+    return data;
+  }
+
+  const record = asRecord(data);
+  const possibleCollections = [
+    record.events,
+    record.calendarEvents,
+    record.items,
+    record.value,
+    record.data,
+    record.result,
+  ];
+
+  for (const collection of possibleCollections) {
+    if (Array.isArray(collection)) {
+      return collection;
+    }
+  }
+
+  return [];
+};
+
 const mapEventFromApi = (apiEvent: unknown): CalendarEvent => {
   const event = unwrapEvent(apiEvent);
-  const id = event.id ?? event.eventId ?? crypto.randomUUID();
+  const id = event.id ?? event.eventId ?? event.calendarEventId ?? crypto.randomUUID();
+  const startDate =
+    asString(event.startDate) ||
+    asString(event.StartDate) ||
+    asString(event.start) ||
+    asString(event.date) ||
+    new Date().toISOString();
 
   return {
     id: typeof id === 'number' || typeof id === 'string' ? id : crypto.randomUUID(),
-    title: asString(event.title, 'Evento sin titulo'),
-    description: asString(event.description),
+    title: asString(event.title) || asString(event.Title, 'Evento sin título'),
+    description: asString(event.description) || asString(event.Description),
     type: asEventType(
       event.type ??
       event.Type ??
+      event.typeId ??
+      event.TypeId ??
+      event.eventTypeId ??
+      event.EventTypeId ??
       event.eventType ??
       event.EventType ??
       event.calendarEventType ??
@@ -62,16 +96,25 @@ const mapEventFromApi = (apiEvent: unknown): CalendarEvent => {
       event.categoryType ??
       event.CategoryType,
     ),
-    startDate:
-      asString(event.startDate) ||
-      asString(event.start) ||
-      asString(event.date) ||
-      new Date().toISOString(),
+    startDate,
     endDate:
       asString(event.endDate) ||
+      asString(event.EndDate) ||
       asString(event.end) ||
-      asString(event.startDate) ||
-      new Date().toISOString(),
+      startDate,
+  };
+};
+
+const mapCreatedEvent = (data: unknown, payload: CreateCalendarEventPayload): CalendarEvent => {
+  const event = mapEventFromApi(data);
+
+  return {
+    ...event,
+    title: event.title || payload.title,
+    description: event.description || payload.description,
+    type: event.type === 3 && payload.type !== 3 ? payload.type : event.type,
+    startDate: event.startDate || payload.startDate,
+    endDate: event.endDate || payload.endDate,
   };
 };
 
@@ -81,19 +124,25 @@ export const calendarService = {
       params: { start, end },
       headers: getAuthHeaders(),
     });
-    const data = response.data;
-    const events = Array.isArray(data) 
-      ? data 
-      : asRecord(data).events ?? asRecord(data).items ?? asRecord(data).value ?? asRecord(data).data;
 
-    return Array.isArray(events) ? events.map(mapEventFromApi) : [];
+    return unwrapEvents(response.data).map(mapEventFromApi);
+  },
+
+  getTodayEvents: async (): Promise<CalendarEvent[]> => {
+    const response = await apiClient.get<unknown>('/calendar/daily', {
+      headers: getAuthHeaders(),
+    });
+
+    return unwrapEvents(response.data).map(mapEventFromApi);
   },
 
   getDailyEvents: async (date: string): Promise<CalendarEvent[]> => {
-    const start = new Date(`${date}T00:00:00`);
-    const end = new Date(`${date}T23:59:59.999`);
+    const response = await apiClient.get<unknown>('/calendar/day', {
+      params: { date },
+      headers: getAuthHeaders(),
+    });
 
-    return calendarService.getEvents(start.toISOString(), end.toISOString());
+    return unwrapEvents(response.data).map(mapEventFromApi);
   },
 
   createEvent: async (payload: CreateCalendarEventPayload): Promise<CalendarEvent> => {
@@ -101,18 +150,14 @@ export const calendarService = {
       title: payload.title,
       description: payload.description,
       type: payload.type,
-      Type: payload.type,
       startDate: payload.startDate,
       endDate: payload.endDate,
     };
+
     const response = await apiClient.post<unknown>('/calendar/events', requestPayload, {
       headers: getAuthHeaders(),
     });
-    const createdEvent = mapEventFromApi(response.data);
 
-    return {
-      ...createdEvent,
-      type: createdEvent.type === 3 && payload.type !== 3 ? payload.type : createdEvent.type,
-    };
+    return mapCreatedEvent(response.data || requestPayload, payload);
   },
 };
