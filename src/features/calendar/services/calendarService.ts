@@ -28,11 +28,27 @@ const asNumber = (value: unknown) =>
       ? Number(value)
       : undefined;
 
+const normalizeText = (value: string) =>
+  value
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .trim()
+    .toLowerCase();
+
 const asEventType = (value: unknown): CalendarEventType => {
   const numericValue = asNumber(value);
 
   if (numericValue && [1, 2, 3, 4].includes(numericValue)) {
     return numericValue as CalendarEventType;
+  }
+
+  if (typeof value === 'string') {
+    const normalizedValue = normalizeText(value);
+
+    if (normalizedValue.includes('examen')) return 1;
+    if (normalizedValue.includes('clase')) return 2;
+    if (normalizedValue.includes('feriado')) return 4;
+    if (normalizedValue.includes('evento')) return 3;
   }
 
   return 3;
@@ -68,16 +84,39 @@ const unwrapEvents = (data: unknown): unknown[] => {
   return [];
 };
 
+const buildDateTime = (day: string, time: string) => {
+  if (!day) return '';
+
+  if (!time) {
+    return day;
+  }
+
+  return `${day}T${time.length === 5 ? `${time}:00` : time}`;
+};
+
+const getEventDay = (event: ApiRecord) =>
+  asString(event.day) ||
+  asString(event.Day) ||
+  asString(event.date) ||
+  asString(event.Date);
+
 const getEventStartDate = (event: ApiRecord) =>
   asString(event.startDate) ||
   asString(event.StartDate) ||
   asString(event.start) ||
-  asString(event.date);
+  buildDateTime(
+    getEventDay(event),
+    asString(event.startTime) || asString(event.StartTime),
+  );
 
 const getEventEndDate = (event: ApiRecord, fallback: string) =>
   asString(event.endDate) ||
   asString(event.EndDate) ||
   asString(event.end) ||
+  buildDateTime(
+    getEventDay(event),
+    asString(event.endTime) || asString(event.EndTime),
+  ) ||
   fallback;
 
 const mapEventFromApi = (apiEvent: unknown): CalendarEvent => {

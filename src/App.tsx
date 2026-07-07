@@ -8,6 +8,35 @@ import { NotFoundPage } from './pages/NotFoundPage';
 import { NotificationsProvider } from './store/notificationsContext';
 import { AuthProvider } from './store/authContext';
 
+const passwordRoutes = [
+  '/register',
+  '/register/:token',
+  '/set-password',
+  '/set-password/:token',
+  '/reset-password',
+  '/reset-password/:token',
+  '/crear-clave',
+  '/crear-clave/:token',
+  '/crear-contrasena',
+  '/crear-contrasena/:token',
+  '/crear-contraseña',
+  '/crear-contraseña/:token',
+  '/restablecer-clave',
+  '/restablecer-clave/:token',
+  '/restablecer-contrasena',
+  '/restablecer-contrasena/:token',
+  '/restablecer-contraseña',
+  '/restablecer-contraseña/:token',
+  '/cambiar-clave',
+  '/cambiar-clave/:token',
+  '/cambiar-contrasena',
+  '/cambiar-contrasena/:token',
+  '/cambiar-contraseña',
+  '/cambiar-contraseña/:token',
+  '/auth/set-initial-password',
+  '/Auth/set-initial-password',
+];
+
 function App() {
   return (
     <NotificationsProvider>
@@ -16,21 +45,10 @@ function App() {
           <Routes>
             <Route path="/" element={<Navigate to="/login" replace />} />
             <Route path="/login" element={<LoginPage />} />
-            <Route path="/register" element={<RegisterPage />} />
-            <Route path="/register/:token" element={<RegisterPage />} />
             <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-            <Route path="/set-password" element={<RegisterPage />} />
-            <Route path="/set-password/:token" element={<RegisterPage />} />
-            <Route path="/reset-password" element={<RegisterPage />} />
-            <Route path="/reset-password/:token" element={<RegisterPage />} />
-            <Route path="/crear-contrasena" element={<RegisterPage />} />
-            <Route path="/crear-contrasena/:token" element={<RegisterPage />} />
-            <Route path="/crear-contraseña" element={<RegisterPage />} />
-            <Route path="/crear-contraseña/:token" element={<RegisterPage />} />
-            <Route path="/crear-clave" element={<RegisterPage />} />
-            <Route path="/crear-clave/:token" element={<RegisterPage />} />
-            <Route path="/auth/set-initial-password" element={<RegisterPage />} />
-            <Route path="/Auth/set-initial-password" element={<RegisterPage />} />
+            {passwordRoutes.map((path) => (
+              <Route key={path} path={path} element={<RegisterPage />} />
+            ))}
             <Route path="/feed" element={<FeedPage />} />
             <Route path="/calendario" element={<CalendarPage />} />
             <Route path="/horario" element={<ScheduleEntryPage />} />

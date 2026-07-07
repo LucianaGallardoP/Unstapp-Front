@@ -23,6 +23,8 @@ const tokenParamNames = [
   'SetPasswordToken',
 ];
 
+const normalizeToken = (value: string) => value.trim().replace(/ /g, '+');
+
 const isLoginResponse = (response: unknown): response is LoginResponse => {
   return Boolean(
     response &&
@@ -53,7 +55,7 @@ const readTokenFromParams = (searchParams: URLSearchParams, hash: string, pathTo
     const value = searchParams.get(name);
 
     if (value) {
-      return value;
+      return normalizeToken(value);
     }
   }
 
@@ -65,11 +67,11 @@ const readTokenFromParams = (searchParams: URLSearchParams, hash: string, pathTo
     const value = hashParams.get(name);
 
     if (value) {
-      return value;
+      return normalizeToken(value);
     }
   }
 
-  return pathToken ? decodeURIComponent(pathToken) : '';
+  return pathToken ? normalizeToken(decodeURIComponent(pathToken)) : '';
 };
 
 export const RegisterForm = ({ onLoginClick }: RegisterFormProps) => {
@@ -82,14 +84,40 @@ export const RegisterForm = ({ onLoginClick }: RegisterFormProps) => {
   const params = useParams<{ token?: string }>();
   const token = readTokenFromParams(searchParams, location.hash, params.token);
   const { setInitialPassword, loading, error } = useSetInitialPassword();
+  const [localError, setLocalError] = useState<string | null>(null);
   
   const [formData, setFormData] = useState({
     password: '',
     repeatPassword: ''
   });
 
+  const passwordsDoNotMatch = Boolean(
+    formData.password &&
+    formData.repeatPassword &&
+    formData.password !== formData.repeatPassword,
+  );
+
+  const isFormValid = Boolean(
+    formData.password &&
+    formData.repeatPassword &&
+    formData.password === formData.repeatPassword &&
+    token,
+  );
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setLocalError(null);
+
+    if (!token) {
+      setLocalError('El enlace no tiene token. Abrí nuevamente el enlace completo que recibiste por correo.');
+      return;
+    }
+
+    if (formData.password !== formData.repeatPassword) {
+      setLocalError('Las contraseñas no coinciden.');
+      return;
+    }
+
     try {
       const response = await setInitialPassword({
         token,
@@ -102,12 +130,6 @@ export const RegisterForm = ({ onLoginClick }: RegisterFormProps) => {
       // El error se maneja y se muestra mediante el hook.
     }
   };
-
-  const isFormValid = 
-    formData.password && 
-    formData.repeatPassword &&
-    formData.password === formData.repeatPassword &&
-    token;
 
   if (isSuccess) {
     return (
@@ -132,9 +154,7 @@ export const RegisterForm = ({ onLoginClick }: RegisterFormProps) => {
             type="button" 
             fullWidth 
             className="hover:bg-[#122b54] py-3.5 mt-4" 
-            onClick={() => {
-              navigate('/feed');
-            }}
+            onClick={() => navigate('/feed')}
           > 
             <span className="flex items-center justify-center gap-2 w-full text-[16px]">
               Comenzar
@@ -156,16 +176,16 @@ export const RegisterForm = ({ onLoginClick }: RegisterFormProps) => {
           <img src={unstaLogo} alt="Logo UNSTA" className="w-20 h-20 object-contain" />
         </div>
         <h1 className="text-[2.5rem] font-bold text-black text-center leading-tight mb-2">
-          Bienvenido
+          Crear contraseña
         </h1>
         <p className="text-gray-500 text-[15px] text-center mb-8 leading-snug">
-          Creá tu cuenta y comenzá a formar parte de tu comunidad académica.
+          Ingresá y confirmá tu nueva contraseña para acceder a Unstapp.
         </p>
 
         <form className="flex flex-col gap-5" onSubmit={handleSubmit}>
-          {error && (
+          {(error || localError) && (
             <div className="bg-[#FFF8E6] text-[#B38000] p-4 rounded-xl text-[14.5px] leading-snug font-medium text-center border border-[#FFE5B4]">
-              {error}
+              {localError || error}
             </div>
           )}
           
@@ -185,6 +205,7 @@ export const RegisterForm = ({ onLoginClick }: RegisterFormProps) => {
               value={formData.password} 
               disabled={loading} 
               onChange={(e: ChangeEvent<HTMLInputElement>) => {
+                setLocalError(null);
                 setFormData({ ...formData, password: e.target.value });
               }}
               suffix={
@@ -193,6 +214,7 @@ export const RegisterForm = ({ onLoginClick }: RegisterFormProps) => {
                   onClick={() => setShowPassword(!showPassword)}
                   className="text-[#1E4E9D] hover:text-[#122b54] focus:outline-none"
                   disabled={loading}
+                  aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
                 >
                   {showPassword ? (
                     <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -220,6 +242,7 @@ export const RegisterForm = ({ onLoginClick }: RegisterFormProps) => {
               value={formData.repeatPassword} 
               disabled={loading} 
               onChange={(e: ChangeEvent<HTMLInputElement>) => {
+                setLocalError(null);
                 setFormData({ ...formData, repeatPassword: e.target.value });
               }}
               suffix={
@@ -228,6 +251,7 @@ export const RegisterForm = ({ onLoginClick }: RegisterFormProps) => {
                   onClick={() => setShowRepeatPassword(!showRepeatPassword)}
                   className="text-[#1E4E9D] hover:text-[#122b54] focus:outline-none"
                   disabled={loading}
+                  aria-label={showRepeatPassword ? 'Ocultar contraseña repetida' : 'Mostrar contraseña repetida'}
                 >
                   {showRepeatPassword ? (
                     <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -243,6 +267,11 @@ export const RegisterForm = ({ onLoginClick }: RegisterFormProps) => {
                 </button>
               }
             />
+            {passwordsDoNotMatch && (
+              <p className="mt-2 text-center text-[13px] font-medium text-[#E7000B]">
+                Las contraseñas no coinciden.
+              </p>
+            )}
           </div>
 
           <Button 
@@ -253,12 +282,12 @@ export const RegisterForm = ({ onLoginClick }: RegisterFormProps) => {
           > 
             {loading ? (
               <span className="flex items-center gap-2">
-                Registrando...
+                Guardando...
                 <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
               </span>
             ) : (
               <span className="flex items-center gap-2">
-                Registrarse
+                Guardar contraseña
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                   <line x1="5" y1="12" x2="19" y2="12"></line>
                   <polyline points="12 5 19 12 12 19"></polyline>
