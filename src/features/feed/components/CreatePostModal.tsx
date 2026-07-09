@@ -1,6 +1,7 @@
 import { ImagePlus, LoaderCircle, Trash2, UserRound, X } from 'lucide-react';
 import { useEffect, useRef, useState, type ChangeEvent } from 'react';
 import { profileService } from '../../profile/services/profileService';
+import { AxiosError } from 'axios';
 
 interface CreatePostModalProps {
   isOpen: boolean;
@@ -110,8 +111,12 @@ export const CreatePostModal = ({ isOpen, onClose, onPublish }: CreatePostModalP
       setContent('');
       clearSelectedFile();
       onClose();
-    } catch {
-      setPublishError('No se pudo publicar. Intentalo nuevamente.');
+    } catch (error) {
+      if (error instanceof AxiosError && error.response?.status === 400) {
+        setPublishError('Tu publicación fue rechazada por nuestro filtro automatizado debido a contenido inapropiado.');
+      } else {
+        setPublishError('No se pudo publicar. Intentalo nuevamente.');
+      }
     } finally {
       setIsPublishing(false);
     }
