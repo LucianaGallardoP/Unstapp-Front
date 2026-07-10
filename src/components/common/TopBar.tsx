@@ -14,6 +14,7 @@ import { formatRelativeTime } from '../../features/feed/utils/formatRelativeTime
 import { GlobalSearch } from '../../features/search';
 import { searchService } from '../../features/search/services/searchService';
 import { useNotifications, type NotificationType } from '../../store/notificationsContext';
+import { useTheme } from '../../store/themeContext';
 
 interface TopBarProps {
   simple?: boolean;
@@ -70,7 +71,7 @@ const resolveProfileIdByActorName = async (actorName: string) => {
 };
 
 export const TopBar = ({ simple = false }: TopBarProps) => {
-  const [isMoonIcon, setIsMoonIcon] = useState(true);
+  const { isDarkMode, toggleTheme } = useTheme();
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const [currentDate, setCurrentDate] = useState(() => new Date());
   const navigate = useNavigate();
@@ -183,11 +184,15 @@ export const TopBar = ({ simple = false }: TopBarProps) => {
         <div className="flex flex-1 justify-end gap-1">
           <button
             type="button"
-            onClick={() => setIsMoonIcon(!isMoonIcon)}
-            className="flex h-10 w-10 items-center justify-center text-[#526174] transition-colors hover:text-[#1F2937]"
-            aria-label="Cambiar tema"
+            onClick={toggleTheme}
+            className="flex h-10 min-w-10 items-center justify-center gap-1.5 rounded-full px-2 text-[#526174] transition-colors hover:bg-[#EFF6FF] hover:text-[#1F2937]"
+            aria-label={isDarkMode ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'}
+            title={isDarkMode ? 'Modo oscuro seleccionado' : 'Modo claro seleccionado'}
           >
-            {isMoonIcon ? <Moon size={20} /> : <Sun size={20} />}
+            {isDarkMode ? <Sun size={20} /> : <Moon size={20} />}
+            <span className="hidden text-[10px] font-black uppercase sm:inline">
+              {isDarkMode ? 'Oscuro' : 'Claro'}
+            </span>
           </button>
 
           {!simple && (
