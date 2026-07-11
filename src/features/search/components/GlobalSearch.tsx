@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useSearch } from '../hooks/useSearch';
 import { Search, Loader2, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { RoleAvatar } from '../../../components/common/RoleAvatar';
 
 export const GlobalSearch = () => {
   const { query, setQuery, results, isLoading, hasSearched } = useSearch();
@@ -73,6 +74,7 @@ export const GlobalSearch = () => {
                     : 'Usuario Desconocido';
                   const avatar = user.avatarUrl || user.avatar || user.profilePicture;
                   const userId = user.id || user.userId;
+                  const role = user.role || user.roles?.[0];
 
                   return (
                     <li key={`user-${userId || index}`} className="list-none">
@@ -82,13 +84,13 @@ export const GlobalSearch = () => {
                         disabled={!userId}
                         className="flex w-full cursor-pointer items-center gap-3 rounded-lg p-3 text-left transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-60"
                       >
-                      <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-white text-xs font-bold overflow-hidden shrink-0">
-                        {avatar ? (
-                          <img src={avatar} alt={displayName} className="w-full h-full object-cover" />
-                        ) : (
-                          displayName.charAt(0).toUpperCase()
-                        )}
-                      </div>
+                      <RoleAvatar
+                        avatarUrl={avatar}
+                        name={displayName}
+                        role={role}
+                        className="h-8 w-8"
+                        iconClassName="h-5 w-5"
+                      />
                       <div>
                         <p className="text-sm font-medium text-gray-900">{displayName}</p>
                       </div>

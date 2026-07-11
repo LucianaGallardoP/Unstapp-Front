@@ -11,6 +11,7 @@ export interface SearchUserDTO {
   avatar?: string | null;
   profilePicture?: string | null;
   role?: string;
+  roles?: string[];
 }
 
 export interface SearchPostDTO {

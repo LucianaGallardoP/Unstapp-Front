@@ -14,6 +14,7 @@ import { usePostInteractions } from '../../features/feed/hooks/usePostInteractio
 import type { Post, PostCategory } from '../../features/feed/types/post.types';
 import { formatRelativeTime } from '../../features/feed/utils/formatRelativeTime';
 import { CommentItem } from './CommentItem';
+import { RoleAvatar } from './RoleAvatar';
 
 interface PostCardProps {
   post: Post;
@@ -34,22 +35,12 @@ const categoryStyles: Record<PostCategory, string> = {
   alumno: 'bg-[#FF751F] text-white',
 };
 
-const authorIconStyles: Record<PostCategory, string> = {
-  administrativo: 'bg-[#E7000B]/10 text-[#E7000B]',
-  carrera: 'bg-[#9810FA]/10 text-[#9810FA]',
-  bar: 'bg-[#155DFC]/10 text-[#155DFC]',
-  alumno: 'bg-[#FF751F]/10 text-[#FF751F]',
-};
-
 const categoryLabels: Record<PostCategory, string> = {
   administrativo: 'ADMINISTRATIVO',
   carrera: 'CARRERA',
   bar: 'BAR',
   alumno: 'ALUMNO',
 };
-
-const defaultProfileAvatar =
-  'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 96 96%22%3E%3Crect width=%2296%22 height=%2296%22 rx=%2248%22 fill=%22%23EFF6FF%22/%3E%3Ccircle cx=%2248%22 cy=%2237%22 r=%2215%22 fill=%22none%22 stroke=%22%231E4E9D%22 stroke-width=%226%22/%3E%3Cpath d=%22M25 78c3-16 15-25 23-25s20 9 23 25%22 fill=%22none%22 stroke=%22%231E4E9D%22 stroke-width=%226%22 stroke-linecap=%22round%22/%3E%3C/svg%3E';
 
 const getCurrentUserId = () => localStorage.getItem('unstapp_user_id');
 
@@ -201,13 +192,15 @@ export const PostCard = ({
             type="button"
             onClick={handleOpenAuthorProfile}
             disabled={!canOpenAuthorProfile}
-            className={`flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full sm:h-11 sm:w-11 ${authorIconStyles[post.category]}`}
+            className="rounded-full disabled:cursor-default"
             aria-label={`Ver perfil de ${post.author.name}`}
           >
-            <img
-              src={post.author.avatarUrl || defaultProfileAvatar}
-              alt={`Foto de ${post.author.name}`}
-              className="h-full w-full object-cover"
+            <RoleAvatar
+              avatarUrl={post.author.avatarUrl}
+              name={post.author.name}
+              role={post.author.role}
+              className="h-10 w-10 sm:h-11 sm:w-11"
+              iconClassName="h-6 w-6"
             />
           </button>
         )}

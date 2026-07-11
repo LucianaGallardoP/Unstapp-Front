@@ -15,6 +15,7 @@ import { GlobalSearch } from '../../features/search';
 import { searchService } from '../../features/search/services/searchService';
 import { useNotifications, type NotificationType } from '../../store/notificationsContext';
 import { useTheme } from '../../store/themeContext';
+import { RoleAvatar } from './RoleAvatar';
 
 interface TopBarProps {
   simple?: boolean;
@@ -36,13 +37,6 @@ const notificationIcons = {
   interaction: MessageCircle,
   followedPost: Megaphone,
   institutional: Megaphone,
-};
-
-const getInitials = (name: string) => {
-  const parts = name.trim().split(/\s+/).filter(Boolean);
-  const initials = parts.slice(0, 2).map((part) => part[0]).join('');
-
-  return initials.toUpperCase() || 'U';
 };
 
 const normalizeSearchText = (value: string) =>
@@ -219,7 +213,7 @@ export const TopBar = ({ simple = false }: TopBarProps) => {
                   onClick={() => setIsNotificationsOpen(false)}
                 >
                   <section
-                    className="fixed right-2 top-14 w-[calc(100vw-16px)] max-w-[360px] rounded-b-[14px] rounded-t-[22px] bg-white px-3 pb-3 pt-4 shadow-[0_14px_34px_rgba(15,23,42,0.28)] sm:right-[calc((100vw-560px)/2+12px)] sm:max-w-[390px] sm:px-4 md:right-[calc((100vw-672px)/2+12px)] md:top-16 md:max-w-[460px] lg:right-[calc((100vw-768px)/2+12px)]"
+                    className="notifications-panel fixed right-2 top-14 w-[calc(100vw-16px)] max-w-[360px] rounded-b-[14px] rounded-t-[22px] bg-white px-3 pb-3 pt-4 shadow-[0_14px_34px_rgba(15,23,42,0.28)] sm:right-[calc((100vw-560px)/2+12px)] sm:max-w-[390px] sm:px-4 md:right-[calc((100vw-672px)/2+12px)] md:top-16 md:max-w-[460px] lg:right-[calc((100vw-768px)/2+12px)]"
                     aria-label="Notificaciones"
                     onClick={(event) => event.stopPropagation()}
                   >
@@ -268,28 +262,33 @@ export const TopBar = ({ simple = false }: TopBarProps) => {
                           <article
                             key={notification.id}
                             onClick={() => handleNotificationClick(notification)}
-                            className={`flex min-h-[58px] items-start justify-between gap-3 rounded-[8px] border px-3 py-2 shadow-[0_4px_10px_rgba(15,23,42,0.08)] ${
+                            className={`notification-card flex min-h-[58px] items-start justify-between gap-3 rounded-[8px] border px-3 py-2 shadow-[0_4px_10px_rgba(15,23,42,0.08)] ${
                               notification.read
                                 ? 'border-transparent bg-[#EFF6FF]/55'
                                 : notificationTypeStyles[notification.type]
                             } ${notification.postId ? 'cursor-pointer' : ''}`}
                           >
                           {notification.avatarUrl ? (
-                            <img
-                              src={notification.avatarUrl}
-                              alt={`Foto de ${notification.actor}`}
-                              className="mt-0.5 h-9 w-9 shrink-0 rounded-full object-cover"
+                            <RoleAvatar
+                              avatarUrl={notification.avatarUrl}
+                              name={notification.actor}
+                              role={notification.actorRole}
+                              className="mt-0.5 h-9 w-9"
+                              iconClassName="h-5 w-5"
+                            />
+                          ) : notification.type !== 'institutional' ? (
+                            <RoleAvatar
+                              name={notification.actor}
+                              role={notification.actorRole}
+                              className="mt-0.5 h-9 w-9"
+                              iconClassName="h-5 w-5"
                             />
                           ) : (
                             <div
                               className={`mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-[12px] font-black ${notificationIconStyles[notification.type]}`}
                               aria-label={`Avatar de ${notification.actor}`}
                             >
-                              {notification.type === 'institutional' ? (
-                                <NotificationIcon size={17} />
-                              ) : (
-                                getInitials(notification.actor)
-                              )}
+                              <NotificationIcon size={17} />
                             </div>
                           )}
 

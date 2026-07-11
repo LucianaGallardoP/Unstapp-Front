@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import type { ProfileResponseDTO, ProfileStatsDTO } from '../types/profile.dtos';
+import { RoleAvatar } from '../../../components/common/RoleAvatar';
 
 const formatCompactNumber = (value: string | number) => {
   const numericValue = typeof value === 'number' ? value : Number(value);
@@ -122,18 +123,14 @@ export const ProfileCard = ({
       </div>
 
       <div className="px-5 flex items-end justify-between -mt-10 mb-3 sm:-mt-12 sm:mb-4">
-        <div className="relative flex items-center justify-center h-[84px] w-[84px] shrink-0 rounded-[18px] border-[3px] border-white bg-gray-300 shadow-sm sm:h-[100px] sm:w-[100px] overflow-hidden">
-          {profile.avatarUrl ? (
-            <img
-              src={profile.avatarUrl}
-              alt={profile.fullName}
-              className="h-full w-full object-cover"
-            />
-          ) : (
-            <span className="text-3xl font-black text-gray-500">
-              {profile.fullName.charAt(0)}
-            </span>
-          )}
+        <div className="relative shrink-0 rounded-[18px] border-[3px] border-white shadow-sm">
+          <RoleAvatar
+            avatarUrl={profile.avatarUrl}
+            name={profile.fullName}
+            role={roleLabel}
+            className="h-[84px] w-[84px] rounded-[15px] sm:h-[100px] sm:w-[100px]"
+            iconClassName="h-11 w-11 sm:h-12 sm:w-12"
+          />
         </div>
 
         {profile.isOwnProfile ? (

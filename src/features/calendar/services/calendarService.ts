@@ -224,4 +224,10 @@ export const calendarService = {
 
     return mapCreatedEvent(response.data || requestPayload, payload);
   },
+
+  deleteEvent: async (eventId: number | string): Promise<void> => {
+    await apiClient.delete(`/calendar/events/${eventId}`, {
+      headers: getAuthHeaders(),
+    });
+  },
 };

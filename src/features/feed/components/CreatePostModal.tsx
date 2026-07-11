@@ -1,7 +1,8 @@
-import { ImagePlus, LoaderCircle, Trash2, UserRound, X } from 'lucide-react';
+import { ImagePlus, LoaderCircle, Trash2, X } from 'lucide-react';
 import { useEffect, useRef, useState, type ChangeEvent } from 'react';
 import { profileService } from '../../profile/services/profileService';
 import { AxiosError } from 'axios';
+import { RoleAvatar } from '../../../components/common/RoleAvatar';
 
 interface CreatePostModalProps {
   isOpen: boolean;
@@ -20,6 +21,16 @@ export const CreatePostModal = ({ isOpen, onClose, onPublish }: CreatePostModalP
   const trimmedContent = content.trim();
   const isVideo = selectedFile?.type.startsWith('video/');
   const currentUserAvatarUrl = profileAvatarUrl || localStorage.getItem('unstapp_user_avatar_url');
+  const currentUserName = localStorage.getItem('unstapp_user_name') || 'Usuario actual';
+  const currentUserRole = (() => {
+    try {
+      const roles = JSON.parse(localStorage.getItem('unstapp_user_roles') ?? '[]');
+
+      return Array.isArray(roles) ? roles[0] : undefined;
+    } catch {
+      return undefined;
+    }
+  })();
 
   // Carga la foto real del usuario si la sesion local no la tiene todavia.
   useEffect(() => {
@@ -147,20 +158,13 @@ export const CreatePostModal = ({ isOpen, onClose, onPublish }: CreatePostModalP
         </header>
 
         <div className="mt-3 flex gap-3 min-[360px]:gap-4 md:mt-4 md:gap-5">
-          <div
-            className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-full bg-[#EFF6FF] text-[#1E4E9D] min-[360px]:h-12 min-[360px]:w-12 md:h-14 md:w-14"
-            aria-label="Foto del usuario actual"
-          >
-            {currentUserAvatarUrl ? (
-              <img
-                src={currentUserAvatarUrl}
-                alt="Foto del usuario actual"
-                className="h-full w-full object-cover"
-              />
-            ) : (
-              <UserRound className="h-5 w-5 md:h-6 md:w-6" strokeWidth={2.2} />
-            )}
-          </div>
+          <RoleAvatar
+            avatarUrl={currentUserAvatarUrl}
+            name={currentUserName}
+            role={currentUserRole}
+            className="h-11 w-11 min-[360px]:h-12 min-[360px]:w-12 md:h-14 md:w-14"
+            iconClassName="h-5 w-5 md:h-6 md:w-6"
+          />
 
           <div className="flex-1 relative">
             <textarea

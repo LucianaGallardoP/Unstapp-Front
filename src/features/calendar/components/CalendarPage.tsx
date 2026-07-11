@@ -85,6 +85,8 @@ export const CalendarPage = () => {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isDailyEventsModalOpen, setIsDailyEventsModalOpen] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
+  const [eventToDelete, setEventToDelete] = useState<CalendarEvent | null>(null);
+  const [isDeletingEvent, setIsDeletingEvent] = useState(false);
   const {
     calendarDays,
     monthTitle,
@@ -104,6 +106,7 @@ export const CalendarPage = () => {
     isCreating,
     error: eventsError,
     createEvent,
+    deleteEvent,
   } = useCalendarEvents(visibleDate, selectedDate);
   const isAlumno = (() => {
     try {
@@ -120,6 +123,26 @@ export const CalendarPage = () => {
     count: monthlyCounters[filter.id],
   }));
   const previewEvents: CalendarEvent[] = selectedDayEvents.slice(0, 3);
+
+  const handleDeleteEvent = async (event: CalendarEvent) => {
+    setEventToDelete(event);
+  };
+
+  const confirmDeleteEvent = async () => {
+    if (!eventToDelete) {
+      return;
+    }
+
+    setIsDeletingEvent(true);
+
+    try {
+      await deleteEvent(eventToDelete.id);
+      setSelectedEvent(null);
+      setEventToDelete(null);
+    } finally {
+      setIsDeletingEvent(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-white pb-20 text-gray-900 md:bg-gray-50">
@@ -363,8 +386,47 @@ export const CalendarPage = () => {
       {selectedEvent && (
         <EventDetailModal
           event={selectedEvent}
+          isDeleting={isDeletingEvent}
           onClose={() => setSelectedEvent(null)}
+          onDelete={!isAlumno ? handleDeleteEvent : undefined}
         />
+      )}
+      {eventToDelete && (
+        <div
+          className="fixed inset-0 z-[80] flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm"
+          onClick={() => !isDeletingEvent && setEventToDelete(null)}
+        >
+          <section
+            className="w-full max-w-[340px] rounded-2xl bg-white p-5 text-center shadow-[0_18px_45px_rgba(15,23,42,0.28)]"
+            onClick={(modalEvent) => modalEvent.stopPropagation()}
+            aria-label="Confirmar eliminación de evento"
+          >
+            <h2 className="text-[18px] font-black text-[#1F2937]">
+              ¿Eliminar evento?
+            </h2>
+            <p className="mt-2 text-[13px] font-semibold leading-5 text-gray-600">
+              Esta acción quitará el evento <span className="font-black">{eventToDelete.title}</span> del calendario.
+            </p>
+            <div className="mt-5 flex gap-2">
+              <button
+                type="button"
+                onClick={() => setEventToDelete(null)}
+                disabled={isDeletingEvent}
+                className="flex-1 rounded-xl px-4 py-2 text-[12px] font-bold text-gray-500 transition-colors hover:bg-gray-100 disabled:opacity-60"
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                onClick={confirmDeleteEvent}
+                disabled={isDeletingEvent}
+                className="flex-1 rounded-xl bg-[#E7000B] px-4 py-2 text-[12px] font-bold text-white transition-colors hover:bg-[#b80009] disabled:bg-gray-300"
+              >
+                {isDeletingEvent ? 'Eliminando...' : 'Eliminar'}
+              </button>
+            </div>
+          </section>
+        </div>
       )}
     </div>
   );

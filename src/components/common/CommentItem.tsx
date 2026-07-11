@@ -6,8 +6,9 @@ import {
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { searchService } from '../../features/search/services/searchService';
-import type { PostAuthorRole, PostComment } from '../../features/feed/types/post.types';
+import type { PostComment } from '../../features/feed/types/post.types';
 import { formatRelativeTime } from '../../features/feed/utils/formatRelativeTime';
+import { RoleAvatar } from './RoleAvatar';
 
 interface CommentItemProps {
   comment: PostComment;
@@ -15,13 +16,6 @@ interface CommentItemProps {
   onDelete?: (commentId: string | number) => void;
   canDelete?: boolean;
 }
-
-const roleIconStyles: Record<PostAuthorRole, string> = {
-  Administrativo: 'bg-[#E7000B]/10 text-[#E7000B]',
-  Docente: 'bg-[#1d8c57]/10 text-[#1d8c57]',
-  Bar: 'bg-[#155DFC]/10 text-[#155DFC]',
-  Alumno: 'bg-[#FF751F]/10 text-[#FF751F]',
-};
 
 const normalizeSearchText = (value: string) =>
   value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
@@ -47,9 +41,6 @@ const resolveProfileIdByName = async (name: string) => {
     return undefined;
   }
 };
-const defaultProfileAvatar =
-  'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 96 96%22%3E%3Crect width=%2296%22 height=%2296%22 rx=%2248%22 fill=%22%23EFF6FF%22/%3E%3Ccircle cx=%2248%22 cy=%2237%22 r=%2215%22 fill=%22none%22 stroke=%22%231E4E9D%22 stroke-width=%226%22/%3E%3Cpath d=%22M25 78c3-16 15-25 23-25s20 9 23 25%22 fill=%22none%22 stroke=%22%231E4E9D%22 stroke-width=%226%22 stroke-linecap=%22round%22/%3E%3C/svg%3E';
-
 export const CommentItem = ({ comment, currentDate, onDelete, canDelete = false }: CommentItemProps) => {
   const navigate = useNavigate();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -112,13 +103,15 @@ export const CommentItem = ({ comment, currentDate, onDelete, canDelete = false 
         type="button"
         onClick={handleOpenAuthorProfile}
         disabled={!canOpenAuthorProfile}
-        className={`flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-full ${roleIconStyles[comment.author.role]}`}
+        className="rounded-full disabled:cursor-default"
         aria-label={`Ver perfil de ${comment.author.name}`}
       >
-        <img
-          src={comment.author.avatarUrl || defaultProfileAvatar}
-          alt={`Foto de ${comment.author.name}`}
-          className="h-full w-full object-cover"
+        <RoleAvatar
+          avatarUrl={comment.author.avatarUrl}
+          name={comment.author.name}
+          role={comment.author.role}
+          className="h-8 w-8"
+          iconClassName="h-5 w-5"
         />
       </button>
 

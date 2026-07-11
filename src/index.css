@@ -1,4 +1,4 @@
-﻿@import "tailwindcss";
+@import "tailwindcss";
 
 :root {
   --unstapp-bg: #f8fafc;
@@ -110,4 +110,52 @@ body {
 
 .theme-dark .ring-black\/5 {
   --tw-ring-color: rgba(255, 255, 255, 0.12) !important;
+}
+
+.theme-dark .notifications-panel {
+  background:
+    linear-gradient(180deg, rgba(30, 78, 157, 0.16), rgba(15, 23, 42, 0.96)),
+    #111827 !important;
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.48) !important;
+}
+
+.theme-dark .notifications-panel h2 {
+  color: #f8fafc !important;
+}
+
+.theme-dark .notification-card {
+  background: linear-gradient(135deg, rgba(30, 78, 157, 0.28), rgba(15, 23, 42, 0.92)) !important;
+  border-color: rgba(148, 163, 184, 0.18) !important;
+  box-shadow: 0 10px 26px rgba(0, 0, 0, 0.28) !important;
+}
+
+.theme-dark .notification-card:hover {
+  background: linear-gradient(135deg, rgba(21, 93, 252, 0.34), rgba(30, 41, 59, 0.96)) !important;
+}
+
+.theme-dark .notification-card h3,
+.theme-dark .notification-card h3 span {
+  color: #f8fafc !important;
+}
+
+.theme-dark .notification-card p {
+  color: #cbd5e1 !important;
+}
+
+.theme-dark .notification-card time {
+  color: #93c5fd !important;
+}
+
+.theme-dark .notification-card button {
+  color: #cbd5e1 !important;
+}
+
+.theme-dark .notification-card button:hover {
+  background-color: rgba(231, 0, 11, 0.16) !important;
+  color: #ff8a8f !important;
+}
+
+.theme-dark .notifications-panel button[disabled] {
+  color: #64748b !important;
 }

@@ -1,9 +1,11 @@
-import { CalendarDays, Clock, FileText, Tag, X } from 'lucide-react';
+import { CalendarDays, Clock, FileText, Loader2, Tag, Trash2, X } from 'lucide-react';
 import type { CalendarEvent, CalendarEventType } from '../types/calendar.types';
 
 interface EventDetailModalProps {
   event: CalendarEvent;
+  isDeleting?: boolean;
   onClose: () => void;
+  onDelete?: (event: CalendarEvent) => Promise<void> | void;
 }
 
 const typeLabels: Record<CalendarEventType, string> = {
@@ -34,7 +36,12 @@ const formatTime = (date: string) =>
     minute: '2-digit',
   }).format(new Date(date));
 
-export const EventDetailModal = ({ event, onClose }: EventDetailModalProps) => (
+export const EventDetailModal = ({
+  event,
+  isDeleting = false,
+  onClose,
+  onDelete,
+}: EventDetailModalProps) => (
   <div
     className="fixed inset-0 z-[70] flex items-center justify-center bg-black/40 p-3 backdrop-blur-sm"
     onClick={onClose}
@@ -100,6 +107,18 @@ export const EventDetailModal = ({ event, onClose }: EventDetailModalProps) => (
           </div>
         </div>
       </dl>
+
+      {onDelete && (
+        <button
+          type="button"
+          onClick={() => onDelete(event)}
+          disabled={isDeleting}
+          className="mt-5 flex w-full items-center justify-center gap-2 rounded-2xl bg-[#E7000B] px-4 py-3 text-[13px] font-black uppercase text-white transition-colors hover:bg-[#b80009] disabled:cursor-not-allowed disabled:bg-gray-300"
+        >
+          {isDeleting ? <Loader2 size={16} className="animate-spin" /> : <Trash2 size={16} />}
+          {isDeleting ? 'Eliminando...' : 'Eliminar evento'}
+        </button>
+      )}
     </section>
   </div>
 );

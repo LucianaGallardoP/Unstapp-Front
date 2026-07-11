@@ -147,6 +147,13 @@ const mapNotificationFromApi = (apiNotification: unknown): AppNotification => {
       asString(actor.profilePhotoUrl) ||
       asString(actor.photoUrl) ||
       undefined,
+    actorRole:
+      asString(notification.actorRole) ||
+      asString(notification.userRole) ||
+      asString(data.actorRole) ||
+      asString(data.userRole) ||
+      asString(actor.role) ||
+      undefined,
     action: asString(notification.action) || asString(notification.message, 'tiene una novedad'),
     target: asString(notification.message) || asString(notification.target) || asString(target.title, 'Nueva notificación'),
     postId,

@@ -176,6 +176,18 @@ export const useCalendarEvents = (visibleDate: Date, selectedDate: Date) => {
       setIsCreating(false);
     }
   };
+  const deleteEvent = async (eventId: number | string) => {
+    setError(null);
+
+    try {
+      await calendarService.deleteEvent(eventId);
+      setEvents((currentEvents) => currentEvents.filter((event) => event.id !== eventId));
+      setDailyEvents((currentEvents) => currentEvents.filter((event) => event.id !== eventId));
+    } catch (err) {
+      setError('No se pudo eliminar el evento.');
+      throw err;
+    }
+  };
 
   return {
     events,
@@ -186,5 +198,6 @@ export const useCalendarEvents = (visibleDate: Date, selectedDate: Date) => {
     isCreating,
     error,
     createEvent,
+    deleteEvent,
   };
 };
