@@ -7,15 +7,9 @@ import type { PostAudience } from '../types/post.types';
 import { CreatePostModal } from './CreatePostModal';
 import { PostCard } from '../../../components/common/PostCard';
 import { useSearchParams } from 'react-router-dom';
+import { useLanguage } from '../../../store/languageContext';
 
 type FeedFilter = 'todo' | 'carrera' | 'administrativo';
-
-// Opciones del selector superior.
-const filters: { id: FeedFilter; label: string }[] = [
-  { id: 'todo', label: 'Todo' },
-  { id: 'carrera', label: 'Mi carrera' },
-  { id: 'administrativo', label: 'Administrativo' },
-];
 
 // Categorias visibles por cada filtro.
 const visibleByFilter: Record<FeedFilter, PostAudience[]> = {
@@ -25,6 +19,7 @@ const visibleByFilter: Record<FeedFilter, PostAudience[]> = {
 };
 
 export const FeedPage = () => {
+  const { t } = useLanguage();
   const [activeTab, setActiveTab] = useState<TabType>('feed');
   const [activeFilter, setActiveFilter] = useState<FeedFilter>('todo');
   const [isCreatePostModalOpen, setIsCreatePostModalOpen] = useState(false);
@@ -34,6 +29,11 @@ export const FeedPage = () => {
   const shouldOpenComments = searchParams.get('comments') === 'open' || Boolean(requestedCommentId);
   const loadedNotificationTargetRef = useRef<string | null>(null);
   const { posts, removingPostIds, loading, error, createPost, deletePost, refreshPosts, loadPostById } = usePosts();
+  const filters: { id: FeedFilter; label: string }[] = [
+    { id: 'todo', label: t('feed.all') },
+    { id: 'carrera', label: t('feed.myCareer') },
+    { id: 'administrativo', label: t('feed.admin') },
+  ];
 
   const handleFilterClick = (filterId: FeedFilter) => {
     setActiveFilter(filterId);
@@ -111,13 +111,13 @@ export const FeedPage = () => {
 
         {loading && posts.length === 0 && (
           <p className="rounded-2xl bg-white px-4 py-3 text-center text-[13px] font-semibold text-gray-400">
-            Cargando publicaciones...
+            {t('feed.loading')}
           </p>
         )}
 
         {loading && posts.length > 0 && (
           <p className="rounded-2xl bg-white px-4 py-2 text-center text-[12px] font-semibold text-[#808080]">
-            Actualizando publicaciones...
+            {t('feed.updating')}
           </p>
         )}
 
@@ -145,7 +145,7 @@ export const FeedPage = () => {
 
         {!loading && !error && visiblePosts.length === 0 && (
           <p className="rounded-2xl bg-white px-4 py-6 text-center text-[13px] font-semibold text-[#808080]">
-            No hay publicaciones recientes en esta categoría.
+            {t('feed.emptyCategory')}
           </p>
         )}
       </main>

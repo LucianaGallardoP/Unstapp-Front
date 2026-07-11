@@ -8,8 +8,7 @@ import { CreateEventModal } from './CreateEventModal';
 import { DailyEventsCard } from './DailyEventsCard';
 import { EventDetailModal } from './EventDetailModal';
 import type { CalendarEvent, CalendarEventType } from '../types/calendar.types';
-
-const weekDays = ['Lun', 'Mar', 'Mie', 'Jue', 'Vie', 'Sab', 'Dom'];
+import { useLanguage } from '../../../store/languageContext';
 
 const formatLocalDate = (date: Date) => {
   const year = date.getFullYear();
@@ -82,6 +81,10 @@ const formatTime = (date: string) =>
   }).format(new Date(date));
 
 export const CalendarPage = () => {
+  const { language, t } = useLanguage();
+  const weekDays = language === 'en'
+    ? ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+    : ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isDailyEventsModalOpen, setIsDailyEventsModalOpen] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
@@ -89,7 +92,6 @@ export const CalendarPage = () => {
   const [isDeletingEvent, setIsDeletingEvent] = useState(false);
   const {
     calendarDays,
-    monthTitle,
     selectedDate,
     visibleDate,
     visibleYear,
@@ -120,9 +122,21 @@ export const CalendarPage = () => {
   })();
   const viewFilters = viewFilterBase.map((filter) => ({
     ...filter,
+    label:
+      filter.id === 'exams'
+        ? t('calendar.exams')
+        : filter.id === 'classes'
+          ? t('calendar.classes')
+          : filter.id === 'events'
+            ? t('calendar.events')
+            : t('calendar.holidays'),
     count: monthlyCounters[filter.id],
   }));
   const previewEvents: CalendarEvent[] = selectedDayEvents.slice(0, 3);
+  const rawMonthTitle = new Intl.DateTimeFormat(language === 'en' ? 'en-US' : 'es-AR', {
+    month: 'long',
+  }).format(visibleDate);
+  const monthTitle = rawMonthTitle.charAt(0).toUpperCase() + rawMonthTitle.slice(1);
 
   const handleDeleteEvent = async (event: CalendarEvent) => {
     setEventToDelete(event);
@@ -156,7 +170,7 @@ export const CalendarPage = () => {
                 {monthTitle}
               </h1>
               <p className="mt-1 text-[8px] font-black uppercase leading-3 text-[#155DFC] sm:text-[10px]">
-                Agenda Académica {visibleYear}
+                {t('calendar.academicAgenda')} {visibleYear}
               </p>
             </div>
 
@@ -165,7 +179,7 @@ export const CalendarPage = () => {
                 type="button"
                 onClick={goToPreviousMonth}
                 className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-100 text-[#526174] transition-colors hover:bg-[#1E4E9D] hover:text-white"
-                aria-label="Ver mes anterior"
+                aria-label={t('calendar.previousMonth')}
               >
                 <ChevronLeft size={17} />
               </button>
@@ -173,7 +187,7 @@ export const CalendarPage = () => {
                 type="button"
                 onClick={goToNextMonth}
                 className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-100 text-[#526174] transition-colors hover:bg-[#1E4E9D] hover:text-white"
-                aria-label="Ver mes siguiente"
+                aria-label={t('calendar.nextMonth')}
               >
                 <ChevronRight size={17} />
               </button>
@@ -224,7 +238,7 @@ export const CalendarPage = () => {
                             : 'text-gray-200'
                       }`}
                     aria-current={day.isToday ? 'date' : undefined}
-                    aria-label={`Seleccionar día ${day.dayNumber}`}
+                    aria-label={t('calendar.selectDay', { day: day.dayNumber })}
                   >
                     <span>{day.dayNumber}</span>
                     {eventTypesForDay.length > 0 && (
@@ -248,14 +262,14 @@ export const CalendarPage = () => {
           <section className="mt-7">
             <header className="flex items-center justify-between gap-3">
               <h2 className="text-[17px] font-black uppercase tracking-tight text-black sm:text-[20px]">
-                Eventos del día
+                {t('calendar.dayEvents')}
               </h2>
               {!isAlumno && (
                 <button
                   type="button"
                   onClick={() => setIsCreateModalOpen(true)}
                   className="flex h-8 w-8 items-center justify-center rounded-full text-[#1E4E9D] transition-colors hover:bg-[#EFF6FF]"
-                  aria-label="Crear nuevo evento"
+                  aria-label={t('calendar.createEvent')}
                 >
                   <Plus size={18} strokeWidth={2.4} />
                 </button>
@@ -265,7 +279,7 @@ export const CalendarPage = () => {
             <div className="mt-3 flex flex-col gap-3">
               {(isEventsLoading || isDailyLoading) && (
                 <p className="rounded-[10px] bg-white px-4 py-5 text-center text-[12px] font-bold text-[#526174] shadow-[0_8px_20px_rgba(15,23,42,0.1)]">
-                  Cargando eventos...
+                  {t('calendar.loadingEvents')}
                 </p>
               )}
 
@@ -306,7 +320,7 @@ export const CalendarPage = () => {
 
               {!(isEventsLoading || isDailyLoading) && previewEvents.length === 0 && (
                 <p className="rounded-[10px] bg-white px-4 py-5 text-center text-[12px] font-bold text-[#526174] shadow-[0_8px_20px_rgba(15,23,42,0.1)]">
-                  No hay eventos para este día.
+                  {t('calendar.emptyDay')}
                 </p>
               )}
             </div>
@@ -320,7 +334,7 @@ export const CalendarPage = () => {
 
           <section className="mt-5 rounded-[10px] bg-[#123866] px-4 py-4 text-white shadow-[0_10px_24px_rgba(15,23,42,0.24)]">
             <h2 className="text-[9px] font-black uppercase tracking-wide text-white sm:text-[10px]">
-              Filtros de Vista
+              {t('calendar.viewFilters')}
             </h2>
 
             <ul className="mt-3 flex flex-col gap-2.5">
@@ -402,10 +416,10 @@ export const CalendarPage = () => {
             aria-label="Confirmar eliminación de evento"
           >
             <h2 className="text-[18px] font-black text-[#1F2937]">
-              ¿Eliminar evento?
+              {t('calendar.deleteEventTitle')}
             </h2>
             <p className="mt-2 text-[13px] font-semibold leading-5 text-gray-600">
-              Esta acción quitará el evento <span className="font-black">{eventToDelete.title}</span> del calendario.
+              {t('calendar.deleteEventText', { title: eventToDelete.title })}
             </p>
             <div className="mt-5 flex gap-2">
               <button
@@ -414,7 +428,7 @@ export const CalendarPage = () => {
                 disabled={isDeletingEvent}
                 className="flex-1 rounded-xl px-4 py-2 text-[12px] font-bold text-gray-500 transition-colors hover:bg-gray-100 disabled:opacity-60"
               >
-                Cancelar
+                {t('calendar.cancel')}
               </button>
               <button
                 type="button"
@@ -422,7 +436,7 @@ export const CalendarPage = () => {
                 disabled={isDeletingEvent}
                 className="flex-1 rounded-xl bg-[#E7000B] px-4 py-2 text-[12px] font-bold text-white transition-colors hover:bg-[#b80009] disabled:bg-gray-300"
               >
-                {isDeletingEvent ? 'Eliminando...' : 'Eliminar'}
+                {isDeletingEvent ? t('calendar.deleting') : t('calendar.delete')}
               </button>
             </div>
           </section>

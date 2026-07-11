@@ -8,6 +8,7 @@ import { useNavigate } from 'react-router-dom';
 import { searchService } from '../../features/search/services/searchService';
 import type { PostComment } from '../../features/feed/types/post.types';
 import { formatRelativeTime } from '../../features/feed/utils/formatRelativeTime';
+import { useLanguage } from '../../store/languageContext';
 import { RoleAvatar } from './RoleAvatar';
 
 interface CommentItemProps {
@@ -43,6 +44,7 @@ const resolveProfileIdByName = async (name: string) => {
 };
 export const CommentItem = ({ comment, currentDate, onDelete, canDelete = false }: CommentItemProps) => {
   const navigate = useNavigate();
+  const { language, t } = useLanguage();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [menuCoords, setMenuCoords] = useState<{ top: number; left: number } | null>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
@@ -139,7 +141,7 @@ export const CommentItem = ({ comment, currentDate, onDelete, canDelete = false 
             }).format(new Date(comment.publishedAt))}
             className="text-[10px] font-semibold leading-4 text-gray-400"
           >
-            {formatRelativeTime(comment.publishedAt, currentDate)}
+            {formatRelativeTime(comment.publishedAt, currentDate, language)}
           </time>
         </div>
         <p className="mt-1 text-[12px] leading-5 text-gray-600">
@@ -174,7 +176,7 @@ export const CommentItem = ({ comment, currentDate, onDelete, canDelete = false 
                 className="flex w-full items-center gap-2 px-3 py-2.5 text-[13px] font-medium text-[#E7000B] transition-colors hover:bg-[#E7000B]/10"
               >
                 <Trash2 size={15} />
-                <span>Eliminar</span>
+                <span>{t('common.delete')}</span>
               </button>
             </div>,
             document.body

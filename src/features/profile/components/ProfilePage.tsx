@@ -7,8 +7,10 @@ import { useParams } from 'react-router-dom';
 import { useProfile } from '../hooks/useProfile';
 import { useState } from 'react';
 import { useAuth } from '../../../store/authContext';
+import { useLanguage } from '../../../store/languageContext';
 
 export const ProfilePage = () => {
+  const { t } = useLanguage();
   const { userId } = useParams<{ userId?: string }>();
   const {
     profileData,
@@ -24,7 +26,7 @@ export const ProfilePage = () => {
   const [isEditProfileModalOpen, setIsEditProfileModalOpen] = useState(false);
   const { handleLogout } = useAuth();
 
-  const postsTitle = isPublicProfile ? 'Publicaciones' : 'Mis Publicaciones';
+  const postsTitle = isPublicProfile ? t('profile.posts') : t('profile.myPosts');
 
   return (
     <div className="min-h-screen bg-white pb-20 text-gray-900 md:bg-gray-50">
@@ -33,7 +35,7 @@ export const ProfilePage = () => {
       <main className="mx-auto flex w-full max-w-[430px] flex-col px-3 py-3 sm:max-w-[560px] sm:px-5 md:max-w-2xl md:py-5 lg:max-w-3xl">
         {isLoading && (
           <div className="mb-3 rounded-xl bg-white px-4 py-3 text-center text-sm font-bold text-gray-500 shadow-sm">
-            Cargando perfil...
+            {t('profile.loading')}
           </div>
         )}
 

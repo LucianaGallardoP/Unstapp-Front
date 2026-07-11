@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import {
   Bell,
+  Globe2,
   Heart,
   Megaphone,
   MessageCircle,
@@ -15,6 +16,7 @@ import { GlobalSearch } from '../../features/search';
 import { searchService } from '../../features/search/services/searchService';
 import { useNotifications, type NotificationType } from '../../store/notificationsContext';
 import { useTheme } from '../../store/themeContext';
+import { useLanguage } from '../../store/languageContext';
 import { RoleAvatar } from './RoleAvatar';
 
 interface TopBarProps {
@@ -66,6 +68,7 @@ const resolveProfileIdByActorName = async (actorName: string) => {
 
 export const TopBar = ({ simple = false }: TopBarProps) => {
   const { isDarkMode, toggleTheme } = useTheme();
+  const { language, toggleLanguage, t } = useLanguage();
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const [currentDate, setCurrentDate] = useState(() => new Date());
   const navigate = useNavigate();
@@ -178,14 +181,27 @@ export const TopBar = ({ simple = false }: TopBarProps) => {
         <div className="flex flex-1 justify-end gap-1">
           <button
             type="button"
+            onClick={toggleLanguage}
+            className="flex h-10 min-w-10 items-center justify-center gap-1.5 rounded-full px-2 text-[#526174] transition-colors hover:bg-[#EFF6FF] hover:text-[#1F2937]"
+            aria-label={language === 'es' ? t('language.toggleToEnglish') : t('language.toggleToSpanish')}
+            title={language === 'es' ? t('language.toggleToEnglish') : t('language.toggleToSpanish')}
+          >
+            <Globe2 size={19} />
+            <span className="text-[10px] font-black uppercase">
+              {language === 'es' ? t('language.es') : t('language.en')}
+            </span>
+          </button>
+
+          <button
+            type="button"
             onClick={toggleTheme}
             className="flex h-10 min-w-10 items-center justify-center gap-1.5 rounded-full px-2 text-[#526174] transition-colors hover:bg-[#EFF6FF] hover:text-[#1F2937]"
-            aria-label={isDarkMode ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'}
-            title={isDarkMode ? 'Modo oscuro seleccionado' : 'Modo claro seleccionado'}
+            aria-label={isDarkMode ? t('topbar.toLight') : t('topbar.toDark')}
+            title={isDarkMode ? t('topbar.darkSelected') : t('topbar.lightSelected')}
           >
             {isDarkMode ? <Sun size={20} /> : <Moon size={20} />}
             <span className="hidden text-[10px] font-black uppercase sm:inline">
-              {isDarkMode ? 'Oscuro' : 'Claro'}
+              {isDarkMode ? t('topbar.darkSelected') : t('topbar.lightSelected')}
             </span>
           </button>
 
@@ -202,7 +218,7 @@ export const TopBar = ({ simple = false }: TopBarProps) => {
                 {showUnreadIndicator && (
                   <span
                     className="absolute right-2 top-1.5 h-2.5 w-2.5 rounded-full border border-white bg-[#E7000B]"
-                    aria-label="Hay notificaciones nuevas"
+                    aria-label={t('topbar.unreadNotifications')}
                   />
                 )}
               </button>
@@ -214,18 +230,18 @@ export const TopBar = ({ simple = false }: TopBarProps) => {
                 >
                   <section
                     className="notifications-panel fixed right-2 top-14 w-[calc(100vw-16px)] max-w-[360px] rounded-b-[14px] rounded-t-[22px] bg-white px-3 pb-3 pt-4 shadow-[0_14px_34px_rgba(15,23,42,0.28)] sm:right-[calc((100vw-560px)/2+12px)] sm:max-w-[390px] sm:px-4 md:right-[calc((100vw-672px)/2+12px)] md:top-16 md:max-w-[460px] lg:right-[calc((100vw-768px)/2+12px)]"
-                    aria-label="Notificaciones"
+                    aria-label={t('topbar.notifications')}
                     onClick={(event) => event.stopPropagation()}
                   >
                     <header className="flex items-start justify-between gap-3">
                       <h2 className="text-[16px] font-black uppercase leading-5 text-black md:text-[18px]">
-                        Notificaciones
+                        {t('topbar.notifications')}
                       </h2>
                       <button
                         type="button"
                         onClick={() => setIsNotificationsOpen(false)}
                         className="-mr-1 -mt-2 flex h-8 w-8 items-center justify-center text-black transition-colors hover:text-[#1E4E9D]"
-                        aria-label="Cerrar notificaciones"
+                        aria-label={t('topbar.closeNotifications')}
                       >
                         <X size={18} strokeWidth={1.7} />
                       </button>
@@ -239,7 +255,7 @@ export const TopBar = ({ simple = false }: TopBarProps) => {
                           disabled={notifications.length === 0}
                           className="text-[11px] font-black uppercase text-[#E7000B] transition-colors hover:text-[#b80009] disabled:cursor-not-allowed disabled:text-gray-300"
                         >
-                          Eliminar todas
+                          {t('topbar.deleteAll')}
                         </button>
                       </div>
                     </div>
@@ -247,7 +263,7 @@ export const TopBar = ({ simple = false }: TopBarProps) => {
                     <div className="mt-2 flex max-h-[min(340px,calc(100vh-120px))] flex-col gap-2 overflow-y-auto pr-1 md:max-h-[340px]">
                       {notificationsLoading && (
                         <p className="rounded-[8px] bg-[#EFF6FF] px-3 py-5 text-center text-[12px] font-semibold text-[#808080]">
-                          Cargando notificaciones...
+                          {t('topbar.loadingNotifications')}
                         </p>
                       )}
 
@@ -304,7 +320,7 @@ export const TopBar = ({ simple = false }: TopBarProps) => {
                                 dateTime={notification.createdAt}
                                 className="mt-1 block text-[10px] font-black uppercase leading-3 text-[#808080]"
                               >
-                                {formatRelativeTime(notification.createdAt, currentDate)}
+                                {formatRelativeTime(notification.createdAt, currentDate, language)}
                               </time>
                             </div>
 
@@ -325,7 +341,7 @@ export const TopBar = ({ simple = false }: TopBarProps) => {
 
                       {!notificationsLoading && notifications.length === 0 && (
                         <p className="rounded-[8px] bg-[#EFF6FF] px-3 py-5 text-center text-[12px] font-semibold text-[#808080]">
-                          No hay notificaciones pendientes.
+                          {t('topbar.emptyNotifications')}
                         </p>
                       )}
                     </div>

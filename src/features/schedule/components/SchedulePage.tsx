@@ -5,6 +5,7 @@ import { BottomNavigation } from '../../../components/common/BottomNavigation';
 import { TopBar } from '../../../components/common/TopBar';
 import { useWeeklySchedule, type CreateScheduleClassInput, type ScheduleClass } from '../hooks/useWeeklySchedule';
 import { CreateSubjectModal } from './CreateSubjectModal';
+import { useLanguage } from '../../../store/languageContext';
 
 const getIsCurrentUserAdmin = () => {
   try {
@@ -17,6 +18,7 @@ const getIsCurrentUserAdmin = () => {
 };
 
 export const SchedulePage = () => {
+  const { t } = useLanguage();
   const [isCreateSubjectModalOpen, setIsCreateSubjectModalOpen] = useState(false);
   const [editingClass, setEditingClass] = useState<ScheduleClass | null>(null);
   const [classToDelete, setClassToDelete] = useState<ScheduleClass | null>(null);
@@ -63,7 +65,7 @@ export const SchedulePage = () => {
               className="mb-3 inline-flex items-center gap-1 rounded-full bg-white px-3 py-2 text-[11px] font-black uppercase text-[#1E4E9D] shadow-sm transition-colors hover:bg-[#EFF6FF]"
             >
               <ChevronLeft size={15} />
-              Volver a Carreras
+              {t('schedule.backToCareers')}
             </button>
           )}
 
@@ -85,7 +87,7 @@ export const SchedulePage = () => {
               <div className="min-w-0 flex-1">
                 {isContextLoading && (
                   <p className="mb-1 text-[8px] font-black uppercase text-[#808080]">
-                    Cargando contexto...
+                    {t('schedule.loadingContext')}
                   </p>
                 )}
                 <h1 className="text-[12px] font-black uppercase leading-4 text-black sm:text-[14px]">
@@ -103,7 +105,7 @@ export const SchedulePage = () => {
                   </div>
                   <div>
                     <p className="text-[9px] font-black uppercase leading-3 text-[#526174]">
-                      Sede
+                      {t('schedule.campus')}
                     </p>
                     <p className="text-[7px] font-black uppercase leading-3 text-[#526174]">
                       {studentContext.campus}
@@ -156,10 +158,10 @@ export const SchedulePage = () => {
           <section className="mt-6">
             <div className="mb-3 flex items-center justify-between">
               <h2 className="text-[10px] font-black uppercase tracking-wide text-[#526174]">
-                Cronograma del día
+                {t('schedule.daySchedule')}
               </h2>
               <span className="text-[9px] font-black uppercase text-[#1E4E9D]">
-                {selectedClasses.length} {selectedClasses.length === 1 ? 'materia' : 'materias'}
+                {selectedClasses.length} {selectedClasses.length === 1 ? t('schedule.subject') : t('schedule.subjects')}
               </span>
             </div>
 
@@ -180,7 +182,7 @@ export const SchedulePage = () => {
                       {scheduleClass.startTime}
                     </p>
                     <p className="mt-0.5 text-[8px] font-bold uppercase text-[#808080]">
-                      {scheduleClass.durationHours} {scheduleClass.durationHours === 1 ? 'hora' : 'horas'}
+                      {scheduleClass.durationHours} {scheduleClass.durationHours === 1 ? t('schedule.hour') : t('schedule.hours')}
                     </p>
                     <h3 className="mt-1 text-[12px] font-black uppercase leading-4 text-black">
                       {scheduleClass.subject}
@@ -220,7 +222,7 @@ export const SchedulePage = () => {
 
               {selectedClasses.length === 0 && (
                 <p className="rounded-[12px] bg-white px-4 py-5 text-center text-[12px] font-bold text-[#526174] shadow-[0_7px_18px_rgba(15,23,42,0.1)]">
-                  No hay clases cargadas para este día.
+                  {t('schedule.emptyDay')}
                 </p>
               )}
             </div>
@@ -230,18 +232,18 @@ export const SchedulePage = () => {
             <div className="flex items-center justify-center gap-2 mb-2">
               <AlertTriangle size={18} />
               <h2 className="text-[13px] font-black uppercase">
-                ¿Problemas con tu horario?
+                {t('schedule.problemTitle')}
               </h2>
             </div>
             <p className="mx-auto mt-1 max-w-[320px] text-[9.5px] font-bold uppercase leading-snug text-white/90">
-              Si detectás inconsistencias en las aulas o materias, reportalo inmediatamente a bedelía para su corrección.
+              {t('schedule.problemText')}
             </p>
             <button
               type="button"
               onClick={() => navigate('/404')}
               className="mt-4 rounded-full bg-white px-6 py-2 text-[10px] font-black uppercase text-[#4c1d95] transition-all hover:bg-gray-100 hover:scale-105 hover:shadow-lg active:scale-95"
             >
-              Reportar
+              {t('schedule.report')}
             </button>
           </section>
         </section>
@@ -288,14 +290,14 @@ export const SchedulePage = () => {
                 onClick={() => setClassToDelete(null)}
                 className="h-8 rounded-full bg-gray-100 px-5 text-[11px] font-black text-[#526174] transition-colors hover:bg-gray-200"
               >
-                Cancelar
+                {t('common.cancel')}
               </button>
               <button
                 type="button"
                 onClick={handleDelete}
                 className="h-8 rounded-full bg-[#E7000B] px-5 text-[11px] font-black text-white transition-colors hover:bg-[#b80009]"
               >
-                Eliminar
+                {t('common.delete')}
               </button>
             </div>
           </section>

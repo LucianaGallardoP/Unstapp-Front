@@ -5,6 +5,7 @@ import { Button } from '../../../components/common/Button';
 import unstaLogo from '../../../assets/img/UNSTA-logo.png';
 import { useSetInitialPassword } from '../hooks/useSetInitialPassword';
 import type { LoginResponse } from '../types/auth.dtos';
+import { useLanguage } from '../../../store/languageContext';
 
 interface RegisterFormProps {
   onLoginClick?: () => void;
@@ -75,6 +76,7 @@ const readTokenFromParams = (searchParams: URLSearchParams, hash: string, pathTo
 };
 
 export const RegisterForm = ({ onLoginClick }: RegisterFormProps) => {
+  const { t } = useLanguage();
   const [showPassword, setShowPassword] = useState(false);
   const [showRepeatPassword, setShowRepeatPassword] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
@@ -109,12 +111,12 @@ export const RegisterForm = ({ onLoginClick }: RegisterFormProps) => {
     setLocalError(null);
 
     if (!token) {
-      setLocalError('El enlace no tiene token. Abrí nuevamente el enlace completo que recibiste por correo.');
+      setLocalError(t('auth.invalidToken'));
       return;
     }
 
     if (formData.password !== formData.repeatPassword) {
-      setLocalError('Las contraseñas no coinciden.');
+      setLocalError(t('auth.passwordsDontMatch'));
       return;
     }
 
@@ -144,10 +146,10 @@ export const RegisterForm = ({ onLoginClick }: RegisterFormProps) => {
           </div>
 
           <h1 className="text-[2.5rem] font-extrabold text-black text-center leading-tight mb-3">
-            ¡Todo listo!
+            {t('auth.done')}
           </h1>
           <p className="text-gray-500 text-[16px] text-center mb-10 leading-snug">
-            Ya podés empezar a disfrutar de tu experiencia en Unstapp.
+            {t('auth.doneSubtitle')}
           </p>
 
           <Button 
@@ -157,7 +159,7 @@ export const RegisterForm = ({ onLoginClick }: RegisterFormProps) => {
             onClick={() => navigate('/feed')}
           > 
             <span className="flex items-center justify-center gap-2 w-full text-[16px]">
-              Comenzar
+              {t('auth.start')}
               <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                 <line x1="5" y1="12" x2="19" y2="12"></line>
                 <polyline points="12 5 19 12 12 19"></polyline>
@@ -176,10 +178,10 @@ export const RegisterForm = ({ onLoginClick }: RegisterFormProps) => {
           <img src={unstaLogo} alt="Logo UNSTA" className="w-20 h-20 object-contain" />
         </div>
         <h1 className="text-[2.5rem] font-bold text-black text-center leading-tight mb-2">
-          Crear contraseña
+          {t('auth.createPassword')}
         </h1>
         <p className="text-gray-500 text-[15px] text-center mb-8 leading-snug">
-          Ingresá y confirmá tu nueva contraseña para acceder a Unstapp.
+          {t('auth.createPasswordSubtitle')}
         </p>
 
         <form className="flex flex-col gap-5" onSubmit={handleSubmit}>
@@ -191,13 +193,13 @@ export const RegisterForm = ({ onLoginClick }: RegisterFormProps) => {
           
           {!token && !isSuccess && (
             <div className="bg-[#FFF8E6] text-[#B38000] p-4 rounded-xl text-[14.5px] leading-snug font-medium text-center border border-[#FFE5B4]">
-              El enlace de registro no es válido o está incompleto. Asegurate de abrir el enlace completo que recibiste por correo.
+              {t('auth.invalidToken')}
             </div>
           )}
 
           <div className="flex flex-col">
             <Input
-              label="Contraseña"
+              label={t('login.password')}
               id="password"
               type={showPassword ? 'text' : 'password'}
               placeholder="********"
@@ -214,7 +216,7 @@ export const RegisterForm = ({ onLoginClick }: RegisterFormProps) => {
                   onClick={() => setShowPassword(!showPassword)}
                   className="text-[#1E4E9D] hover:text-[#122b54] focus:outline-none"
                   disabled={loading}
-                  aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+                  aria-label={showPassword ? t('login.hidePassword') : t('login.showPassword')}
                 >
                   {showPassword ? (
                     <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -234,7 +236,7 @@ export const RegisterForm = ({ onLoginClick }: RegisterFormProps) => {
 
           <div className="flex flex-col">
             <Input
-              label="Repetir contraseña"
+              label={t('auth.repeatPassword')}
               id="repeatPassword"
               type={showRepeatPassword ? 'text' : 'password'}
               placeholder="********"
@@ -251,7 +253,7 @@ export const RegisterForm = ({ onLoginClick }: RegisterFormProps) => {
                   onClick={() => setShowRepeatPassword(!showRepeatPassword)}
                   className="text-[#1E4E9D] hover:text-[#122b54] focus:outline-none"
                   disabled={loading}
-                  aria-label={showRepeatPassword ? 'Ocultar contraseña repetida' : 'Mostrar contraseña repetida'}
+                  aria-label={showRepeatPassword ? t('login.hidePassword') : t('login.showPassword')}
                 >
                   {showRepeatPassword ? (
                     <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -269,7 +271,7 @@ export const RegisterForm = ({ onLoginClick }: RegisterFormProps) => {
             />
             {passwordsDoNotMatch && (
               <p className="mt-2 text-center text-[13px] font-medium text-[#E7000B]">
-                Las contraseñas no coinciden.
+                {t('auth.passwordsDontMatch')}
               </p>
             )}
           </div>
@@ -282,12 +284,12 @@ export const RegisterForm = ({ onLoginClick }: RegisterFormProps) => {
           > 
             {loading ? (
               <span className="flex items-center gap-2">
-                Guardando...
+                {t('auth.saving')}
                 <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
               </span>
             ) : (
               <span className="flex items-center gap-2">
-                Guardar contraseña
+                {t('auth.savePassword')}
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                   <line x1="5" y1="12" x2="19" y2="12"></line>
                   <polyline points="12 5 19 12 12 19"></polyline>
@@ -299,7 +301,7 @@ export const RegisterForm = ({ onLoginClick }: RegisterFormProps) => {
       </div>
 
       <div className="text-center mt-6">
-        <span className="text-gray-500 text-[15px]">¿Ya tenés cuenta? </span>
+        <span className="text-gray-500 text-[15px]">{t('auth.hasAccount')} </span>
         <button 
           type="button"
           onClick={(e) => {
@@ -312,7 +314,7 @@ export const RegisterForm = ({ onLoginClick }: RegisterFormProps) => {
           }}
           className="text-[#1E4E9D] font-bold text-[15px] hover:text-[#122b54] hover:underline transition-all"
         >
-          Iniciá sesión
+          {t('login.submit')}
         </button>
       </div>
     </div>

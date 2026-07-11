@@ -1,5 +1,5 @@
-// Convierte una fecha en "Hace X min/hs/dias".
-export const formatRelativeTime = (publishedAt: string, currentDate: Date) => {
+// Convierte una fecha en texto relativo segun el idioma elegido.
+export const formatRelativeTime = (publishedAt: string, currentDate: Date, language: 'es' | 'en' = 'es') => {
   const publishedDate = new Date(publishedAt);
   const differenceInMinutes = Math.max(
     0,
@@ -7,24 +7,28 @@ export const formatRelativeTime = (publishedAt: string, currentDate: Date) => {
   );
 
   if (differenceInMinutes < 1) {
-    return 'Ahora';
+    return language === 'en' ? 'Now' : 'Ahora';
   }
 
   if (differenceInMinutes < 60) {
-    return `Hace ${differenceInMinutes} min`;
+    return language === 'en' ? `${differenceInMinutes} min ago` : `Hace ${differenceInMinutes} min`;
   }
 
   const differenceInHours = Math.floor(differenceInMinutes / 60);
 
   if (differenceInHours < 24) {
-    return `Hace ${differenceInHours}hs`;
+    return language === 'en'
+      ? `${differenceInHours}h ago`
+      : `Hace ${differenceInHours}hs`;
   }
 
   const differenceInDays = Math.floor(differenceInHours / 24);
 
   if (differenceInDays === 1) {
-    return 'Hace 1 dia';
+    return language === 'en' ? '1 day ago' : 'Hace 1 día';
   }
 
-  return `Hace ${differenceInDays} dias`;
+  return language === 'en'
+    ? `${differenceInDays} days ago`
+    : `Hace ${differenceInDays} días`;
 };

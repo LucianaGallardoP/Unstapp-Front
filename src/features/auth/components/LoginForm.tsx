@@ -4,10 +4,11 @@ import { Input } from '../../../components/common/Input';
 import { Button } from '../../../components/common/Button';
 import { useLogin } from '../hooks/useLogin';
 import unstaLogo from '../../../assets/img/UNSTA-logo.png';
+import { useLanguage } from '../../../store/languageContext';
 
-const LoginErrorMessage = () => (
+const LoginErrorMessage = ({ message }: { message: string }) => (
   <p className="text-[#E7000B] text-[12px] font-medium mt-1 text-center">
-    Usuario o contraseña incorrectos
+    {message}
   </p>
 );
 
@@ -16,6 +17,7 @@ interface LoginFormProps {
 }
 
 export const LoginForm = ({ onFirstTimeClick }: LoginFormProps) => {
+  const { t } = useLanguage();
   const [showPassword, setShowPassword] = useState(false);
   const [localError, setLocalError] = useState(false);
   const navigate = useNavigate();
@@ -46,10 +48,10 @@ export const LoginForm = ({ onFirstTimeClick }: LoginFormProps) => {
       </div>
 
       <h1 className="mb-2 text-center text-[28px] font-bold leading-tight text-black sm:text-[30px]">
-        Bienvenido
+        {t('login.welcome')}
       </h1>
       <p className="mx-auto mb-6 max-w-[230px] text-center text-[12px] leading-snug text-gray-500 sm:text-[13px]">
-        Accede a tu comunidad académica y gestiona tu vida universitaria.
+        {t('login.subtitle')}
       </p>
 
       <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
@@ -59,7 +61,7 @@ export const LoginForm = ({ onFirstTimeClick }: LoginFormProps) => {
           type="text"
           inputMode="numeric"
           pattern="[0-9]*"
-          placeholder="Ingresá tu DNI"
+          placeholder={t('login.dniPlaceholder')}
           className={inputStyles}
           value={formData.dni}
           disabled={loading}
@@ -71,7 +73,7 @@ export const LoginForm = ({ onFirstTimeClick }: LoginFormProps) => {
 
         <div className="flex flex-col">
           <Input
-            label="Contraseña"
+            label={t('login.password')}
             id="password"
             type={showPassword ? 'text' : 'password'}
             placeholder="********"
@@ -88,7 +90,7 @@ export const LoginForm = ({ onFirstTimeClick }: LoginFormProps) => {
                 onClick={() => setShowPassword(!showPassword)}
                 className="text-[#1E4E9D] hover:text-[#122b54] focus:outline-none"
                 disabled={loading}
-                aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+                aria-label={showPassword ? t('login.hidePassword') : t('login.showPassword')}
               >
                 {showPassword ? (
                   <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -104,7 +106,7 @@ export const LoginForm = ({ onFirstTimeClick }: LoginFormProps) => {
               </button>
             }
           />
-          {localError && <LoginErrorMessage />}
+          {localError && <LoginErrorMessage message={t('login.error')} />}
         </div>
 
         <div className="mt-1 flex flex-col gap-1.5 text-center">
@@ -116,7 +118,7 @@ export const LoginForm = ({ onFirstTimeClick }: LoginFormProps) => {
             }}
             className="text-[12px] font-medium text-[#1E4E9D] transition-all hover:text-[#122b54] hover:underline"
           >
-            ¿Olvidaste tu contraseña?
+            {t('login.forgot')}
           </a>
           <button
             type="button"
@@ -126,7 +128,7 @@ export const LoginForm = ({ onFirstTimeClick }: LoginFormProps) => {
             }}
             className="text-[12px] font-medium text-[#1E4E9D] transition-all hover:text-[#122b54] hover:underline"
           >
-            ¿Es tu primera vez ingresando?
+            {t('login.firstTime')}
           </button>
         </div>
 
@@ -138,12 +140,12 @@ export const LoginForm = ({ onFirstTimeClick }: LoginFormProps) => {
         >
           {loading ? (
             <span className="flex items-center gap-2">
-              Iniciando sesión...
+              {t('login.loading')}
               <div className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
             </span>
           ) : (
             <span className="flex items-center gap-2">
-              Iniciar Sesión
+              {t('login.submit')}
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                 <line x1="5" y1="12" x2="19" y2="12"></line>
                 <polyline points="12 5 19 12 12 19"></polyline>

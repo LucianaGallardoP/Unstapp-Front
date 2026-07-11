@@ -6,16 +6,18 @@ import { Input } from '../../../components/common/Input';
 import { Button } from '../../../components/common/Button';
 import unstaLogo from '../../../assets/img/UNSTA-logo.png';
 import { authService } from '../services/authService';
+import { useLanguage } from '../../../store/languageContext';
 
-const getResponseMessage = (response: unknown): string => {
+const getResponseMessage = (response: unknown, fallback: string): string => {
   if (response && typeof response === 'object' && 'message' in response && typeof response.message === 'string') {
     return response.message;
   }
 
-  return 'Te enviamos un enlace al correo asociado a tu DNI.';
+  return fallback;
 };
 
 export const ForgotPasswordPage = () => {
+  const { t } = useLanguage();
   const navigate = useNavigate();
   const [dni, setDni] = useState('');
   const [loading, setLoading] = useState(false);
@@ -35,10 +37,10 @@ export const ForgotPasswordPage = () => {
 
     try {
       const response = await authService.forgotPassword({ dni });
-      setSuccessMessage(getResponseMessage(response));
+      setSuccessMessage(getResponseMessage(response, t('auth.recoverSuccess')));
       setDni('');
     } catch {
-      setError('No se pudo iniciar la recuperación de contraseña.');
+      setError(t('auth.recoverError'));
     } finally {
       setLoading(false);
     }
@@ -54,10 +56,10 @@ export const ForgotPasswordPage = () => {
           </div>
 
           <h1 className="mb-2 text-center text-[28px] font-bold leading-tight text-black">
-            Recuperar contraseña
+            {t('auth.recoverTitle')}
           </h1>
           <p className="mx-auto mb-6 max-w-[250px] text-center text-[13px] leading-snug text-gray-500">
-            Ingresá tu DNI para validar tu cuenta y crear una nueva contraseña.
+            {t('auth.recoverSubtitle')}
           </p>
 
           {successMessage && (
@@ -79,7 +81,7 @@ export const ForgotPasswordPage = () => {
               type="text"
               inputMode="numeric"
               pattern="[0-9]*"
-              placeholder="Ingresá tu DNI"
+              placeholder={t('login.dniPlaceholder')}
               value={dni}
               disabled={loading}
               onChange={(event: ChangeEvent<HTMLInputElement>) => {
@@ -95,7 +97,7 @@ export const ForgotPasswordPage = () => {
               className="mt-2 !rounded-[8px] !py-3 text-[13px] hover:bg-[#122b54]"
               disabled={loading || !dni}
             >
-              {loading ? 'Validando...' : 'Continuar'}
+              {loading ? t('auth.validating') : t('auth.continue')}
             </Button>
 
             <button
@@ -103,7 +105,7 @@ export const ForgotPasswordPage = () => {
               onClick={() => navigate('/login')}
               className="mt-2 text-[12px] font-medium text-[#1E4E9D] transition-all hover:text-[#122b54] hover:underline"
             >
-              Volver al inicio de sesión
+              {t('auth.backToLogin')}
             </button>
           </form>
         </section>

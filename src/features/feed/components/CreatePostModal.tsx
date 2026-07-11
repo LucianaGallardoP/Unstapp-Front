@@ -3,6 +3,7 @@ import { useEffect, useRef, useState, type ChangeEvent } from 'react';
 import { profileService } from '../../profile/services/profileService';
 import { AxiosError } from 'axios';
 import { RoleAvatar } from '../../../components/common/RoleAvatar';
+import { useLanguage } from '../../../store/languageContext';
 
 interface CreatePostModalProps {
   isOpen: boolean;
@@ -11,6 +12,7 @@ interface CreatePostModalProps {
 }
 
 export const CreatePostModal = ({ isOpen, onClose, onPublish }: CreatePostModalProps) => {
+  const { t } = useLanguage();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [content, setContent] = useState('');
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -124,9 +126,9 @@ export const CreatePostModal = ({ isOpen, onClose, onPublish }: CreatePostModalP
       onClose();
     } catch (error) {
       if (error instanceof AxiosError && error.response?.status === 400) {
-        setPublishError('Tu publicación fue rechazada por nuestro filtro automatizado debido a contenido inapropiado.');
+        setPublishError(t('createPost.rejected'));
       } else {
-        setPublishError('No se pudo publicar. Intentalo nuevamente.');
+        setPublishError(t('createPost.error'));
       }
     } finally {
       setIsPublishing(false);
@@ -143,7 +145,7 @@ export const CreatePostModal = ({ isOpen, onClose, onPublish }: CreatePostModalP
       <section className="w-full max-w-[315px] rounded-[6px] bg-white px-4 pb-4 pt-3 shadow-[0_24px_70px_rgba(15,23,42,0.28)] sm:max-w-[390px] sm:px-5 sm:pb-5 md:max-w-[460px] md:px-6 md:pt-4">
         <header className="flex items-start justify-between">
           <h2 id="create-post-title" className="pt-1 text-[16px] font-black uppercase leading-5 text-black md:text-[18px]">
-            Nueva Publicacion
+            {t('createPost.title')}
           </h2>
 
           <button
@@ -171,7 +173,7 @@ export const CreatePostModal = ({ isOpen, onClose, onPublish }: CreatePostModalP
               value={content}
               onChange={(event) => setContent(event.target.value)}
               maxLength={500}
-              placeholder="¿Qué queres compartir con el campus?"
+              placeholder={t('createPost.placeholder')}
               className="min-h-[132px] w-full resize-none rounded-[18px] border-2 border-[#808080] bg-white px-3 py-2 text-[14px] leading-7 text-gray-800 outline-none transition-colors placeholder:text-[#808080] focus:border-[#1E4E9D] min-[360px]:min-h-[138px] md:min-h-[170px] md:px-4 md:py-3 md:text-[15px]"
             />
             <span className={`absolute bottom-3 right-4 text-[10px] font-medium ${content.length >= 500 ? 'text-[#E7000B]' : 'text-transparent'}`}>
@@ -193,7 +195,7 @@ export const CreatePostModal = ({ isOpen, onClose, onPublish }: CreatePostModalP
                 className="flex h-8 shrink-0 items-center gap-1 rounded-full px-2 text-[11px] font-bold text-[#E7000B] transition-colors hover:bg-[#E7000B]/10 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 <Trash2 size={14} />
-                Eliminar
+                {t('createPost.remove')}
               </button>
             </div>
 
@@ -207,7 +209,7 @@ export const CreatePostModal = ({ isOpen, onClose, onPublish }: CreatePostModalP
               ) : (
                 <img
                   src={previewUrl}
-                  alt="Previsualizacion del archivo seleccionado"
+                  alt={t('createPost.previewAlt')}
                   className="max-h-64 w-full object-cover"
                 />
               )}
@@ -229,7 +231,7 @@ export const CreatePostModal = ({ isOpen, onClose, onPublish }: CreatePostModalP
             onClick={() => fileInputRef.current?.click()}
             disabled={isPublishing}
             className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#EFF6FF] text-[#1E4E9D] transition-colors hover:bg-[#dcecff] disabled:cursor-not-allowed disabled:text-gray-300 md:h-11 md:w-11"
-            aria-label="Agregar multimedia"
+            aria-label={t('createPost.media')}
           >
             <ImagePlus className="h-[18px] w-[18px] md:h-5 md:w-5" strokeWidth={2.2} />
           </button>
@@ -241,7 +243,7 @@ export const CreatePostModal = ({ isOpen, onClose, onPublish }: CreatePostModalP
             className="flex h-9 min-w-0 flex-1 items-center justify-center gap-2 rounded-full bg-[#1E4E9D] px-5 text-[13px] font-black uppercase text-white transition-colors hover:bg-[#155DFC] disabled:cursor-not-allowed disabled:bg-gray-200 disabled:text-gray-400 min-[360px]:max-w-[174px] md:h-11 md:max-w-[240px] md:text-[14px]"
           >
             {isPublishing && <LoaderCircle size={16} className="animate-spin" />}
-            {isPublishing ? 'Publicando' : 'Publicar'}
+            {isPublishing ? t('createPost.publishing') : t('createPost.publish')}
           </button>
         </footer>
 

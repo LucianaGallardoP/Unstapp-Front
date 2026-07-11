@@ -3,8 +3,10 @@ import { useSearch } from '../hooks/useSearch';
 import { Search, Loader2, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { RoleAvatar } from '../../../components/common/RoleAvatar';
+import { useLanguage } from '../../../store/languageContext';
 
 export const GlobalSearch = () => {
+  const { t } = useLanguage();
   const { query, setQuery, results, isLoading, hasSearched } = useSearch();
   const [isExpanded, setIsExpanded] = useState(false);
   const navigate = useNavigate();
@@ -45,7 +47,7 @@ export const GlobalSearch = () => {
           type="text"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder="Buscar..."
+          placeholder={t('search.placeholder')}
           className="w-full border-none bg-transparent text-[13px] text-gray-700 outline-none"
           autoFocus
         />
@@ -53,7 +55,7 @@ export const GlobalSearch = () => {
           type="button"
           onClick={handleClose}
           className="ml-1 shrink-0 rounded-full p-1 text-gray-400 hover:text-gray-600"
-          aria-label="Cerrar busqueda"
+          aria-label={t('search.close')}
         >
           <X size={14} />
         </button>
@@ -66,7 +68,7 @@ export const GlobalSearch = () => {
             {/* SECCIÓN DE USUARIOS */}
             {!isLoading && results.users.length > 0 && (
               <div className="p-2">
-                <h3 className="text-xs font-bold text-gray-400 px-3 py-2 uppercase">Personas</h3>
+                <h3 className="text-xs font-bold text-gray-400 px-3 py-2 uppercase">{t('search.people')}</h3>
                 {results.users.map((user, index) => {
                   const rawName = user.fullName || user.userName || user.name || user.username || user.UserName || user.FullName || '';
                   const displayName = (typeof rawName === 'string' && rawName.trim().length > 0) 
@@ -104,7 +106,7 @@ export const GlobalSearch = () => {
             {/* SECCIÓN DE PUBLICACIONES */}
             {!isLoading && results.posts.length > 0 && (
               <div className="p-2 border-t border-gray-100">
-                <h3 className="text-xs font-bold text-gray-400 px-3 py-2 uppercase">Publicaciones</h3>
+                <h3 className="text-xs font-bold text-gray-400 px-3 py-2 uppercase">{t('search.posts')}</h3>
                 {results.posts.map((post, index) => {
                   const rawAuthor = post.authorName || post.userName || post.author?.userName || post.user?.userName || post.author?.name || post.user?.name || '';
                   const authorName = (typeof rawAuthor === 'string' && rawAuthor.trim().length > 0) 
@@ -123,7 +125,7 @@ export const GlobalSearch = () => {
             {/* MENSAJE SIN RESULTADOS (Si ambos arrays están vacíos) */}
             {!isLoading && hasSearched && results.users.length === 0 && results.posts.length === 0 && (
               <div className="p-6 text-center text-sm text-gray-500">
-                No se encontraron coincidencias para <span className="font-bold">"{query}"</span>
+                {t('search.noResults', { query })}
               </div>
             )}
           </div>

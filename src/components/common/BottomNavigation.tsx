@@ -1,5 +1,6 @@
 import { LayoutGrid, Calendar, Clock, User } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { useLanguage } from '../../store/languageContext';
 
 export type TabType = 'feed' | 'calendario' | 'horario' | 'perfil';
 
@@ -10,12 +11,13 @@ interface BottomNavigationProps {
 
 export const BottomNavigation = ({ activeTab, onTabChange }: BottomNavigationProps) => {
   const navigate = useNavigate();
+  const { t } = useLanguage();
   // Secciones principales de la app.
   const tabs = [
-    { id: 'feed', label: 'FEED', icon: LayoutGrid },
-    { id: 'calendario', label: 'CALENDARIO', icon: Calendar },
-    { id: 'horario', label: 'HORARIO', icon: Clock },
-    { id: 'perfil', label: 'PERFIL', icon: User },
+    { id: 'feed', label: t('nav.feed'), icon: LayoutGrid },
+    { id: 'calendario', label: t('nav.calendar'), icon: Calendar },
+    { id: 'horario', label: t('nav.schedule'), icon: Clock },
+    { id: 'perfil', label: t('nav.profile'), icon: User },
   ] as const;
 
   const handleTabClick = (tabId: TabType) => {

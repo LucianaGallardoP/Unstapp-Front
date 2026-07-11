@@ -4,8 +4,10 @@ import { TopBar } from '../../../components/common/TopBar';
 import { LegalTermsFooter } from '../../../components/common/LegalTermsFooter';
 import { LoginForm } from './LoginForm';
 import { DNIValidationForm } from './DNIValidationForm';
+import { useLanguage } from '../../../store/languageContext';
 
 export const LoginPage = () => {
+  const { t } = useLanguage();
   const [isFirstTime, setIsFirstTime] = useState(false);
   const [searchParams] = useSearchParams();
   const sessionExpired = searchParams.get('session') === 'expired';
@@ -16,7 +18,7 @@ export const LoginPage = () => {
       <main className="flex-grow flex flex-col items-center justify-center gap-3 p-4">
         {sessionExpired && !isFirstTime && (
           <div className="w-full max-w-[360px] rounded-xl border border-[#E7000B]/20 bg-[#E7000B]/10 px-4 py-3 text-center text-[12px] font-bold text-[#E7000B]">
-            Tu sesión expiró. Iniciá sesión nuevamente.
+            {t('login.sessionExpired')}
           </div>
         )}
 

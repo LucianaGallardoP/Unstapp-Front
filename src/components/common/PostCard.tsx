@@ -13,6 +13,7 @@ import { useNavigate } from 'react-router-dom';
 import { usePostInteractions } from '../../features/feed/hooks/usePostInteractions';
 import type { Post, PostCategory } from '../../features/feed/types/post.types';
 import { formatRelativeTime } from '../../features/feed/utils/formatRelativeTime';
+import { useLanguage } from '../../store/languageContext';
 import { CommentItem } from './CommentItem';
 import { RoleAvatar } from './RoleAvatar';
 
@@ -66,6 +67,7 @@ export const PostCard = ({
   focusedCommentId = null,
 }: PostCardProps) => {
   const navigate = useNavigate();
+  const { language, t } = useLanguage();
   // Estados de interaccion local.
   const {
     liked,
@@ -145,7 +147,7 @@ export const PostCard = ({
     dateStyle: 'medium',
     timeStyle: 'short',
   }).format(new Date(post.publishedAt));
-  const relativeTime = formatRelativeTime(post.publishedAt, currentDate);
+  const relativeTime = formatRelativeTime(post.publishedAt, currentDate, language);
   const canSendComment = isAuthenticated && newComment.trim().length > 0 && !commentLoading;
   const canOpenAuthorProfile = Boolean(post.author.id);
   const currentUserId = getCurrentUserId();
@@ -171,7 +173,7 @@ export const PostCard = ({
       setIsConfirmOpen(false);
       setIsActionsOpen(false);
     } catch {
-      setDeleteError('No se pudo eliminar la publicación.');
+      setDeleteError(t('post.deleteError'));
     } finally {
       setIsDeleteLoading(false);
     }
@@ -249,7 +251,7 @@ export const PostCard = ({
                     type="button"
                     onClick={() => setIsActionsOpen((currentValue) => !currentValue)}
                     className="-mr-1 -mt-1 flex h-7 w-7 items-center justify-center rounded-full text-gray-400 transition-colors hover:bg-gray-100 hover:text-[#1F2937]"
-                    aria-label="Abrir menu de publicación"
+                    aria-label={t('post.deletePublication')}
                     aria-expanded={isActionsOpen}
                   >
                     <MoreVertical size={16} />
@@ -266,7 +268,7 @@ export const PostCard = ({
                         className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-[12px] font-bold text-[#E7000B] transition-colors hover:bg-[#E7000B]/10"
                       >
                         <Trash2 size={14} />
-                        Eliminar Publicación
+                        {t('post.deletePost')}
                       </button>
                     </div>
                   )}
@@ -290,11 +292,11 @@ export const PostCard = ({
           type="button"
           onClick={() => setSelectedImageUrl(post.media?.url ?? null)}
           className="mt-3 block w-full overflow-hidden rounded-2xl bg-gray-50"
-          aria-label="Ver imagen completa"
+          aria-label={t('post.viewImage')}
         >
           <img
             src={post.media.url}
-            alt={post.media.alt ?? 'Contenido multimedia de la publicación'}
+            alt={post.media.alt ?? t('post.imageAlt')}
             className="max-h-72 w-full object-cover transition-transform duration-200 hover:scale-[1.01] sm:max-h-80"
           />
         </button>
@@ -317,7 +319,7 @@ export const PostCard = ({
           className="mt-3 flex items-center gap-2 rounded-2xl border border-gray-100 bg-gray-50 px-3 py-2 text-[12px] font-semibold text-gray-600 sm:text-[13px]"
         >
           <FileText size={16} className="shrink-0 text-[#155DFC]" />
-          <span className="truncate">{post.media.fileName ?? 'Archivo adjunto'}</span>
+          <span className="truncate">{post.media.fileName ?? t('post.fileAttachment')}</span>
         </a>
       )}
 
@@ -374,7 +376,7 @@ export const PostCard = ({
             <header className="flex items-start justify-between gap-3 border-b border-gray-100 pb-3">
               <div className="min-w-0">
                 <h3 className="text-[15px] font-black uppercase text-[#1F2937] sm:text-[16px]">
-                  Comentarios
+                  {t('post.comments')}
                 </h3>
                 <p className="mt-1 truncate text-[12px] font-semibold text-gray-400">
                   {post.author.name}: {post.content}
@@ -384,7 +386,7 @@ export const PostCard = ({
                 type="button"
                 onClick={closeComments}
                 className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-gray-500 transition-colors hover:bg-gray-100 hover:text-[#1F2937]"
-                aria-label="Cerrar comentarios"
+                aria-label={t('post.closeComments')}
               >
                 <X size={18} />
               </button>
@@ -412,7 +414,7 @@ export const PostCard = ({
                 );
               }) : (
                 <p className="rounded-2xl bg-gray-50 px-4 py-6 text-center text-[12px] font-semibold text-gray-400">
-                  Todavía no hay comentarios.
+                  {t('post.noComments')}
                 </p>
               )}
             </div>
@@ -428,7 +430,7 @@ export const PostCard = ({
                       handleAddComment();
                     }
                   }}
-                  placeholder={isAuthenticated ? 'Escribir comentario' : 'Iniciá sesión para comentar'}
+                  placeholder={isAuthenticated ? t('post.writeComment') : t('post.loginToComment')}
                   disabled={!isAuthenticated || commentLoading}
                   className="min-w-0 flex-1 rounded-xl border border-gray-200 bg-white px-3 py-2 text-[12px] text-gray-800 outline-none focus:border-[#1E4E9D] disabled:cursor-not-allowed disabled:bg-gray-100 disabled:text-gray-400"
                 />
@@ -437,7 +439,7 @@ export const PostCard = ({
                   onClick={handleAddComment}
                   disabled={!canSendComment}
                   className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#1E4E9D] text-white transition-colors hover:bg-[#155DFC] disabled:cursor-not-allowed disabled:bg-gray-200 disabled:text-gray-400"
-                  aria-label="Enviar comentario"
+                  aria-label={t('post.sendComment')}
                 >
                   <Send size={15} />
                 </button>
@@ -455,10 +457,10 @@ export const PostCard = ({
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/35 px-4">
           <section className="w-full max-w-[340px] rounded-2xl bg-white p-5 shadow-[0_18px_45px_rgba(15,23,42,0.28)]">
             <h3 className="text-[16px] font-black text-[#1F2937]">
-              Eliminar publicación
+              {t('post.deleteConfirmTitle')}
             </h3>
             <p className="mt-2 text-[13px] leading-5 text-gray-600">
-              ¿Estás seguro de eliminar esta publicación?
+              {t('post.deleteConfirmText')}
             </p>
 
             <div className="mt-5 flex justify-end gap-2">
@@ -468,7 +470,7 @@ export const PostCard = ({
                 disabled={isDeleteLoading}
                 className="rounded-xl px-4 py-2 text-[12px] font-bold text-gray-500 transition-colors hover:bg-gray-100 disabled:opacity-60"
               >
-                Cancelar
+                {t('post.cancel')}
               </button>
               <button
                 type="button"
@@ -476,7 +478,7 @@ export const PostCard = ({
                 disabled={isDeleteLoading}
                 className="rounded-xl bg-[#E7000B] px-4 py-2 text-[12px] font-bold text-white transition-colors hover:bg-[#b80009] disabled:cursor-wait disabled:opacity-70"
               >
-                {isDeleteLoading ? 'Eliminando...' : 'Eliminar'}
+                {isDeleteLoading ? t('post.deleting') : t('post.delete')}
               </button>
             </div>
           </section>
@@ -488,20 +490,20 @@ export const PostCard = ({
           className="fixed inset-0 z-[100] flex touch-none items-center justify-center overflow-hidden bg-black/95 px-3 py-16"
           role="dialog"
           aria-modal="true"
-          aria-label="Imagen de la publicación"
+          aria-label={t('post.imageAlt')}
           onClick={() => setSelectedImageUrl(null)}
         >
           <button
             type="button"
             onClick={() => setSelectedImageUrl(null)}
             className="fixed left-4 top-4 z-[101] flex h-11 w-11 items-center justify-center rounded-full bg-black/40 text-white transition-colors hover:bg-white/15 focus:outline-none focus:ring-2 focus:ring-white/70"
-            aria-label="Cerrar imagen"
+            aria-label={t('post.closeImage')}
           >
             <X size={24} strokeWidth={2.2} />
           </button>
           <img
             src={selectedImageUrl}
-            alt={post.media?.alt ?? 'Imagen de la publicación'}
+            alt={post.media?.alt ?? t('post.imageAlt')}
             className="max-h-[calc(100vh-96px)] max-w-[min(100vw-24px,980px)] select-none object-contain"
             onClick={(event) => event.stopPropagation()}
           />

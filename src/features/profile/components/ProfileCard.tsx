@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import type { ProfileResponseDTO, ProfileStatsDTO } from '../types/profile.dtos';
 import { RoleAvatar } from '../../../components/common/RoleAvatar';
+import { useLanguage, type LanguageCode } from '../../../store/languageContext';
 
 const formatCompactNumber = (value: string | number) => {
   const numericValue = typeof value === 'number' ? value : Number(value);
@@ -30,14 +31,14 @@ const getStoredRoles = () => {
   }
 };
 
-const formatRoleLabel = (role: string) => {
+const formatRoleLabel = (role: string, language: LanguageCode) => {
   const normalizedRole = role.toLowerCase();
 
-  if (normalizedRole.includes('admin')) return 'Administrador';
-  if (normalizedRole.includes('docente')) return 'Docente';
+  if (normalizedRole.includes('admin')) return language === 'en' ? 'Administrator' : 'Administrador';
+  if (normalizedRole.includes('docente')) return language === 'en' ? 'Teacher' : 'Docente';
   if (normalizedRole.includes('bar')) return 'Bar';
 
-  return 'Alumno';
+  return language === 'en' ? 'Student' : 'Alumno';
 };
 
 interface ProfileCardProps {
@@ -59,6 +60,7 @@ export const ProfileCard = ({
   onEditProfile,
   onLogout,
 }: ProfileCardProps) => {
+  const { language, t } = useLanguage();
   const [isFollowing, setIsFollowing] = useState(profile.isFollowing);
   const [followersCount, setFollowersCount] = useState(stats.followers);
   const [isFollowLoading, setIsFollowLoading] = useState(false);
@@ -67,8 +69,8 @@ export const ProfileCard = ({
     const roles = profile.roles?.length ? profile.roles : profile.isOwnProfile ? getStoredRoles() : [];
     const primaryRole = roles[0];
 
-    return primaryRole ? formatRoleLabel(primaryRole) : null;
-  }, [profile.isOwnProfile, profile.roles]);
+    return primaryRole ? formatRoleLabel(primaryRole, language) : null;
+  }, [language, profile.isOwnProfile, profile.roles]);
 
   useEffect(() => {
     setIsFollowing(profile.isFollowing);
@@ -104,7 +106,7 @@ export const ProfileCard = ({
     } catch {
       setIsFollowing(previousIsFollowing);
       setFollowersCount(previousFollowersCount);
-      setFollowError('No se pudo actualizar el seguimiento');
+      setFollowError(t('profile.followError'));
     } finally {
       setIsFollowLoading(false);
     }
@@ -140,14 +142,14 @@ export const ProfileCard = ({
               onClick={onEditProfile}
               className="h-8 rounded-lg bg-[#F0F2F5] px-4 text-[12px] font-bold text-gray-900 transition-colors hover:bg-[#E4E6E9] sm:h-9 sm:px-5 sm:text-[13px]"
             >
-              Editar Perfil
+              {t('profile.edit')}
             </button>
             <button
               type="button"
               onClick={onLogout}
               className="h-8 rounded-lg bg-[#E7000B] px-4 text-[12px] font-bold text-white transition-colors hover:bg-[#b80009] sm:h-9 sm:px-5 sm:text-[13px]"
             >
-              Cerrar Sesión
+              {t('profile.logout')}
             </button>
           </div>
         ) : (
@@ -162,7 +164,7 @@ export const ProfileCard = ({
                 : 'bg-[#155DFC] text-white hover:bg-blue-700'
             }`}
           >
-            {isFollowing ? 'Siguiendo' : 'Seguir'}
+            {isFollowing ? t('profile.following') : t('profile.follow')}
           </button>
         )}
       </div>
@@ -198,15 +200,15 @@ export const ProfileCard = ({
       <div className="mt-6 flex justify-center gap-6 px-5 sm:gap-10">
         <div className="flex flex-col items-center">
           <span className="text-[18px] font-black leading-none text-black sm:text-[20px]">{formatCompactNumber(stats.posts)}</span>
-          <span className="mt-1 text-[10px] font-bold text-gray-500 sm:text-[11px]">PUBLICACIONES</span>
+          <span className="mt-1 text-[10px] font-bold text-gray-500 sm:text-[11px]">{t('profile.publications')}</span>
         </div>
         <div className="flex flex-col items-center">
           <span className="text-[18px] font-black leading-none text-black sm:text-[20px]">{formatCompactNumber(followersCount)}</span>
-          <span className="mt-1 text-[10px] font-bold text-gray-500 sm:text-[11px]">SEGUIDORES</span>
+          <span className="mt-1 text-[10px] font-bold text-gray-500 sm:text-[11px]">{t('profile.followers')}</span>
         </div>
         <div className="flex flex-col items-center">
           <span className="text-[18px] font-black leading-none text-black sm:text-[20px]">{formatCompactNumber(stats.following)}</span>
-          <span className="mt-1 text-[10px] font-bold text-gray-500 sm:text-[11px]">SIGUIENDO</span>
+          <span className="mt-1 text-[10px] font-bold text-gray-500 sm:text-[11px]">{t('profile.followingCount')}</span>
         </div>
       </div>
     </article>
