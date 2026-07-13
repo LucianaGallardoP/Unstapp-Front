@@ -32,6 +32,9 @@ const getNotificationText = (notification: ApiRecord) =>
     asString(notification.type),
     asString(notification.entityType),
     asString(notification.message),
+    asString(notification.targetType),
+    asString(notification.relatedEntityType),
+    asString(notification.entityName),
   ].join(' '));
 
 const isFollowNotification = (notification: ApiRecord) => {
@@ -63,6 +66,7 @@ const mapNotificationFromApi = (apiNotification: unknown): AppNotification => {
   const comment = asRecord(notification.comment ?? data.comment ?? notification.response ?? data.response);
   const target = asRecord(notification.target ?? data.target ?? post ?? comment);
   const id = notification.notificationId ?? notification.id ?? crypto.randomUUID();
+  const notificationText = getNotificationText(notification);
   const actorName =
     asString(notification.user) ||
     asString(notification.actor) ||
@@ -71,7 +75,27 @@ const mapNotificationFromApi = (apiNotification: unknown): AppNotification => {
     asString(actor.userName) ||
     'Unstapp';
   const isFollow = isFollowNotification(notification);
-  const isCommentNotification = getNotificationText(notification).includes('coment') || getNotificationText(notification).includes('comment');
+  const isCommentNotification = notificationText.includes('coment') || notificationText.includes('comment');
+  const isPostInteraction =
+    notificationText.includes('post') ||
+    notificationText.includes('public') ||
+    notificationText.includes('publicacion') ||
+    notificationText.includes('publicacion') ||
+    notificationText.includes('me gusta') ||
+    notificationText.includes('like') ||
+    isCommentNotification;
+  const genericTargetId =
+    asId(notification.targetId) ||
+    asId(notification.entityId) ||
+    asId(notification.relatedEntityId) ||
+    asId(notification.resourceId) ||
+    asId(notification.objectId) ||
+    asId(data.targetId) ||
+    asId(data.entityId) ||
+    asId(data.relatedEntityId) ||
+    asId(data.resourceId) ||
+    asId(data.objectId) ||
+    asId(target.id);
   const actorId =
     asId(notification.actorId) ||
     asId(notification.triggeredByUserId) ||
@@ -116,8 +140,18 @@ const mapNotificationFromApi = (apiNotification: unknown): AppNotification => {
     ? undefined
     : asId(notification.postId) ||
       asId(notification.publicationId) ||
+      asId(notification.postID) ||
+      asId(notification.publicacionId) ||
+      asId(notification.publicationID) ||
+      asId(notification.relatedPostId) ||
+      asId(notification.relatedPublicationId) ||
       asId(data.postId) ||
       asId(data.publicationId) ||
+      asId(data.postID) ||
+      asId(data.publicacionId) ||
+      asId(data.publicationID) ||
+      asId(data.relatedPostId) ||
+      asId(data.relatedPublicationId) ||
       asId(data.targetPostId) ||
       asId(data.targetPublicationId) ||
       asId(post.postId) ||
@@ -126,7 +160,7 @@ const mapNotificationFromApi = (apiNotification: unknown): AppNotification => {
       asId(comment.publicationId) ||
       asId(target.postId) ||
       asId(target.publicationId) ||
-      (isCommentNotification ? undefined : asId(notification.targetId) || asId(notification.entityId) || asId(data.targetId) || asId(data.entityId) || asId(target.id));
+      (isPostInteraction ? genericTargetId : undefined);
 
   return {
     id: asId(id) ?? crypto.randomUUID(),
@@ -166,7 +200,10 @@ const mapNotificationFromApi = (apiNotification: unknown): AppNotification => {
       asId(comment.id) ||
       asId(target.commentId) ||
       asId(target.responseId) ||
-      (isCommentNotification ? asId(notification.targetId) || asId(notification.entityId) || asId(data.targetId) || asId(data.entityId) || asId(target.id) : undefined),
+      asId(notification.relatedCommentId) ||
+      asId(notification.relatedResponseId) ||
+      asId(data.relatedCommentId) ||
+      asId(data.relatedResponseId),
     createdAt:
       asString(notification.createdAt) ||
       asString(notification.date) ||

@@ -159,3 +159,25 @@ body {
 .theme-dark .notifications-panel button[disabled] {
   color: #64748b !important;
 }
+
+.theme-dark .post-card {
+  background-color: #111827 !important;
+  border-color: rgba(148, 163, 184, 0.28) !important;
+}
+
+.theme-dark .post-card p,
+.theme-dark .post-card .text-\[\#374151\],
+.theme-dark .post-card .text-gray-600 {
+  color: #dbeafe !important;
+}
+
+.theme-dark .post-card button,
+.theme-dark .post-card span,
+.theme-dark .post-card time {
+  color: #cbd5e1;
+}
+
+.theme-dark .post-card h3,
+.theme-dark .post-card .text-\[\#1F2937\] {
+  color: #f8fafc !important;
+}

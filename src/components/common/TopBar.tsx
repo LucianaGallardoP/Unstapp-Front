@@ -66,6 +66,29 @@ const resolveProfileIdByActorName = async (actorName: string) => {
   }
 };
 
+const translateNotificationText = (value: string, language: 'es' | 'en') => {
+  if (language === 'es') {
+    return value;
+  }
+
+  return value
+    .replace(/comentó en tu post/gi, 'commented on your post')
+    .replace(/comento en tu post/gi, 'commented on your post')
+    .replace(/comentó tu post/gi, 'commented on your post')
+    .replace(/comento tu post/gi, 'commented on your post')
+    .replace(/dio me gusta a tu post/gi, 'liked your post')
+    .replace(/le dio me gusta a tu post/gi, 'liked your post')
+    .replace(/empezó a seguirte/gi, 'started following you')
+    .replace(/empezo a seguirte/gi, 'started following you')
+    .replace(/comenzó a seguirte/gi, 'started following you')
+    .replace(/comenzo a seguirte/gi, 'started following you')
+    .replace(/publicó un nuevo post/gi, 'published a new post')
+    .replace(/publico un nuevo post/gi, 'published a new post')
+    .replace(/realizó una nueva publicación/gi, 'published a new post')
+    .replace(/realizo una nueva publicacion/gi, 'published a new post')
+    .replace(/tiene una novedad/gi, 'has an update');
+};
+
 export const TopBar = ({ simple = false }: TopBarProps) => {
   const { isDarkMode, toggleTheme } = useTheme();
   const { language, toggleLanguage, t } = useLanguage();
@@ -112,6 +135,12 @@ export const TopBar = ({ simple = false }: TopBarProps) => {
       notificationText.includes('coment') ||
       notificationText.includes('comment') ||
       notificationText.includes('respuesta');
+    const isPostNotification =
+      notificationText.includes('post') ||
+      notificationText.includes('public') ||
+      notificationText.includes('me gusta') ||
+      notificationText.includes('like') ||
+      isCommentNotification;
     let profileId = notification.profileId ?? notification.actorId;
 
     if (isFollowRequest) {
@@ -140,6 +169,11 @@ export const TopBar = ({ simple = false }: TopBarProps) => {
 
     if (notification.postId) {
       navigate(`/feed?postId=${notification.postId}`);
+      return;
+    }
+
+    if (isPostNotification) {
+      navigate('/feed');
       return;
     }
 
@@ -268,6 +302,8 @@ export const TopBar = ({ simple = false }: TopBarProps) => {
                       )}
 
                       {notifications.map((notification) => {
+                        const translatedAction = translateNotificationText(notification.action, language);
+                        const translatedTarget = translateNotificationText(notification.target, language);
                         const NotificationIcon =
                           notification.type === 'interaction' &&
                           notification.action.includes('me gusta')
@@ -311,10 +347,10 @@ export const TopBar = ({ simple = false }: TopBarProps) => {
                             <div className="min-w-0 flex-1">
                               <h3 className="text-[12px] leading-4 text-[#1F2937] md:text-[13px]">
                                 <span className="font-black">{notification.actor}</span>
-                                <span className="font-semibold"> {notification.action}</span>
+                                <span className="font-semibold"> {translatedAction}</span>
                               </h3>
                               <p className="mt-0.5 line-clamp-2 text-[11px] font-semibold leading-4 text-[#526174] md:text-[12px]">
-                                {notification.target}
+                                {translatedTarget}
                               </p>
                               <time
                                 dateTime={notification.createdAt}

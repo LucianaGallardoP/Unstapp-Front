@@ -18,7 +18,7 @@ const getIsCurrentUserAdmin = () => {
 };
 
 export const SchedulePage = () => {
-  const { t } = useLanguage();
+  const { language, t } = useLanguage();
   const [isCreateSubjectModalOpen, setIsCreateSubjectModalOpen] = useState(false);
   const [editingClass, setEditingClass] = useState<ScheduleClass | null>(null);
   const [classToDelete, setClassToDelete] = useState<ScheduleClass | null>(null);
@@ -38,6 +38,18 @@ export const SchedulePage = () => {
     setSelectedDay,
     fetchSchedules,
   } = useWeeklySchedule(careerId);
+  const visibleWeekDays = weekDays.map((day) => ({
+    ...day,
+    label: language === 'en'
+      ? ({
+          lun: 'MOND',
+          mar: 'TUES',
+          mie: 'WEDN',
+          jue: 'THUR',
+          vie: 'FRID',
+        } as const)[day.id]
+      : day.label,
+  }));
 
   const handleEdit = async (values: CreateScheduleClassInput) => {
     if (!editingClass) return;
@@ -129,7 +141,7 @@ export const SchedulePage = () => {
 
           <nav className="mt-5" aria-label="Selector semanal">
             <ul className="grid grid-cols-5 items-center gap-2">
-              {weekDays.map((day) => {
+              {visibleWeekDays.map((day) => {
                 const isActive = selectedDay === day.id;
 
                 return (

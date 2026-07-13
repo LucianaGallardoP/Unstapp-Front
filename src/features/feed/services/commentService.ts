@@ -1,5 +1,5 @@
 import { apiClient } from '../../../services/apiClient';
-import type { PostComment } from '../types/post.types';
+import type { PostAuthorRole, PostComment } from '../types/post.types';
 
 const getToken = () => localStorage.getItem('unstapp_token');
 
@@ -18,7 +18,28 @@ const asString = (value: unknown, fallback = '') =>
 const asOptionalId = (value: unknown) =>
   typeof value === 'number' || typeof value === 'string' ? value : undefined;
 
-const getProfileAvatarFromApi = async (authorId: number | string) => {
+const normalizeRole = (value: unknown): PostAuthorRole => {
+  const rawRole = Array.isArray(value) ? value[0] : value;
+  const role = asString(rawRole).normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+
+  if (role.includes('docente') || role.includes('profesor')) return 'Docente';
+  if (role.includes('admin')) return 'Administrativo';
+  if (role.includes('bar')) return 'Bar';
+
+  return 'Alumno';
+};
+
+const getCurrentUserRole = (): PostAuthorRole => {
+  try {
+    const roles = JSON.parse(localStorage.getItem('unstapp_user_roles') ?? '[]');
+
+    return normalizeRole(Array.isArray(roles) ? roles[0] : undefined);
+  } catch {
+    return 'Alumno';
+  }
+};
+
+const getProfileSummaryFromApi = async (authorId: number | string) => {
   try {
     const response = await apiClient.get<unknown>(`/profile/${authorId}`, {
       headers: getAuthHeaders(),
@@ -27,25 +48,36 @@ const getProfileAvatarFromApi = async (authorId: number | string) => {
     const data = asRecord(root.data ?? root.value ?? root.profile ?? root);
     const user = asRecord(data.user ?? data.profile ?? data.person ?? data);
     const rootUser = asRecord(root.user ?? root.profile ?? root.person);
+    const roles =
+      user.roles ??
+      user.role ??
+      rootUser.roles ??
+      rootUser.role ??
+      data.roles ??
+      data.role ??
+      root.roles ??
+      root.role;
 
-    return (
-      asString(user.avatarUrl) ||
-      asString(user.profileImageUrl) ||
-      asString(user.profilePictureUrl) ||
-      asString(user.profilePhotoUrl) ||
-      asString(user.photoUrl) ||
-      asString(rootUser.avatarUrl) ||
-      asString(rootUser.profileImageUrl) ||
-      asString(rootUser.profilePictureUrl) ||
-      asString(rootUser.profilePhotoUrl) ||
-      asString(rootUser.photoUrl) ||
-      asString(root.avatarUrl) ||
-      asString(root.profileImageUrl) ||
-      asString(root.profilePictureUrl) ||
-      asString(root.profilePhotoUrl) ||
-      asString(root.photoUrl) ||
-      undefined
-    );
+    return {
+      avatarUrl:
+        asString(user.avatarUrl) ||
+        asString(user.profileImageUrl) ||
+        asString(user.profilePictureUrl) ||
+        asString(user.profilePhotoUrl) ||
+        asString(user.photoUrl) ||
+        asString(rootUser.avatarUrl) ||
+        asString(rootUser.profileImageUrl) ||
+        asString(rootUser.profilePictureUrl) ||
+        asString(rootUser.profilePhotoUrl) ||
+        asString(rootUser.photoUrl) ||
+        asString(root.avatarUrl) ||
+        asString(root.profileImageUrl) ||
+        asString(root.profilePictureUrl) ||
+        asString(root.profilePhotoUrl) ||
+        asString(root.photoUrl) ||
+        undefined,
+      role: normalizeRole(roles),
+    };
   } catch {
     return undefined;
   }
@@ -59,16 +91,17 @@ const hydrateCommentAvatars = async (comments: PostComment[]) => {
         .filter((authorId): authorId is number | string => typeof authorId === 'number' || typeof authorId === 'string'),
     ),
   );
-  const avatarEntries = await Promise.all(
-    uniqueAuthorIds.map(async (authorId) => [String(authorId), await getProfileAvatarFromApi(authorId)] as const),
+  const profileEntries = await Promise.all(
+    uniqueAuthorIds.map(async (authorId) => [String(authorId), await getProfileSummaryFromApi(authorId)] as const),
   );
-  const avatarsByAuthorId = new Map(avatarEntries);
+  const profilesByAuthorId = new Map(profileEntries);
 
   return comments.map((comment) => ({
     ...comment,
     author: {
       ...comment.author,
-      avatarUrl: comment.author.avatarUrl || avatarsByAuthorId.get(String(comment.author.id)),
+      avatarUrl: comment.author.avatarUrl || profilesByAuthorId.get(String(comment.author.id))?.avatarUrl,
+      role: profilesByAuthorId.get(String(comment.author.id))?.role || comment.author.role,
     },
   }));
 };
@@ -141,7 +174,15 @@ const mapCommentFromApi = (apiComment: unknown, fallbackContent: string): PostCo
         asString(comment.profilePictureUrl) ||
         asString(comment.photoUrl) ||
         undefined,
-      role: 'Alumno',
+      role: normalizeRole(
+        author.role ??
+        author.roles ??
+        comment.role ??
+        comment.userRole ??
+        comment.authorRole ??
+        comment.rol ??
+        (!parsedId || String(parsedId) === String(currentUserId) ? getCurrentUserRole() : undefined),
+      ),
     },
     publishedAt:
       asString(comment.publishedAt) ||
@@ -184,8 +225,10 @@ export const commentService = {
       createdComment.author.id = localStorage.getItem('unstapp_user_id') || undefined;
     }
 
-    if (createdComment.author.id && !createdComment.author.avatarUrl) {
-      createdComment.author.avatarUrl = await getProfileAvatarFromApi(createdComment.author.id);
+    if (createdComment.author.id) {
+      const profileSummary = await getProfileSummaryFromApi(createdComment.author.id);
+      createdComment.author.avatarUrl = createdComment.author.avatarUrl || profileSummary?.avatarUrl;
+      createdComment.author.role = profileSummary?.role || createdComment.author.role;
     }
 
     return createdComment;

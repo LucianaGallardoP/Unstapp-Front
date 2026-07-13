@@ -183,7 +183,7 @@ export const PostCard = ({
     <>
     <article
       id={domId}
-      className={`w-full rounded-[22px] border ${highlighted ? 'border-[#155DFC] ring-2 ring-[#155DFC]/20' : 'border-gray-100'} bg-white px-4 py-4 shadow-[0_10px_30px_rgba(15,23,42,0.08)] transition-all duration-200 sm:px-5 sm:py-5 md:h-full ${
+      className={`post-card w-full rounded-[22px] border ${highlighted ? 'border-[#155DFC] ring-2 ring-[#155DFC]/20' : 'border-gray-100'} bg-white px-4 py-4 shadow-[0_10px_30px_rgba(15,23,42,0.08)] transition-all duration-200 sm:px-5 sm:py-5 md:h-full ${
         isRemoving ? 'scale-[0.98] opacity-0' : 'scale-100 opacity-100'
       }`}
     >
