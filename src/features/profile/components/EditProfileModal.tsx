@@ -1,5 +1,6 @@
 import { Camera, ImagePlus, Trash2, X } from 'lucide-react';
 import { useEffect, useState, type ChangeEvent } from 'react';
+import { useLanguage } from '../../../store/languageContext';
 import type { ProfileEditValues, ProfileResponseDTO } from '../types/profile.dtos';
 
 interface EditProfileModalProps {
@@ -20,6 +21,7 @@ export const EditProfileModal = ({
   onClose,
   onSave,
 }: EditProfileModalProps) => {
+  const { t } = useLanguage();
   const [avatarFile, setAvatarFile] = useState<File | undefined>();
   const [coverFile, setCoverFile] = useState<File | undefined>();
   const [avatarPreview, setAvatarPreview] = useState(profile.avatarUrl);
@@ -117,7 +119,7 @@ export const EditProfileModal = ({
       });
       onClose();
     } catch {
-      setSaveError('No se pudo actualizar el perfil.');
+      setSaveError(t('profile.updateError'));
     } finally {
       setIsSaving(false);
     }

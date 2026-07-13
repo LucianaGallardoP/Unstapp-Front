@@ -3,13 +3,14 @@ import { useNavigate } from 'react-router-dom';
 import { BottomNavigation } from '../../../components/common/BottomNavigation';
 import { TopBar } from '../../../components/common/TopBar';
 import { useCareers } from '../hooks/useCareers';
+import { useLanguage } from '../../../store/languageContext';
 
 const DEFAULT_COLOR = '#1E4E9D';
-const DEFAULT_YEAR = 'Año 1';
 
 export const AdminCareerSelectionPage = () => {
   const navigate = useNavigate();
   const { careers, loading, error } = useCareers();
+  const { t } = useLanguage();
 
   return (
     <div className="min-h-screen bg-white pb-20 text-gray-900 md:bg-gray-50">
@@ -19,13 +20,13 @@ export const AdminCareerSelectionPage = () => {
         <section className="mx-auto w-full max-w-[430px] sm:max-w-[560px] md:max-w-[600px]">
           <header className="mb-4">
             <h1 className="text-[10px] font-black uppercase tracking-wide text-[#526174]">
-              Carreras de la Facultad
+              {t('schedule.facultyCareers')}
             </h1>
           </header>
 
           {loading && (
             <p className="text-center text-[12px] font-bold text-[#526174] py-10">
-              Cargando carreras...
+              {t('schedule.loadingCareers')}
             </p>
           )}
 
@@ -37,7 +38,7 @@ export const AdminCareerSelectionPage = () => {
 
           {!loading && !error && careers.length === 0 && (
             <p className="text-center text-[12px] font-bold text-[#526174] py-10">
-              No se encontraron carreras.
+              {t('schedule.emptyCareers')}
             </p>
           )}
 
@@ -60,7 +61,7 @@ export const AdminCareerSelectionPage = () => {
                     {career.name}
                   </h2>
                   <p className="mt-2 text-[9px] font-black uppercase text-[#526174]">
-                    {DEFAULT_YEAR}
+                    {t('schedule.yearOne')}
                   </p>
                 </div>
 

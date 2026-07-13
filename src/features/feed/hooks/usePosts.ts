@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { AxiosError } from 'axios';
+import i18n from '../../../i18n';
 import { postService } from '../services/postService';
 import type { Post } from '../types/post.types';
 
@@ -18,9 +19,9 @@ export const usePosts = () => {
       setPosts(apiPosts);
     } catch (requestError) {
       if (requestError instanceof AxiosError && requestError.response?.status === 401) {
-        setError('Tu sesion vencio. Volve a iniciar sesion para ver las publicaciones.');
+        setError(i18n.t('feed.sessionExpired'));
       } else {
-        setError('No se pudieron cargar las publicaciones.');
+        setError(i18n.t('feed.loadError'));
       }
     } finally {
       setLoading(false);
@@ -49,7 +50,7 @@ export const usePosts = () => {
           : [requestedPost, ...currentPosts];
       });
     } catch {
-      setError('No se pudo cargar la publicación solicitada.');
+      setError(i18n.t('feed.loadPostError'));
     }
  
   }, []);

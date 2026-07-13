@@ -1,5 +1,6 @@
 import React from 'react';
 import { Plus, X } from 'lucide-react';
+import { useLanguage } from '../../../store/languageContext';
 import type { CalendarEvent, CalendarEventType } from '../types/calendar.types';
 
 interface DailyEventsCardProps {
@@ -45,6 +46,7 @@ export const DailyEventsCard: React.FC<DailyEventsCardProps> = ({
   onAddEventClick,
   onEventClick,
 }) => {
+  const { t } = useLanguage();
   const isAlumno = (() => {
     try {
       const rolesStr = localStorage.getItem('unstapp_user_roles');
@@ -75,7 +77,7 @@ export const DailyEventsCard: React.FC<DailyEventsCardProps> = ({
       <div className="mb-8 flex max-h-[50vh] flex-col gap-4 overflow-y-auto pr-1">
         {isLoading && (
           <p className="rounded-2xl bg-[#EFF6FF] px-4 py-5 text-center text-[13px] font-bold text-[#526174]">
-            Cargando eventos...
+            {t('calendar.loadingEvents')}
           </p>
         )}
 
@@ -122,7 +124,7 @@ export const DailyEventsCard: React.FC<DailyEventsCardProps> = ({
 
         {!isLoading && events.length === 0 && (
           <p className="rounded-2xl bg-[#EFF6FF] px-4 py-5 text-center text-[13px] font-bold text-[#526174]">
-            No hay eventos para este día.
+            {t('calendar.emptyDay')}
           </p>
         )}
       </div>

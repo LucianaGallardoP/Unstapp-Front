@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { X } from 'lucide-react';
+import { useLanguage } from '../../../store/languageContext';
 import type { CreateScheduleClassInput, ScheduleClass, WeekDayId } from '../hooks/useWeeklySchedule';
 import { weekDays } from '../hooks/useWeeklySchedule';
 
@@ -18,6 +19,7 @@ export const CreateSubjectModal = ({
   onClose,
   onCreate,
 }: CreateSubjectModalProps) => {
+  const { t } = useLanguage();
   const [selectedDay, setSelectedDay] = useState<WeekDayId>(initialValues?.day ?? initialDay);
   const [subject, setSubject] = useState(initialValues?.subject ?? '');
   const [startTime, setStartTime] = useState(initialValues?.startTime ?? '15:00');
@@ -145,7 +147,7 @@ export const CreateSubjectModal = ({
 
         {wasSubmitted && !canSubmit && (
           <p className="mt-3 rounded-lg bg-[#E7000B]/10 px-3 py-2 text-[10px] font-bold text-[#E7000B]">
-            Completá todos los campos para {mode === 'edit' ? 'editar' : 'agregar'} la materia.
+            {t(mode === 'edit' ? 'schedule.completeFieldsEdit' : 'schedule.completeFieldsCreate')}
           </p>
         )}
 

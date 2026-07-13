@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import i18n from '../../../i18n';
 import {
   profileService,
   type ProfileViewData,
@@ -84,7 +85,7 @@ export const useProfile = (userId: string | undefined) => {
     setHasLoadedProfile(false);
 
     if (!profileId) {
-      setError('No se pudo identificar el usuario autenticado.');
+      setError(i18n.t('profile.identifyError'));
       return;
     }
 
@@ -108,7 +109,7 @@ export const useProfile = (userId: string | undefined) => {
         }
       } catch {
         if (isMounted) {
-          setError('No se pudo cargar el perfil actualizado.');
+          setError(i18n.t('profile.loadError'));
         }
       } finally {
         if (isMounted) {

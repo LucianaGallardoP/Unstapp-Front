@@ -125,7 +125,7 @@ export const ProfileCard = ({
       </div>
 
       <div className="px-5 flex items-end justify-between -mt-10 mb-3 sm:-mt-12 sm:mb-4">
-        <div className="relative shrink-0 rounded-[18px] border-[3px] border-white shadow-sm">
+        <div className="relative shrink-0">
           <RoleAvatar
             avatarUrl={profile.avatarUrl}
             name={profile.fullName}

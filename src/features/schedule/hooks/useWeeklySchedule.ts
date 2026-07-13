@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import i18n from '../../../i18n';
 import { scheduleService } from '../services/scheduleService';
 import type { CareerDto, ScheduleDto } from '../types/schedule.dtos';
 
@@ -127,7 +128,7 @@ export const useWeeklySchedule = (careerId?: string) => {
 
       setScheduleClasses(schedules.map((schedule) => ({ ...mapScheduleClass(schedule), day })));
     } catch {
-      setContextError('No se pudieron cargar los horarios.');
+      setContextError(i18n.t('schedule.loadError'));
     }
   }, [careerId, selectedDay]);
 
@@ -148,7 +149,7 @@ export const useWeeklySchedule = (careerId?: string) => {
       setSelectedDay(newClass.day);
       await fetchSchedules(newClass.day);
     } catch {
-      setContextError('No se pudo crear la materia.');
+      setContextError(i18n.t('schedule.createError'));
     }
   };
 
@@ -184,8 +185,8 @@ export const useWeeklySchedule = (careerId?: string) => {
       );
       setSelectedDay(values.day);
     } catch {
-      setContextError('No se pudo actualizar la materia.');
-      throw new Error('No se pudo actualizar la materia.');
+      setContextError(i18n.t('schedule.updateError'));
+      throw new Error(i18n.t('schedule.updateError'));
     }
   };
 
@@ -194,8 +195,8 @@ export const useWeeklySchedule = (careerId?: string) => {
       await scheduleService.deleteSchedule(classId);
       setScheduleClasses((currentClasses) => currentClasses.filter((scheduleClass) => scheduleClass.id !== classId));
     } catch {
-      setContextError('No se pudo eliminar la materia.');
-      throw new Error('No se pudo eliminar la materia.');
+      setContextError(i18n.t('schedule.deleteError'));
+      throw new Error(i18n.t('schedule.deleteError'));
     }
   };
 
@@ -229,7 +230,7 @@ export const useWeeklySchedule = (careerId?: string) => {
         }
       } catch {
         if (isMounted) {
-          setContextError('No se pudo cargar el contexto académico.');
+          setContextError(i18n.t('schedule.contextLoadError'));
           setCurrentStudentContext(careerId ? getCareerContext() : defaultStudentContext);
         }
       } finally {

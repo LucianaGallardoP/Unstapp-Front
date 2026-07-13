@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import i18n from '../../../i18n';
 import { calendarService } from '../services/calendarService';
 import type {
   CalendarEvent,
@@ -88,7 +89,7 @@ export const useCalendarEvents = (visibleDate: Date, selectedDate: Date) => {
         }
       } catch {
         if (isMounted) {
-          setError('No se pudieron cargar los eventos del calendario.');
+          setError(i18n.t('calendar.loadError'));
         }
       } finally {
         if (isMounted) {
@@ -170,7 +171,7 @@ export const useCalendarEvents = (visibleDate: Date, selectedDate: Date) => {
 
       return createdEvent;
     } catch (err) {
-      setError('No se pudo crear el evento.');
+      setError(i18n.t('calendar.createError'));
       throw err;
     } finally {
       setIsCreating(false);
@@ -184,7 +185,7 @@ export const useCalendarEvents = (visibleDate: Date, selectedDate: Date) => {
       setEvents((currentEvents) => currentEvents.filter((event) => event.id !== eventId));
       setDailyEvents((currentEvents) => currentEvents.filter((event) => event.id !== eventId));
     } catch (err) {
-      setError('No se pudo eliminar el evento.');
+      setError(i18n.t('calendar.deleteError'));
       throw err;
     }
   };

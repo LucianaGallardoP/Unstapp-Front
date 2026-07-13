@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import i18n from '../../../i18n';
 import { scheduleService } from '../services/scheduleService';
 import type { CareerDto } from '../types/schedule.dtos';
 
@@ -20,7 +21,7 @@ export const useCareers = () => {
         }
       } catch (err) {
         if (isMounted) {
-          setError('No se pudieron cargar las carreras.');
+          setError(i18n.t('schedule.careersLoadError'));
         }
       } finally {
         if (isMounted) {

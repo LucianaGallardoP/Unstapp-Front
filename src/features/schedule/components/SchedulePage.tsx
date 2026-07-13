@@ -50,6 +50,25 @@ export const SchedulePage = () => {
         } as const)[day.id]
       : day.label,
   }));
+  const displayStudentContext = {
+    ...studentContext,
+    year:
+      studentContext.year === 'Año académico' || studentContext.year === 'AÃ±o acadÃ©mico'
+        ? t('schedule.academicYear')
+        : studentContext.year === '2do año' || studentContext.year === '2do aÃ±o'
+          ? t('schedule.defaultYear')
+          : studentContext.year,
+    commission:
+      studentContext.commission === 'Administración' || studentContext.commission === 'AdministraciÃ³n'
+        ? t('schedule.administration')
+        : studentContext.commission === 'Comisión B' || studentContext.commission === 'ComisiÃ³n B'
+          ? t('schedule.defaultCommission')
+          : studentContext.commission,
+    career:
+      studentContext.career === 'Ingeniería de Software' || studentContext.career === 'IngenierÃ­a de Software'
+        ? t('schedule.defaultCareer')
+        : studentContext.career,
+  };
 
   const handleEdit = async (values: CreateScheduleClassInput) => {
     if (!editingClass) return;
@@ -103,16 +122,16 @@ export const SchedulePage = () => {
                   </p>
                 )}
                 <h1 className="text-[12px] font-black uppercase leading-4 text-black sm:text-[14px]">
-                  {studentContext.career}
+                  {displayStudentContext.career}
                 </h1>
 
                 <div className="mt-2 grid grid-cols-2 gap-2 text-center">
                   <div>
                     <p className="text-[9px] font-black uppercase leading-3 text-[#1E4E9D]">
-                      {studentContext.year}
+                      {displayStudentContext.year}
                     </p>
                     <p className="text-[7px] font-black uppercase leading-3 text-[#526174]">
-                      {studentContext.commission}
+                      {displayStudentContext.commission}
                     </p>
                   </div>
                   <div>
@@ -120,7 +139,7 @@ export const SchedulePage = () => {
                       {t('schedule.campus')}
                     </p>
                     <p className="text-[7px] font-black uppercase leading-3 text-[#526174]">
-                      {studentContext.campus}
+                      {displayStudentContext.campus}
                     </p>
                   </div>
                 </div>

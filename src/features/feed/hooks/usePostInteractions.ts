@@ -1,4 +1,5 @@
 import { useCallback, useState } from 'react';
+import i18n from '../../../i18n';
 import { commentService } from '../services/commentService';
 import { likeService } from '../services/likeService';
 import type { PostComment } from '../types/post.types';
@@ -88,7 +89,7 @@ export const usePostInteractions = ({
     } catch {
       setLiked(liked);
       setLikesCount(likesCount);
-      setLikeError('No se pudo procesar el like');
+      setLikeError(i18n.t('post.likeError'));
     } finally {
       setLikeLoading(false);
     }
@@ -138,7 +139,7 @@ export const usePostInteractions = ({
       );
       setCommentsCount((count) => Math.max(0, count - 1));
       setNewComment(trimmedComment);
-      setCommentError('No se pudo publicar el comentario');
+      setCommentError(i18n.t('post.commentCreateError'));
     } finally {
       setCommentLoading(false);
     }
@@ -162,7 +163,7 @@ export const usePostInteractions = ({
         );
       });
       setCommentsCount((count) => count + 1);
-      setCommentError('No se pudo eliminar el comentario');
+      setCommentError(i18n.t('post.commentDeleteError'));
     }
   };
 

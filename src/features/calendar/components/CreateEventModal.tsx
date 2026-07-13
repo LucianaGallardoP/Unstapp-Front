@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Loader2, X } from 'lucide-react';
+import { useLanguage } from '../../../store/languageContext';
 import { EventTypeDropdown } from './EventTypeDropdown';
 import type {
   CalendarEventType,
@@ -44,6 +45,7 @@ export const CreateEventModal: React.FC<CreateEventModalProps> = ({
   onClose,
   onCreate,
 }) => {
+  const { t } = useLanguage();
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [type, setType] = useState<CalendarEventType>(3);
@@ -85,7 +87,7 @@ export const CreateEventModal: React.FC<CreateEventModalProps> = ({
       });
       onClose?.();
     } catch {
-      setFormError('No se pudo crear el evento.');
+      setFormError(t('calendar.createError'));
     }
   };
 
