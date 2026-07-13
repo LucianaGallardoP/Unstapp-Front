@@ -40,6 +40,17 @@ const getNotificationText = (notification: ApiRecord) =>
 const isFollowNotification = (notification: ApiRecord) => {
   const text = getNotificationText(notification);
 
+  if (
+    text.includes('post') ||
+    text.includes('public') ||
+    text.includes('coment') ||
+    text.includes('comment') ||
+    text.includes('me gusta') ||
+    text.includes('like')
+  ) {
+    return false;
+  }
+
   return text.includes('segu') || text.includes('follow') || text.includes('follower');
 };
 

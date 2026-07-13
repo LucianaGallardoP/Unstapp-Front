@@ -127,20 +127,29 @@ export const TopBar = ({ simple = false }: TopBarProps) => {
       .normalize('NFD')
       .replace(/[\u0300-\u036f]/g, '')
       .toLowerCase();
-    const isFollowRequest =
-      notificationText.includes('segu') ||
-      notificationText.includes('follow') ||
-      notificationText.includes('follower');
-    const isCommentNotification =
-      notificationText.includes('coment') ||
-      notificationText.includes('comment') ||
-      notificationText.includes('respuesta');
+    const notificationContentText = `${notification.action} ${notification.target}`
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .toLowerCase();
     const isPostNotification =
       notificationText.includes('post') ||
       notificationText.includes('public') ||
       notificationText.includes('me gusta') ||
       notificationText.includes('like') ||
-      isCommentNotification;
+      notificationText.includes('coment') ||
+      notificationText.includes('comment') ||
+      notificationText.includes('respuesta');
+    const isFollowRequest =
+      !isPostNotification &&
+      (
+        notificationContentText.includes('segu') ||
+        notificationContentText.includes('follow') ||
+        notificationContentText.includes('follower')
+      );
+    const isCommentNotification =
+      notificationText.includes('coment') ||
+      notificationText.includes('comment') ||
+      notificationText.includes('respuesta');
     let profileId = notification.profileId ?? notification.actorId;
 
     if (isFollowRequest) {
