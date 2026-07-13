@@ -305,15 +305,15 @@ export const SchedulePage = () => {
               type="button"
               onClick={() => setClassToDelete(null)}
               className="absolute right-4 top-4 flex h-7 w-7 items-center justify-center rounded-full text-black transition-colors hover:bg-gray-100"
-              aria-label="Cerrar confirmación"
+              aria-label={t('schedule.closeDeleteConfirmation')}
             >
               <X size={16} />
             </button>
             <h2 className="text-[15px] font-black text-[#1F2937]">
-              ¿Estás seguro?
+              {t('schedule.deleteConfirmTitle')}
             </h2>
             <p className="mt-3 text-[12px] font-semibold leading-5 text-[#526174]">
-              Se eliminará la materia {classToDelete.subject} del cronograma visible.
+              {t('schedule.deleteConfirmText', { subject: classToDelete.subject })}
             </p>
             <div className="mt-5 flex justify-center gap-3">
               <button

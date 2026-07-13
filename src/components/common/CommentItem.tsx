@@ -9,6 +9,7 @@ import { searchService } from '../../features/search/services/searchService';
 import type { PostComment } from '../../features/feed/types/post.types';
 import { formatRelativeTime } from '../../features/feed/utils/formatRelativeTime';
 import { useLanguage } from '../../store/languageContext';
+import { translateRole } from '../../utils/roleLabels';
 import { RoleAvatar } from './RoleAvatar';
 
 interface CommentItemProps {
@@ -128,7 +129,7 @@ export const CommentItem = ({ comment, currentDate, onDelete, canDelete = false 
             {comment.author.name}
           </button>
           <span className="text-[10px] font-semibold leading-4 text-gray-400">
-            {comment.author.role}
+            {translateRole(comment.author.role, t)}
           </span>
           <span aria-hidden="true" className="text-[10px] text-gray-300">
             &middot;

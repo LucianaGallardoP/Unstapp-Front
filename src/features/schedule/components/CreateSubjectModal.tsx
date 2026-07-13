@@ -19,7 +19,7 @@ export const CreateSubjectModal = ({
   onClose,
   onCreate,
 }: CreateSubjectModalProps) => {
-  const { t } = useLanguage();
+  const { language, t } = useLanguage();
   const [selectedDay, setSelectedDay] = useState<WeekDayId>(initialValues?.day ?? initialDay);
   const [subject, setSubject] = useState(initialValues?.subject ?? '');
   const [startTime, setStartTime] = useState(initialValues?.startTime ?? '15:00');
@@ -62,7 +62,7 @@ export const CreateSubjectModal = ({
       <section className="relative w-full max-w-[390px] rounded-[18px] bg-white px-6 py-5 shadow-[0_20px_48px_rgba(15,23,42,0.28)]">
         <header className="mb-5 flex items-center justify-center">
           <h2 className="text-[15px] font-black text-[#1E4E9D]">
-            {mode === 'edit' ? 'Editar Materia' : 'Agregar Materia'}
+            {t(mode === 'edit' ? 'schedule.editSubject' : 'schedule.addSubject')}
           </h2>
           <button
             type="button"
@@ -76,17 +76,17 @@ export const CreateSubjectModal = ({
 
         <div className="flex flex-col gap-3">
           <label className="grid grid-cols-[78px_1fr] items-center gap-3 text-[11px] font-black text-[#1F2937]">
-            Materia
+            {t('schedule.subjectLabel')}
             <input
               value={subject}
               onChange={(event) => setSubject(event.target.value)}
-              placeholder="Nombre de la Materia"
+              placeholder={t('schedule.subjectPlaceholder')}
               className={fieldClass(isSubjectValid)}
             />
           </label>
 
           <label className="grid grid-cols-[78px_1fr] items-center gap-3 text-[11px] font-black text-[#1F2937]">
-            Día
+            {t('schedule.dayLabel')}
             <select
               value={selectedDay}
               onChange={(event) => setSelectedDay(event.target.value as WeekDayId)}
@@ -94,14 +94,16 @@ export const CreateSubjectModal = ({
             >
               {weekDays.map((day) => (
                 <option key={day.id} value={day.id}>
-                  {day.label}
+                  {language === 'en'
+                    ? ({ lun: 'MOND', mar: 'TUES', mie: 'WEDN', jue: 'THUR', vie: 'FRID' } as const)[day.id]
+                    : day.label}
                 </option>
               ))}
             </select>
           </label>
 
           <label className="grid grid-cols-[78px_1fr] items-center gap-3 text-[11px] font-black text-[#1F2937]">
-            Hora
+            {t('schedule.timeLabel')}
             <input
               type="time"
               step={900}
@@ -112,7 +114,7 @@ export const CreateSubjectModal = ({
           </label>
 
           <label className="grid grid-cols-[78px_1fr] items-center gap-3 text-[11px] font-black text-[#1F2937]">
-            Duración
+            {t('schedule.durationLabel')}
             <input
               type="number"
               min={0.5}
@@ -125,21 +127,21 @@ export const CreateSubjectModal = ({
           </label>
 
           <label className="grid grid-cols-[78px_1fr] items-center gap-3 text-[11px] font-black text-[#1F2937]">
-            Profesor
+            {t('schedule.teacherLabel')}
             <input
               value={teacher}
               onChange={(event) => setTeacher(event.target.value)}
-              placeholder="Nombre del Profesor"
+              placeholder={t('schedule.teacherPlaceholder')}
               className={fieldClass(isTeacherValid)}
             />
           </label>
 
           <label className="grid grid-cols-[78px_1fr] items-center gap-3 text-[11px] font-black text-[#1F2937]">
-            Aula
+            {t('schedule.classroomLabel')}
             <input
               value={room}
               onChange={(event) => setRoom(event.target.value)}
-              placeholder="Aula o laboratorio"
+              placeholder={t('schedule.classroomPlaceholder')}
               className={fieldClass(isRoomValid)}
             />
           </label>
@@ -157,7 +159,7 @@ export const CreateSubjectModal = ({
             onClick={handleSubmit}
             className="h-8 min-w-36 rounded-full bg-[#1E4E9D] px-8 text-[12px] font-black text-white transition-colors hover:bg-[#155DFC]"
           >
-            {mode === 'edit' ? 'Guardar' : 'Agregar'}
+            {t(mode === 'edit' ? 'schedule.saveSubject' : 'schedule.addSubjectAction')}
           </button>
         </div>
       </section>

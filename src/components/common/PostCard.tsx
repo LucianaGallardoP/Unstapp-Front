@@ -14,6 +14,7 @@ import { usePostInteractions } from '../../features/feed/hooks/usePostInteractio
 import type { Post, PostCategory } from '../../features/feed/types/post.types';
 import { formatRelativeTime } from '../../features/feed/utils/formatRelativeTime';
 import { useLanguage } from '../../store/languageContext';
+import { translateRole } from '../../utils/roleLabels';
 import { CommentItem } from './CommentItem';
 import { RoleAvatar } from './RoleAvatar';
 
@@ -34,13 +35,6 @@ const categoryStyles: Record<PostCategory, string> = {
   carrera: 'bg-[#9810FA] text-white',
   bar: 'bg-[#155DFC] text-white',
   alumno: 'bg-[#FF751F] text-white',
-};
-
-const categoryLabels: Record<PostCategory, string> = {
-  administrativo: 'ADMINISTRATIVO',
-  carrera: 'CARRERA',
-  bar: 'BAR',
-  alumno: 'ALUMNO',
 };
 
 const getCurrentUserId = () => localStorage.getItem('unstapp_user_id');
@@ -242,7 +236,7 @@ export const PostCard = ({
               <span
                 className={`rounded-full px-2 py-1 text-[8px] font-black tracking-wide sm:text-[9px] ${categoryStyles[post.category]}`}
               >
-                {categoryLabels[post.category]}
+                {translateRole(post.author.role, t).toUpperCase()}
               </span>
 
               {canShowDeleteAction && (

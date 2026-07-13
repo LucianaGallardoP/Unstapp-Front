@@ -24,8 +24,8 @@ const formatDate = (date: string, language: 'es' | 'en') =>
     year: 'numeric',
   }).format(new Date(date));
 
-const formatTime = (date: string) =>
-  new Intl.DateTimeFormat('es-AR', {
+const formatTime = (date: string, language: 'es' | 'en') =>
+  new Intl.DateTimeFormat(language === 'en' ? 'en-US' : 'es-AR', {
     hour: '2-digit',
     minute: '2-digit',
   }).format(new Date(date));
@@ -77,7 +77,7 @@ export const EventDetailModal = ({
         <div className="flex gap-3 rounded-2xl bg-gray-50 px-4 py-3">
           <CalendarDays size={18} className="mt-0.5 shrink-0 text-[#1E4E9D]" />
           <div>
-            <dt className="font-black uppercase text-gray-400">{language === 'en' ? 'Day' : 'Día'}</dt>
+            <dt className="font-black uppercase text-gray-400">{t('calendar.dayLabel')}</dt>
             <dd className="mt-0.5 font-semibold capitalize">{formatDate(event.startDate, language)}</dd>
           </div>
         </div>
@@ -85,9 +85,9 @@ export const EventDetailModal = ({
         <div className="flex gap-3 rounded-2xl bg-gray-50 px-4 py-3">
           <Clock size={18} className="mt-0.5 shrink-0 text-[#1E4E9D]" />
           <div>
-            <dt className="font-black uppercase text-gray-400">{language === 'en' ? 'Time' : 'Hora'}</dt>
+            <dt className="font-black uppercase text-gray-400">{t('calendar.timeLabel')}</dt>
             <dd className="mt-0.5 font-semibold">
-              {formatTime(event.startDate)} - {formatTime(event.endDate)}
+              {formatTime(event.startDate, language)} - {formatTime(event.endDate, language)}
             </dd>
           </div>
         </div>
@@ -95,7 +95,7 @@ export const EventDetailModal = ({
         <div className="flex gap-3 rounded-2xl bg-gray-50 px-4 py-3">
           <Tag size={18} className="mt-0.5 shrink-0 text-[#1E4E9D]" />
           <div>
-            <dt className="font-black uppercase text-gray-400">{language === 'en' ? 'Type' : 'Tipo'}</dt>
+            <dt className="font-black uppercase text-gray-400">{t('calendar.typeLabel')}</dt>
             <dd className="mt-0.5 font-semibold">{translatedTypeLabels[event.type]}</dd>
           </div>
         </div>
@@ -103,9 +103,9 @@ export const EventDetailModal = ({
         <div className="flex gap-3 rounded-2xl bg-gray-50 px-4 py-3">
           <FileText size={18} className="mt-0.5 shrink-0 text-[#1E4E9D]" />
           <div>
-            <dt className="font-black uppercase text-gray-400">{language === 'en' ? 'Description' : 'Descripción'}</dt>
+            <dt className="font-black uppercase text-gray-400">{t('calendar.descriptionLabel')}</dt>
             <dd className="mt-0.5 whitespace-pre-line font-semibold leading-5 text-gray-600">
-              {event.description || (language === 'en' ? 'No description.' : 'Sin descripción.')}
+              {event.description || t('calendar.noDescription')}
             </dd>
           </div>
         </div>

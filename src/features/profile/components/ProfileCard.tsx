@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
 import type { ProfileResponseDTO, ProfileStatsDTO } from '../types/profile.dtos';
 import { RoleAvatar } from '../../../components/common/RoleAvatar';
-import { useLanguage, type LanguageCode } from '../../../store/languageContext';
+import { useLanguage } from '../../../store/languageContext';
+import { translateRole } from '../../../utils/roleLabels';
 
 const formatCompactNumber = (value: string | number) => {
   const numericValue = typeof value === 'number' ? value : Number(value);
@@ -31,16 +32,6 @@ const getStoredRoles = () => {
   }
 };
 
-const formatRoleLabel = (role: string, language: LanguageCode) => {
-  const normalizedRole = role.toLowerCase();
-
-  if (normalizedRole.includes('admin')) return language === 'en' ? 'Administrator' : 'Administrador';
-  if (normalizedRole.includes('docente')) return language === 'en' ? 'Teacher' : 'Docente';
-  if (normalizedRole.includes('bar')) return 'Bar';
-
-  return language === 'en' ? 'Student' : 'Alumno';
-};
-
 interface ProfileCardProps {
   profile: ProfileResponseDTO;
   stats?: ProfileStatsDTO;
@@ -60,7 +51,7 @@ export const ProfileCard = ({
   onEditProfile,
   onLogout,
 }: ProfileCardProps) => {
-  const { language, t } = useLanguage();
+  const { t } = useLanguage();
   const [isFollowing, setIsFollowing] = useState(profile.isFollowing);
   const [followersCount, setFollowersCount] = useState(stats.followers);
   const [isFollowLoading, setIsFollowLoading] = useState(false);
@@ -69,8 +60,8 @@ export const ProfileCard = ({
     const roles = profile.roles?.length ? profile.roles : profile.isOwnProfile ? getStoredRoles() : [];
     const primaryRole = roles[0];
 
-    return primaryRole ? formatRoleLabel(primaryRole, language) : null;
-  }, [language, profile.isOwnProfile, profile.roles]);
+    return primaryRole ? translateRole(primaryRole, t) : null;
+  }, [profile.isOwnProfile, profile.roles, t]);
 
   useEffect(() => {
     setIsFollowing(profile.isFollowing);

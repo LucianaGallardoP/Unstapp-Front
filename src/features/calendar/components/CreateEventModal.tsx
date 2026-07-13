@@ -14,8 +14,8 @@ interface CreateEventModalProps {
   onCreate: (payload: CreateCalendarEventPayload) => Promise<void>;
 }
 
-const formatDateTitle = (date: Date) =>
-  new Intl.DateTimeFormat('es-AR', {
+const formatDateTitle = (date: Date, language: 'es' | 'en') =>
+  new Intl.DateTimeFormat(language === 'en' ? 'en-US' : 'es-AR', {
     day: 'numeric',
     month: 'long',
   }).format(date);
@@ -45,7 +45,7 @@ export const CreateEventModal: React.FC<CreateEventModalProps> = ({
   onClose,
   onCreate,
 }) => {
-  const { t } = useLanguage();
+  const { language, t } = useLanguage();
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [type, setType] = useState<CalendarEventType>(3);
@@ -102,13 +102,13 @@ export const CreateEventModal: React.FC<CreateEventModalProps> = ({
     >
       <div className="relative mb-7 flex items-center justify-center sm:mb-9">
         <h2 className="px-7 text-center text-[1.15rem] font-bold tracking-tight text-[#1f4e99] sm:px-0 sm:text-[1.25rem]">
-          Crear Evento - {formatDateTitle(selectedDate)}
+          {t('calendar.createEventForDate', { date: formatDateTitle(selectedDate, language) })}
         </h2>
         <button
           type="button"
           onClick={onClose}
           className="absolute right-0 top-[-2.25rem] rounded-full p-1.5 text-gray-800 transition-colors hover:bg-gray-100 sm:top-1/2 sm:-translate-y-1/2"
-          aria-label="Cerrar"
+          aria-label={t('common.close')}
         >
           <X className="h-6 w-6" strokeWidth={1.5} />
         </button>
@@ -116,23 +116,23 @@ export const CreateEventModal: React.FC<CreateEventModalProps> = ({
 
       <div className="mb-8 flex flex-col gap-5">
         <label className="flex flex-col gap-2 text-[14px] font-[800] text-[#2c2c2c]">
-          Título del evento
+          {t('calendar.eventTitleLabel')}
           <input
             type="text"
             value={title}
             onChange={(event) => setTitle(event.target.value)}
-            placeholder="Título para el evento"
+            placeholder={t('calendar.eventTitlePlaceholder')}
             className="rounded-full border border-[#1f4e99] px-4 py-2 text-[13px] font-medium text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-[#1f4e99]"
           />
         </label>
 
         <label className="flex flex-col gap-2 text-[14px] font-[800] text-[#2c2c2c]">
-          Tipo de evento
+          {t('calendar.eventTypeLabel')}
           <EventTypeDropdown value={type} onChange={setType} />
         </label>
 
         <label className="flex flex-col gap-2 text-[14px] font-[800] text-[#2c2c2c]">
-          Hora del evento
+          {t('calendar.eventTimeLabel')}
           <select
             value={time}
             onChange={(event) => setTime(event.target.value)}
@@ -147,11 +147,11 @@ export const CreateEventModal: React.FC<CreateEventModalProps> = ({
         </label>
 
         <label className="flex flex-col gap-2 text-[14px] font-[800] text-[#2c2c2c]">
-          Descripción <span className="text-[11px] font-semibold text-gray-400">Opcional</span>
+          {t('calendar.eventDescriptionLabel')} <span className="text-[11px] font-semibold text-gray-400">{t('calendar.optional')}</span>
           <textarea
             value={description}
             onChange={(event) => setDescription(event.target.value)}
-            placeholder="Detalle opcional del evento"
+            placeholder={t('calendar.eventDescriptionPlaceholder')}
             rows={3}
             className="resize-none rounded-2xl border border-[#1f4e99] px-4 py-3 text-[13px] font-medium text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-[#1f4e99]"
           />
@@ -171,7 +171,7 @@ export const CreateEventModal: React.FC<CreateEventModalProps> = ({
           className="flex min-w-40 items-center justify-center gap-2 rounded-full bg-[#21519c] px-10 py-3.5 text-[15px] font-bold text-white transition-colors hover:bg-[#1a4079] disabled:cursor-not-allowed disabled:bg-gray-300"
         >
           {isSubmitting && <Loader2 size={16} className="animate-spin" />}
-          {isSubmitting ? 'Creando...' : 'Crear Evento'}
+          {isSubmitting ? t('calendar.creatingEvent') : t('calendar.createEventAction')}
         </button>
       </div>
     </form>

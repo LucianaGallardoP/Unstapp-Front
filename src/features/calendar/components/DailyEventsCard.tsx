@@ -19,21 +19,23 @@ const typeThemes: Record<CalendarEventType, string> = {
   4: 'bg-gradient-to-b from-[#e8f8dd] to-[#f4fff0] text-[#7ed957]',
 };
 
-const getMonthInitials = (date: Date) =>
-  new Intl.DateTimeFormat('es-AR', { month: 'short' })
+const getLocale = (language: 'es' | 'en') => language === 'en' ? 'en-US' : 'es-AR';
+
+const getMonthInitials = (date: Date, language: 'es' | 'en') =>
+  new Intl.DateTimeFormat(getLocale(language), { month: 'short' })
     .format(date)
     .replace('.', '')
     .slice(0, 3)
     .toUpperCase();
 
-const formatTitleDate = (date: Date) =>
-  new Intl.DateTimeFormat('es-AR', {
+const formatTitleDate = (date: Date, language: 'es' | 'en') =>
+  new Intl.DateTimeFormat(getLocale(language), {
     day: 'numeric',
     month: 'long',
   }).format(date);
 
-const formatTime = (date: string) =>
-  new Intl.DateTimeFormat('es-AR', {
+const formatTime = (date: string, language: 'es' | 'en') =>
+  new Intl.DateTimeFormat(getLocale(language), {
     hour: '2-digit',
     minute: '2-digit',
   }).format(new Date(date));
@@ -46,7 +48,7 @@ export const DailyEventsCard: React.FC<DailyEventsCardProps> = ({
   onAddEventClick,
   onEventClick,
 }) => {
-  const { t } = useLanguage();
+  const { language, t } = useLanguage();
   const isAlumno = (() => {
     try {
       const rolesStr = localStorage.getItem('unstapp_user_roles');
@@ -62,13 +64,13 @@ export const DailyEventsCard: React.FC<DailyEventsCardProps> = ({
     <div className="relative w-full max-w-[420px] rounded-[2.5rem] bg-white p-8 font-sans shadow-[0_12px_40px_-10px_rgb(0,0,0,0.15)]">
       <div className="relative mb-8 flex items-center justify-center">
         <h2 className="text-center text-[1.3rem] font-bold tracking-tight text-[#1f4e99]">
-          Eventos del {formatTitleDate(selectedDate)}
+          {t('calendar.eventsForDate', { date: formatTitleDate(selectedDate, language) })}
         </h2>
         <button
           type="button"
           onClick={onClose}
           className="absolute right-0 top-1/2 -translate-y-1/2 rounded-full p-1.5 text-gray-800 transition-colors hover:bg-gray-100"
-          aria-label="Cerrar"
+          aria-label={t('common.close')}
         >
           <X className="h-6 w-6" strokeWidth={1.5} />
         </button>
@@ -96,7 +98,7 @@ export const DailyEventsCard: React.FC<DailyEventsCardProps> = ({
                   className={`flex h-14 w-14 shrink-0 flex-col items-center justify-center rounded-full shadow-[0_2px_8px_-2px_rgba(0,0,0,0.15)] ${typeThemes[event.type]}`}
                 >
                   <span className="mb-0.5 text-[10px] font-bold leading-none">
-                    {getMonthInitials(eventDate)}
+                    {getMonthInitials(eventDate, language)}
                   </span>
                   <span className="text-[22px] font-bold leading-none">
                     {eventDate.getDate()}
@@ -116,7 +118,7 @@ export const DailyEventsCard: React.FC<DailyEventsCardProps> = ({
               </div>
 
               <span className="ml-3 whitespace-nowrap text-[15px] font-bold text-black">
-                {formatTime(event.startDate)}
+                {formatTime(event.startDate, language)}
               </span>
             </button>
           );
@@ -137,7 +139,7 @@ export const DailyEventsCard: React.FC<DailyEventsCardProps> = ({
             className="flex items-center gap-2 rounded-full bg-[#21519c] px-10 py-3.5 text-[15px] font-bold text-white transition-colors hover:bg-[#1a4079]"
           >
             <Plus size={17} />
-            Agregar Evento
+            {t('calendar.addEvent')}
           </button>
         </div>
       )}
