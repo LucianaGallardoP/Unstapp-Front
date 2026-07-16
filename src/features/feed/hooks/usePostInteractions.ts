@@ -1,4 +1,5 @@
 import { useCallback, useState } from 'react';
+import { AxiosError } from 'axios';
 import i18n from '../../../i18n';
 import { commentService } from '../services/commentService';
 import { likeService } from '../services/likeService';
@@ -133,13 +134,18 @@ export const usePostInteractions = ({
           comment.id === optimisticComment.id ? createdComment : comment,
         ),
       );
-    } catch {
+    } catch (error) {
       setComments((currentComments) =>
         currentComments.filter((comment) => comment.id !== optimisticComment.id),
       );
       setCommentsCount((count) => Math.max(0, count - 1));
       setNewComment(trimmedComment);
-      setCommentError(i18n.t('post.commentCreateError'));
+      
+      if (error instanceof AxiosError && error.response?.status === 400) {
+        setCommentError(i18n.t('createPost.rejected'));
+      } else {
+        setCommentError(i18n.t('post.commentCreateError'));
+      }
     } finally {
       setCommentLoading(false);
     }
