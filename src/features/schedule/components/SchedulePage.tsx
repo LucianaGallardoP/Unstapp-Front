@@ -132,7 +132,7 @@ export const SchedulePage = () => {
                 <img
                   src="/UNSTA-logo.png"
                   alt="UNSTA"
-                  className="h-full w-full object-contain"
+                  className="h-full w-full object-contain brightness-0 invert"
                 />
               </div>
 
