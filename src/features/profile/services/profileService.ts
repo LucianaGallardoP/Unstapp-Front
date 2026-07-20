@@ -1,7 +1,8 @@
 import { apiClient } from '../../../services/apiClient';
 import type { ProfileEditValues, ProfileResponseDTO, ProfileStatsDTO } from '../types/profile.dtos';
-import type { Post } from '../../feed/types/post.types';
+import type { Post, PostAuthorRole, PostCategory } from '../../feed/types/post.types';
 import { postService } from '../../feed/services/postService';
+import { normalizeRoleKey } from '../../../utils/roleLabels';
 
 type ApiRecord = Record<string, unknown>;
 
@@ -35,13 +36,25 @@ const asNumber = (value: unknown, fallback = 0) =>
 const asBoolean = (value: unknown, fallback = false) =>
   typeof value === 'boolean' ? value : fallback;
 
-const asStringList = (value: unknown) => {
+const asStringList = (value: unknown): string[] => {
   if (Array.isArray(value)) {
-    return value.filter((item): item is string => typeof item === 'string');
+    return value.flatMap(asStringList);
   }
 
   if (typeof value === 'string' && value.trim()) {
     return [value];
+  }
+
+  const record = asRecord(value);
+  const nestedValue =
+    asString(record.name) ||
+    asString(record.role) ||
+    asString(record.roleName) ||
+    asString(record.displayName) ||
+    asString(record.description);
+
+  if (nestedValue) {
+    return [nestedValue];
   }
 
   return [];
@@ -83,18 +96,37 @@ export const MOCK_PROFILE_STATS: ProfileStatsDTO = {
 
 
 
-const mapPostFromApi = (apiPost: unknown, fallbackAuthor: { id: number; name: string; avatarUrl?: string }): Post => {
+const normalizeProfilePostRole = (role?: string): PostAuthorRole => {
+  const roleKey = normalizeRoleKey(role);
+
+  if (roleKey === 'admin') return 'Administrativo';
+  if (roleKey === 'teacher') return 'Docente';
+  if (roleKey === 'bar') return 'Bar';
+
+  return 'Alumno';
+};
+
+const normalizeProfilePostCategory = (role: PostAuthorRole): PostCategory => {
+  if (role === 'Administrativo') return 'administrativo';
+  if (role === 'Docente') return 'carrera';
+  if (role === 'Bar') return 'bar';
+
+  return 'alumno';
+};
+
+const mapPostFromApi = (apiPost: unknown, fallbackAuthor: { id: number; name: string; avatarUrl?: string; role?: string }): Post => {
   const post = asRecord(apiPost);
+  const authorRole = normalizeProfilePostRole(fallbackAuthor.role);
 
   return {
     id: String(post.id ?? post.postId ?? crypto.randomUUID()),
     author: {
       id: fallbackAuthor.id,
       name: fallbackAuthor.name,
-      role: 'Alumno',
+      role: authorRole,
       avatarUrl: fallbackAuthor.avatarUrl,
     },
-    category: 'alumno',
+    category: normalizeProfilePostCategory(authorRole),
     audience: 'general',
     publishedAt: asString(post.publishedAt) || asString(post.createdAt) || asString(post.postDate) || asString(post.date) || new Date().toISOString(),
     content:
@@ -130,11 +162,34 @@ const mapProfileFromApi = (
   const roles = [
     ...asStringList(user.roles),
     ...asStringList(user.role),
+    ...asStringList(user.roleName),
+    ...asStringList(user.rol),
+    ...asStringList(user.userRole),
+    ...asStringList(user.tipoUsuario),
+    ...asStringList(user.type),
     ...asStringList(rootUser.roles),
     ...asStringList(rootUser.role),
+    ...asStringList(rootUser.roleName),
+    ...asStringList(rootUser.rol),
+    ...asStringList(rootUser.userRole),
+    ...asStringList(rootUser.tipoUsuario),
+    ...asStringList(rootUser.type),
     ...asStringList(data.roles),
     ...asStringList(data.role),
+    ...asStringList(data.roleName),
+    ...asStringList(data.rol),
+    ...asStringList(data.userRole),
+    ...asStringList(data.tipoUsuario),
+    ...asStringList(data.type),
+    ...asStringList(root.roles),
+    ...asStringList(root.role),
+    ...asStringList(root.roleName),
+    ...asStringList(root.rol),
+    ...asStringList(root.userRole),
+    ...asStringList(root.tipoUsuario),
+    ...asStringList(root.type),
   ];
+  const primaryRole = roles[0];
 
   return {
     profile: {
@@ -151,6 +206,7 @@ const mapProfileFromApi = (
         asString(root.username) ||
         fallbackProfile.fullName,
       careers: careers.length ? careers : fallbackProfile.careers,
+      role: primaryRole,
       roles: roles.length ? roles : isOwnProfile ? undefined : fallbackProfile.roles,
       bio: asString(user.bio) || asString(user.description) || fallbackProfile.bio,
       avatarUrl:
@@ -185,6 +241,7 @@ const mapProfileFromApi = (
           id: fallbackProfile.userId,
           name: fallbackProfile.fullName,
           avatarUrl: fallbackProfile.avatarUrl,
+          role: primaryRole ?? fallbackProfile.role ?? fallbackProfile.roles?.[0],
         }))
       : [],
   };
@@ -211,12 +268,15 @@ export const profileService = {
     }
 
     // En el muro de perfil, cada card conserva el autor del perfil visible.
+    const profilePostRole = normalizeProfilePostRole(mappedData.profile.role ?? mappedData.profile.roles?.[0]);
     mappedData.posts = mappedData.posts.map((post) => ({
       ...post,
+      category: normalizeProfilePostCategory(profilePostRole),
       author: {
         ...post.author,
         id: mappedData.profile.userId,
         name: mappedData.profile.fullName,
+        role: profilePostRole,
         avatarUrl: mappedData.profile.avatarUrl,
       },
     }));

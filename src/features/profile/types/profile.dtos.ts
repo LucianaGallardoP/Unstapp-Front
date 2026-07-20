@@ -4,6 +4,7 @@ export interface ProfileResponseDTO {
     userId: number;
     fullName: string;
     careers: string[];
+    role?: string;
     roles?: string[];
     bio?: string;
     avatarUrl?: string;

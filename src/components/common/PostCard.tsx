@@ -11,10 +11,10 @@ import {
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { usePostInteractions } from '../../features/feed/hooks/usePostInteractions';
-import type { Post, PostCategory } from '../../features/feed/types/post.types';
+import type { Post } from '../../features/feed/types/post.types';
 import { formatRelativeTime } from '../../features/feed/utils/formatRelativeTime';
 import { useLanguage } from '../../store/languageContext';
-import { translateRole } from '../../utils/roleLabels';
+import { getRoleBadgeClass, shouldShowVerifiedForRole, translateRole } from '../../utils/roleLabels';
 import { CommentItem } from './CommentItem';
 import { RoleAvatar } from './RoleAvatar';
 
@@ -29,13 +29,6 @@ interface PostCardProps {
   initialCommentsOpen?: boolean;
   focusedCommentId?: number | string | null;
 }
-
-const categoryStyles: Record<PostCategory, string> = {
-  administrativo: 'bg-[#E7000B] text-white',
-  carrera: 'bg-[#9810FA] text-white',
-  bar: 'bg-[#155DFC] text-white',
-  alumno: 'bg-[#FF751F] text-white',
-};
 
 const getCurrentUserId = () => localStorage.getItem('unstapp_user_id');
 
@@ -146,6 +139,7 @@ export const PostCard = ({
   const canOpenAuthorProfile = Boolean(post.author.id);
   const currentUserId = getCurrentUserId();
   const isCurrentUserAdmin = getIsCurrentUserAdmin();
+  const shouldShowAuthorVerified = shouldShowVerifiedForRole(post.author.role);
   const canShowDeleteAction =
     Boolean(onDelete) &&
     (isCurrentUserAdmin || (canDelete ?? Boolean(currentUserId && post.author.id && String(currentUserId) === String(post.author.id))));
@@ -214,7 +208,7 @@ export const PostCard = ({
                   >
                     {post.author.name}
                   </button>
-                  {post.author.verified && (
+                  {(post.author.verified || shouldShowAuthorVerified) && (
                     <CheckCircle2
                       size={13}
                       className="shrink-0 text-[#155DFC]"
@@ -234,7 +228,7 @@ export const PostCard = ({
 
             <div className="relative flex shrink-0 items-start gap-1">
               <span
-                className={`rounded-full px-2 py-1 text-[8px] font-black tracking-wide sm:text-[9px] ${categoryStyles[post.category]}`}
+                className={`rounded-full px-2 py-1 text-[8px] font-black tracking-wide sm:text-[9px] ${getRoleBadgeClass(post.author.role)}`}
               >
                 {translateRole(post.author.role, t).toUpperCase()}
               </span>

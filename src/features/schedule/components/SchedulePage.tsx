@@ -17,6 +17,20 @@ const getIsCurrentUserAdmin = () => {
   }
 };
 
+const getYearBadgeParts = (yearText: string, yearLabel: string) => {
+  const normalizedYear = yearText
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase();
+  const numberMatch = normalizedYear.match(/\b([1-6])\b/) ?? normalizedYear.match(/([1-6])(?:ro|do|er|to|st|nd|rd|th)/);
+  const yearNumber = numberMatch?.[1] ?? '1';
+
+  return {
+    ordinal: `${yearNumber}\u00b0`,
+    label: yearLabel,
+  };
+};
+
 export const SchedulePage = () => {
   const { language, t } = useLanguage();
   const [isCreateSubjectModalOpen, setIsCreateSubjectModalOpen] = useState(false);
@@ -69,6 +83,7 @@ export const SchedulePage = () => {
         ? t('schedule.defaultCareer')
         : studentContext.career,
   };
+  const yearBadge = getYearBadgeParts(displayStudentContext.year, t('schedule.yearBadgeLabel'));
 
   const handleEdit = async (values: CreateScheduleClassInput) => {
     if (!editingClass) return;
@@ -113,7 +128,13 @@ export const SchedulePage = () => {
             )}
 
             <div className="flex items-center gap-3 pr-8">
-              <div className="h-14 w-14 shrink-0 rounded-[10px] bg-[#1E4E9D]" />
+              <div className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-[10px] bg-[#1E4E9D] p-1.5">
+                <img
+                  src="/UNSTA-logo.png"
+                  alt="UNSTA"
+                  className="h-full w-full object-contain"
+                />
+              </div>
 
               <div className="min-w-0 flex-1">
                 {isContextLoading && (
@@ -147,8 +168,12 @@ export const SchedulePage = () => {
             </div>
 
             <div className="mt-3 flex gap-2">
-              <span className="h-5 w-8 rounded bg-gray-200" />
-              <span className="h-5 w-8 rounded bg-gray-200" />
+              <span className="flex h-5 w-8 items-center justify-center rounded bg-white text-[9px] font-black uppercase text-[#1E4E9D] shadow-sm ring-1 ring-[#D8E0EE]">
+                {yearBadge.ordinal}
+              </span>
+              <span className="flex h-5 w-8 items-center justify-center rounded bg-white text-[7px] font-black uppercase text-[#1E4E9D] shadow-sm ring-1 ring-[#D8E0EE]">
+                {yearBadge.label}
+              </span>
             </div>
 
             {contextError && (

@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useState } from 'react';
+import { CheckCircle2 } from 'lucide-react';
 import type { ProfileResponseDTO, ProfileStatsDTO } from '../types/profile.dtos';
 import { RoleAvatar } from '../../../components/common/RoleAvatar';
 import { useLanguage } from '../../../store/languageContext';
-import { translateRole } from '../../../utils/roleLabels';
+import { getRoleBadgeClass, shouldShowVerifiedForRole, translateRole } from '../../../utils/roleLabels';
 
 const formatCompactNumber = (value: string | number) => {
   const numericValue = typeof value === 'number' ? value : Number(value);
@@ -56,12 +57,13 @@ export const ProfileCard = ({
   const [followersCount, setFollowersCount] = useState(stats.followers);
   const [isFollowLoading, setIsFollowLoading] = useState(false);
   const [followError, setFollowError] = useState<string | null>(null);
-  const roleLabel = useMemo(() => {
+  const rawRole = useMemo(() => {
     const roles = profile.roles?.length ? profile.roles : profile.isOwnProfile ? getStoredRoles() : [];
-    const primaryRole = roles[0];
 
-    return primaryRole ? translateRole(primaryRole, t) : null;
-  }, [profile.isOwnProfile, profile.roles, t]);
+    return profile.role ?? roles[0] ?? null;
+  }, [profile.isOwnProfile, profile.role, profile.roles]);
+  const roleLabel = rawRole ? translateRole(rawRole, t) : null;
+  const showVerified = shouldShowVerifiedForRole(rawRole);
 
   useEffect(() => {
     setIsFollowing(profile.isFollowing);
@@ -120,7 +122,7 @@ export const ProfileCard = ({
           <RoleAvatar
             avatarUrl={profile.avatarUrl}
             name={profile.fullName}
-            role={roleLabel}
+            role={rawRole}
             className="h-[84px] w-[84px] rounded-[15px] sm:h-[100px] sm:w-[100px]"
             iconClassName="h-11 w-11 sm:h-12 sm:w-12"
           />
@@ -165,8 +167,15 @@ export const ProfileCard = ({
           <h2 className="text-[22px] font-black tracking-tight text-black sm:text-[24px]">
             {profile.fullName}
           </h2>
+          {showVerified && (
+            <CheckCircle2
+              size={18}
+              className="shrink-0 text-[#155DFC]"
+              aria-label="Usuario verificado"
+            />
+          )}
           {roleLabel && (
-            <span className="rounded-full bg-[#EFF6FF] px-3 py-1 text-[10px] font-black uppercase text-[#1E4E9D]">
+            <span className={`rounded-full px-3 py-1 text-[10px] font-black uppercase ${getRoleBadgeClass(rawRole)}`}>
               {roleLabel}
             </span>
           )}
