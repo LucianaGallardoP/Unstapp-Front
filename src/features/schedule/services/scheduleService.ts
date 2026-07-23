@@ -202,8 +202,28 @@ export const scheduleService = {
     } catch (error: any) {
       if (error && error.response && error.response.data) {
         console.error('[scheduleService.deleteSchedule] Error del servidor. Detalles de validación:', JSON.stringify(error.response.data, null, 2));
+      }
+      throw error;
+    }
+  },
+
+  importSchedules: async (file: File): Promise<{ message: string; count?: number }> => {
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      
+      const response = await apiClient.post<any>('/horarios/import', formData, {
+        headers: {
+          ...getAuthHeaders(),
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+      return response.data;
+    } catch (error: any) {
+      if (error && error.response && error.response.data) {
+        console.error('[scheduleService.importSchedules] Error del servidor:', JSON.stringify(error.response.data, null, 2));
       } else {
-        console.error('[scheduleService.deleteSchedule] Error al eliminar horario:', error);
+        console.error('[scheduleService.importSchedules] Error al importar horarios:', error);
       }
       throw error;
     }
