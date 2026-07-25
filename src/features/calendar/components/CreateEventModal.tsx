@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Loader2, X } from 'lucide-react';
 import { useLanguage } from '../../../store/languageContext';
+import { useCareers } from '../../schedule/hooks/useCareers';
 import { EventTypeDropdown } from './EventTypeDropdown';
 import type {
   CalendarEventType,
@@ -27,16 +28,47 @@ const timeOptions = Array.from({ length: 24 * 6 }, (_, index) => {
   return `${hours}:${minutes}`;
 });
 
-const buildDateTime = (date: Date, time: string) => {
+const formatDatePart = (date: Date) => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+
+  return `${year}-${month}-${day}`;
+};
+
+const formatTimePart = (date: Date) => {
+  const hours = String(date.getHours()).padStart(2, '0');
+  const minutes = String(date.getMinutes()).padStart(2, '0');
+
+  return `${hours}:${minutes}:00`;
+};
+
+const buildLocalDateTime = (date: Date, time: string) => {
   const [hours, minutes] = time.split(':').map(Number);
-  const nextDate = new Date(date);
+  const eventDate = new Date(
+    date.getFullYear(),
+    date.getMonth(),
+    date.getDate(),
+    Number.isFinite(hours) ? hours : 0,
+    Number.isFinite(minutes) ? minutes : 0,
+  );
 
-  nextDate.setHours(Number.isFinite(hours) ? hours : 0);
-  nextDate.setMinutes(Number.isFinite(minutes) ? minutes : 0);
-  nextDate.setSeconds(0);
-  nextDate.setMilliseconds(0);
+  return `${formatDatePart(eventDate)}T${formatTimePart(eventDate)}`;
+};
 
-  return nextDate;
+const buildLocalEndDateTime = (date: Date, time: string) => {
+  const [hours, minutes] = time.split(':').map(Number);
+  const eventDate = new Date(
+    date.getFullYear(),
+    date.getMonth(),
+    date.getDate(),
+    Number.isFinite(hours) ? hours : 0,
+    Number.isFinite(minutes) ? minutes : 0,
+  );
+
+  eventDate.setHours(eventDate.getHours() + 1);
+
+  return `${formatDatePart(eventDate)}T${formatTimePart(eventDate)}`;
 };
 
 export const CreateEventModal: React.FC<CreateEventModalProps> = ({
@@ -46,10 +78,12 @@ export const CreateEventModal: React.FC<CreateEventModalProps> = ({
   onCreate,
 }) => {
   const { language, t } = useLanguage();
+  const { careers, loading: careersLoading } = useCareers();
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [type, setType] = useState<CalendarEventType>(3);
   const [time, setTime] = useState('08:00');
+  const [selectedCareerId, setSelectedCareerId] = useState('');
   const [formError, setFormError] = useState<string | null>(null);
 
   const isAlumno = (() => {
@@ -72,8 +106,8 @@ export const CreateEventModal: React.FC<CreateEventModalProps> = ({
       return;
     }
 
-    const startDate = buildDateTime(selectedDate, time);
-    const endDate = new Date(startDate.getTime() + 60 * 60 * 1000);
+    const startDate = buildLocalDateTime(selectedDate, time);
+    const endDate = buildLocalEndDateTime(selectedDate, time);
 
     setFormError(null);
 
@@ -82,8 +116,9 @@ export const CreateEventModal: React.FC<CreateEventModalProps> = ({
         title: title.trim(),
         description: description.trim(),
         type,
-        startDate: startDate.toISOString(),
-        endDate: endDate.toISOString(),
+        startDate,
+        endDate,
+        careerId: selectedCareerId ? Number(selectedCareerId) : undefined,
       });
       onClose?.();
     } catch {
@@ -129,6 +164,24 @@ export const CreateEventModal: React.FC<CreateEventModalProps> = ({
         <label className="flex flex-col gap-2 text-[14px] font-[800] text-[#2c2c2c]">
           {t('calendar.eventTypeLabel')}
           <EventTypeDropdown value={type} onChange={setType} />
+        </label>
+
+        <label className="flex flex-col gap-2 text-[14px] font-[800] text-[#2c2c2c]">
+          {t('calendar.eventCareerLabel')}
+          <select
+            value={selectedCareerId}
+            onChange={(event) => setSelectedCareerId(event.target.value)}
+            className="rounded-full border border-[#1f4e99] bg-transparent px-4 py-2 text-[13px] font-medium text-gray-700 focus:outline-none focus:ring-1 focus:ring-[#1f4e99]"
+          >
+            <option value="">
+              {careersLoading ? t('schedule.loadingCareers') : t('calendar.allCareers')}
+            </option>
+            {careers.map((career) => (
+              <option key={career.id} value={career.id}>
+                {career.name}
+              </option>
+            ))}
+          </select>
         </label>
 
         <label className="flex flex-col gap-2 text-[14px] font-[800] text-[#2c2c2c]">

@@ -1,11 +1,13 @@
 export interface CareerDto {
   id: number;
   name: string;
+  year?: string;
 }
 
 export interface ScheduleDto {
   id: number;
   careerId: number;
+  year?: string;
   subject: string;
   day: string;
   startTime: string;

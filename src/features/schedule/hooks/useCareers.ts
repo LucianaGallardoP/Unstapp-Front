@@ -3,12 +3,19 @@ import i18n from '../../../i18n';
 import { scheduleService } from '../services/scheduleService';
 import type { CareerDto } from '../types/schedule.dtos';
 
-export const useCareers = () => {
+export const useCareers = (enabled = true) => {
   const [careers, setCareers] = useState<CareerDto[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(enabled);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    if (!enabled) {
+      setCareers([]);
+      setLoading(false);
+      setError(null);
+      return;
+    }
+
     let isMounted = true;
 
     const fetchCareers = async () => {
@@ -35,7 +42,7 @@ export const useCareers = () => {
     return () => {
       isMounted = false;
     };
-  }, []);
+  }, [enabled]);
 
   return { careers, loading, error };
 };

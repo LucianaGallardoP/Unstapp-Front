@@ -33,6 +33,18 @@ const getStoredRoles = () => {
   }
 };
 
+const getWhatsAppNotificationsKey = (userId: number | string) =>
+  `unstapp_whatsapp_notifications_${userId}`;
+
+const getStoredWhatsAppNotifications = (userId: number | string, fallback = true) => {
+  const storedValue = localStorage.getItem(getWhatsAppNotificationsKey(userId));
+
+  if (storedValue === 'true') return true;
+  if (storedValue === 'false') return false;
+
+  return fallback;
+};
+
 interface ProfileCardProps {
   profile: ProfileResponseDTO;
   stats?: ProfileStatsDTO;
@@ -55,6 +67,9 @@ export const ProfileCard = ({
   const { t } = useLanguage();
   const [isFollowing, setIsFollowing] = useState(profile.isFollowing);
   const [followersCount, setFollowersCount] = useState(stats.followers);
+  const [whatsAppNotificationsEnabled, setWhatsAppNotificationsEnabled] = useState(() =>
+    getStoredWhatsAppNotifications(profile.userId, profile.whatsappNotificationsEnabled ?? true),
+  );
   const [isFollowLoading, setIsFollowLoading] = useState(false);
   const [followError, setFollowError] = useState<string | null>(null);
   const rawRole = useMemo(() => {
@@ -69,6 +84,12 @@ export const ProfileCard = ({
     setIsFollowing(profile.isFollowing);
     setFollowersCount(stats.followers);
   }, [profile.isFollowing, stats.followers]);
+
+  useEffect(() => {
+    setWhatsAppNotificationsEnabled(
+      getStoredWhatsAppNotifications(profile.userId, profile.whatsappNotificationsEnabled ?? true),
+    );
+  }, [profile.userId, profile.whatsappNotificationsEnabled]);
 
   const updateFollowersCount = (nextIsFollowing: boolean) => {
     setFollowersCount((currentCount) => {
@@ -103,6 +124,16 @@ export const ProfileCard = ({
     } finally {
       setIsFollowLoading(false);
     }
+  };
+
+  const handleWhatsAppNotificationsToggle = () => {
+    setWhatsAppNotificationsEnabled((currentValue) => {
+      const nextValue = !currentValue;
+
+      localStorage.setItem(getWhatsAppNotificationsKey(profile.userId), String(nextValue));
+
+      return nextValue;
+    });
   };
 
   return (
@@ -180,9 +211,11 @@ export const ProfileCard = ({
             </span>
           )}
         </div>
-        <p className="mt-0.5 text-[11px] font-bold uppercase text-[#155DFC] sm:text-[12px]">
-          {profile.careers.join(', ')}
-        </p>
+        {profile.careers.length > 0 && (
+          <p className="mt-0.5 text-[11px] font-bold uppercase text-[#155DFC] sm:text-[12px]">
+            {profile.careers.join(', ')}
+          </p>
+        )}
 
         {profile.bio && (
           <p className="mt-3 text-[13px] leading-snug text-gray-500 sm:text-[14px]">
@@ -194,6 +227,37 @@ export const ProfileCard = ({
           <p className="mt-3 text-[12px] font-bold text-[#E7000B]">
             {followError}
           </p>
+        )}
+
+        {profile.isOwnProfile && (
+          <div className="mt-4 flex items-center justify-between gap-3 rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3">
+            <div className="min-w-0">
+              <p className="text-[12px] font-black text-[#1F2937]">
+                {t('profile.whatsappNotifications')}
+              </p>
+              <p className="mt-0.5 text-[11px] font-semibold text-gray-500">
+                {whatsAppNotificationsEnabled
+                  ? t('profile.whatsappNotificationsOn')
+                  : t('profile.whatsappNotificationsOff')}
+              </p>
+            </div>
+
+            <button
+              type="button"
+              role="switch"
+              aria-checked={whatsAppNotificationsEnabled}
+              onClick={handleWhatsAppNotificationsToggle}
+              className={`relative h-7 w-12 shrink-0 rounded-full transition-colors ${
+                whatsAppNotificationsEnabled ? 'bg-[#1d8c57]' : 'bg-gray-300'
+              }`}
+            >
+              <span
+                className={`absolute top-1 h-5 w-5 rounded-full bg-white shadow transition-transform ${
+                  whatsAppNotificationsEnabled ? 'translate-x-6' : 'translate-x-1'
+                }`}
+              />
+            </button>
+          </div>
         )}
       </div>
 

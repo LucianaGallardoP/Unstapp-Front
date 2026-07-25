@@ -3,7 +3,8 @@ import { AxiosError } from 'axios';
 import i18n from '../../../i18n';
 import { commentService } from '../services/commentService';
 import { likeService } from '../services/likeService';
-import type { PostComment } from '../types/post.types';
+import type { PostAuthorRole, PostComment } from '../types/post.types';
+import { normalizeRoleKey } from '../../../utils/roleLabels';
 
 interface UsePostInteractionsParams {
   postId: number | string;
@@ -13,6 +14,21 @@ interface UsePostInteractionsParams {
   initialCommentsCount?: number;
   initialCommentsOpen?: boolean;
 }
+
+const getCurrentUserRole = (): PostAuthorRole => {
+  try {
+    const roles = JSON.parse(localStorage.getItem('unstapp_user_roles') ?? '[]');
+    const roleKey = normalizeRoleKey(Array.isArray(roles) ? roles.join(' ') : String(roles ?? ''));
+
+    if (roleKey === 'admin') return 'Administrativo';
+    if (roleKey === 'teacher') return 'Docente';
+    if (roleKey === 'bar') return 'Bar';
+
+    return 'Alumno';
+  } catch {
+    return 'Alumno';
+  }
+};
 
 // Maneja likes y comentarios de una publicacion.
 export const usePostInteractions = ({
@@ -111,7 +127,7 @@ export const usePostInteractions = ({
       author: {
         id: localStorage.getItem('unstapp_user_id') || undefined,
         name: localStorage.getItem('unstapp_user_name') ?? 'Vos',
-        role: 'Alumno',
+        role: getCurrentUserRole(),
       },
       publishedAt: new Date().toISOString(),
       content: trimmedComment,

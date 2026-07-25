@@ -1,5 +1,6 @@
 import { apiClient } from '../../../services/apiClient';
 import type { PostAuthorRole, PostComment } from '../types/post.types';
+import { normalizeRoleKey } from '../../../utils/roleLabels';
 
 const getToken = () => localStorage.getItem('unstapp_token');
 
@@ -15,16 +16,36 @@ const asRecord = (value: unknown): Record<string, unknown> =>
 const asString = (value: unknown, fallback = '') =>
   typeof value === 'string' ? value : fallback;
 
+const asStringList = (value: unknown): string[] => {
+  if (Array.isArray(value)) {
+    return value.flatMap(asStringList);
+  }
+
+  if (typeof value === 'string' && value.trim()) {
+    return [value];
+  }
+
+  const record = asRecord(value);
+  const nestedValue =
+    asString(record.name) ||
+    asString(record.role) ||
+    asString(record.roleName) ||
+    asString(record.displayName) ||
+    asString(record.normalizedName) ||
+    asString(record.description);
+
+  return nestedValue ? [nestedValue] : [];
+};
+
 const asOptionalId = (value: unknown) =>
   typeof value === 'number' || typeof value === 'string' ? value : undefined;
 
 const normalizeRole = (value: unknown): PostAuthorRole => {
-  const rawRole = Array.isArray(value) ? value[0] : value;
-  const role = asString(rawRole).normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+  const roleKey = normalizeRoleKey(asStringList(value).join(' '));
 
-  if (role.includes('docente') || role.includes('profesor')) return 'Docente';
-  if (role.includes('admin')) return 'Administrativo';
-  if (role.includes('bar')) return 'Bar';
+  if (roleKey === 'teacher') return 'Docente';
+  if (roleKey === 'admin') return 'Administrativo';
+  if (roleKey === 'bar') return 'Bar';
 
   return 'Alumno';
 };

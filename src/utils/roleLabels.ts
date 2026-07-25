@@ -15,7 +15,10 @@ export const normalizeRoleKey = (role?: string | null): NormalizedRoleKey => {
   if (
     normalizedRole.includes('docente') ||
     normalizedRole.includes('profesor') ||
-    normalizedRole.includes('teacher')
+    normalizedRole.includes('professor') ||
+    normalizedRole.includes('teacher') ||
+    normalizedRole.includes('educador') ||
+    normalizedRole.includes('instructor')
   ) {
     return 'teacher';
   }

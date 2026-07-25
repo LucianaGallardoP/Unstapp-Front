@@ -1,6 +1,6 @@
 export interface SearchUserDTO {
-  id?: number;
-  userId?: number;
+  id?: number | string;
+  userId?: number | string;
   fullName?: string;
   userName?: string;
   name?: string;
@@ -15,8 +15,8 @@ export interface SearchUserDTO {
 }
 
 export interface SearchPostDTO {
-  id?: number;
-  postId?: number;
+  id?: number | string;
+  postId?: number | string;
   content?: string;
   authorName?: string;
   userName?: string;

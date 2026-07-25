@@ -8,6 +8,7 @@ import { CreatePostModal } from './CreatePostModal';
 import { PostCard } from '../../../components/common/PostCard';
 import { useSearchParams } from 'react-router-dom';
 import { useLanguage } from '../../../store/languageContext';
+import { LoaderCircle } from 'lucide-react';
 
 type FeedFilter = 'todo' | 'carrera' | 'administrativo';
 
@@ -28,7 +29,20 @@ export const FeedPage = () => {
   const requestedCommentId = searchParams.get('commentId');
   const shouldOpenComments = searchParams.get('comments') === 'open' || Boolean(requestedCommentId);
   const loadedNotificationTargetRef = useRef<string | null>(null);
-  const { posts, removingPostIds, loading, error, createPost, deletePost, refreshPosts, loadPostById } = usePosts();
+  const loadMoreRef = useRef<HTMLDivElement | null>(null);
+  const {
+    posts,
+    removingPostIds,
+    loading,
+    loadingMore,
+    hasMore,
+    error,
+    createPost,
+    deletePost,
+    refreshPosts,
+    loadMorePosts,
+    loadPostById,
+  } = usePosts();
   const filters: { id: FeedFilter; label: string }[] = [
     { id: 'todo', label: t('feed.all') },
     { id: 'carrera', label: t('feed.myCareer') },
@@ -77,6 +91,27 @@ export const FeedPage = () => {
 
     return posts.filter((post) => visibleCategories.includes(post.audience));
   }, [activeFilter, posts]);
+
+  useEffect(() => {
+    const sentinel = loadMoreRef.current;
+
+    if (!sentinel || loading || loadingMore || !hasMore) {
+      return;
+    }
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          loadMorePosts();
+        }
+      },
+      { rootMargin: '260px 0px' },
+    );
+
+    observer.observe(sentinel);
+
+    return () => observer.disconnect();
+  }, [hasMore, loading, loadingMore, loadMorePosts, visiblePosts.length]);
 
   return (
     <div className="min-h-screen bg-white pb-20 text-gray-900 md:bg-gray-50">
@@ -147,6 +182,17 @@ export const FeedPage = () => {
           <p className="rounded-2xl bg-white px-4 py-6 text-center text-[13px] font-semibold text-[#808080]">
             {t('feed.emptyCategory')}
           </p>
+        )}
+
+        {posts.length > 0 && hasMore && (
+          <div ref={loadMoreRef} className="flex min-h-12 items-center justify-center py-3">
+            {loadingMore && (
+              <span className="flex items-center gap-2 text-[12px] font-bold text-[#526174]">
+                <LoaderCircle size={16} className="animate-spin" />
+                {t('feed.loadingMore')}
+              </span>
+            )}
+          </div>
         )}
       </main>
 

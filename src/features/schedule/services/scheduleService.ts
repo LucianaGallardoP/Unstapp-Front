@@ -18,6 +18,13 @@ const asRecord = (value: unknown): ApiRecord =>
 const asString = (value: unknown, fallback = '') =>
   typeof value === 'string' ? value : fallback;
 
+const asOptionalString = (value: unknown) => {
+  if (typeof value === 'string' && value.trim()) return value;
+  if (typeof value === 'number' && Number.isFinite(value)) return String(value);
+
+  return undefined;
+};
+
 const asNumber = (value: unknown, fallback = 0) => {
   if (typeof value === 'number') return value;
   if (typeof value === 'string' && value.trim() !== '') {
@@ -48,6 +55,12 @@ const mapCareerFromApi = (apiCareer: unknown): CareerDto => {
       asString(career.careerName) ||
       asString(career.carreraNombre) ||
       'Carrera sin nombre',
+    year:
+      asOptionalString(career.yearName) ||
+      asOptionalString(career.academicYear) ||
+      asOptionalString(career.year) ||
+      asOptionalString(career.anio) ||
+      asOptionalString(career['año']),
   };
 };
 
@@ -58,6 +71,12 @@ const mapScheduleFromApi = (apiSchedule: unknown): ScheduleDto => {
   return {
     id: asNumber(schedule.id ?? schedule.scheduleId ?? schedule.horarioId, Date.now()),
     careerId: asNumber(schedule.careerId ?? schedule.carreraId),
+    year:
+      asOptionalString(schedule.yearName) ||
+      asOptionalString(schedule.academicYear) ||
+      asOptionalString(schedule.year) ||
+      asOptionalString(schedule.anio) ||
+      asOptionalString(schedule['año']),
     subject:
       asString(schedule.subject) ||
       asString(schedule.materia) ||
@@ -145,7 +164,7 @@ export const scheduleService = {
     return unwrapArray(response.data).map(mapCareerFromApi).filter((career) => career.id > 0);
   },
 
-  getSchedules: async (params?: { careerId?: string | number; dia?: string }): Promise<ScheduleDto[]> => {
+  getSchedules: async (params?: { careerId?: string | number; dia?: string; year?: string | number; anio?: string | number }): Promise<ScheduleDto[]> => {
     try {
       const response = await apiClient.get<unknown>('/horarios', {
         params,

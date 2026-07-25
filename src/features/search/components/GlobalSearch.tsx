@@ -16,11 +16,18 @@ export const GlobalSearch = () => {
     setQuery('');
   };
 
-  const handleUserClick = (userId?: number) => {
+  const handleUserClick = (userId?: number | string) => {
     if (!userId) return;
 
     handleClose();
     navigate(`/perfil/${userId}`);
+  };
+
+  const handlePostClick = (postId?: number | string) => {
+    if (!postId) return;
+
+    handleClose();
+    navigate(`/feed?postId=${encodeURIComponent(String(postId))}`);
   };
 
   if (!isExpanded) {
@@ -108,14 +115,22 @@ export const GlobalSearch = () => {
               <div className="p-2 border-t border-gray-100">
                 <h3 className="text-xs font-bold text-gray-400 px-3 py-2 uppercase">{t('search.posts')}</h3>
                 {results.posts.map((post, index) => {
+                  const postId = post.id || post.postId;
                   const rawAuthor = post.authorName || post.userName || post.author?.userName || post.user?.userName || post.author?.name || post.user?.name || '';
                   const authorName = (typeof rawAuthor === 'string' && rawAuthor.trim().length > 0) 
                     ? rawAuthor.trim() 
                     : 'Desconocido';
                   return (
-                    <li key={`post-${post.id || post.postId || index}`} className="p-3 hover:bg-gray-50 cursor-pointer rounded-lg transition-colors list-none">
-                      <p className="text-sm text-gray-800 line-clamp-2 italic">"{post.content || 'Sin contenido'}"</p>
-                      <p className="text-[10px] text-gray-500 mt-1">Por {authorName}</p>
+                    <li key={`post-${postId || index}`} className="list-none">
+                      <button
+                        type="button"
+                        onClick={() => handlePostClick(postId)}
+                        disabled={!postId}
+                        className="w-full rounded-lg p-3 text-left transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-60"
+                      >
+                        <p className="text-sm text-gray-800 line-clamp-2 italic">"{post.content || 'Sin contenido'}"</p>
+                        <p className="text-[10px] text-gray-500 mt-1">Por {authorName}</p>
+                      </button>
                     </li>
                   );
                 })}

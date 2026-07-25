@@ -36,9 +36,11 @@ export const SchedulePage = () => {
   const [isCreateSubjectModalOpen, setIsCreateSubjectModalOpen] = useState(false);
   const [editingClass, setEditingClass] = useState<ScheduleClass | null>(null);
   const [classToDelete, setClassToDelete] = useState<ScheduleClass | null>(null);
+  const [selectedYearFilter, setSelectedYearFilter] = useState('1');
   const { careerId } = useParams<{ careerId?: string }>();
   const navigate = useNavigate();
   const isCurrentUserAdmin = getIsCurrentUserAdmin();
+  const shouldShowYearFilters = Boolean(isCurrentUserAdmin && careerId);
   const {
     studentContext,
     isContextLoading,
@@ -51,7 +53,7 @@ export const SchedulePage = () => {
     removeScheduleClass,
     setSelectedDay,
     fetchSchedules,
-  } = useWeeklySchedule(careerId);
+  } = useWeeklySchedule(careerId, shouldShowYearFilters ? selectedYearFilter : undefined);
   const visibleWeekDays = weekDays.map((day) => ({
     ...day,
     label: language === 'en'
@@ -182,6 +184,33 @@ export const SchedulePage = () => {
               </p>
             )}
           </article>
+
+          {shouldShowYearFilters && (
+            <nav className="mt-4" aria-label={t('schedule.yearFilter')}>
+              <ul className="grid grid-cols-6 gap-2">
+                {['1', '2', '3', '4', '5', '6'].map((year) => {
+                  const isActive = selectedYearFilter === year;
+
+                  return (
+                    <li key={year}>
+                      <button
+                        type="button"
+                        onClick={() => setSelectedYearFilter(year)}
+                        className={`h-8 w-full rounded-full text-[10px] font-black transition-colors ${
+                          isActive
+                            ? 'bg-[#1E4E9D] text-white shadow-[0_8px_18px_rgba(30,78,157,0.24)]'
+                            : 'bg-white text-[#526174] hover:bg-[#EFF6FF] hover:text-[#1E4E9D]'
+                        }`}
+                        aria-pressed={isActive}
+                      >
+                        {year}°
+                      </button>
+                    </li>
+                  );
+                })}
+              </ul>
+            </nav>
+          )}
 
           <nav className="mt-5" aria-label="Selector semanal">
             <ul className="grid grid-cols-5 items-center gap-2">

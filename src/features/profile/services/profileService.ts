@@ -36,6 +36,18 @@ const asNumber = (value: unknown, fallback = 0) =>
 const asBoolean = (value: unknown, fallback = false) =>
   typeof value === 'boolean' ? value : fallback;
 
+const asOptionalBoolean = (value: unknown) => {
+  if (typeof value === 'boolean') return value;
+  if (typeof value === 'string') {
+    const normalizedValue = value.trim().toLowerCase();
+
+    if (normalizedValue === 'true') return true;
+    if (normalizedValue === 'false') return false;
+  }
+
+  return undefined;
+};
+
 const asStringList = (value: unknown): string[] => {
   if (Array.isArray(value)) {
     return value.flatMap(asStringList);
@@ -51,6 +63,7 @@ const asStringList = (value: unknown): string[] => {
     asString(record.role) ||
     asString(record.roleName) ||
     asString(record.displayName) ||
+    asString(record.normalizedName) ||
     asString(record.description);
 
   if (nestedValue) {
@@ -65,11 +78,7 @@ const asStringList = (value: unknown): string[] => {
 export const MOCK_PROFILE_DETAILS: ProfileResponseDTO = {
   userId: 1,
   fullName: "María Gonzales",
-  careers: ["ESTUDIANTE DE INGENIERÍA DE SOFTWARE"],
-  bio: "Apasionado por la tecnología y el desarrollo de software. Siempre buscando aprender algo nuevo y compartir conocimiento con la comunidad UNSTA. 🚀",
-  // Usamos imágenes de placeholder temporalmente para que tu UI no se rompa
-  avatarUrl: "https://i.pravatar.cc/150?img=47", 
-  coverUrl: "https://images.unsplash.com/photo-1555066931-4365d14bab8c?q=80&w=1000&auto=format&fit=crop", 
+  careers: [],
   isOwnProfile: true, // Ponlo en 'false' luego si quieres probar cómo se ve el botón "Seguir"
   isFollowing: false,
   roles: ['Alumno']
@@ -79,13 +88,9 @@ export const MOCK_PROFILE_DETAILS: ProfileResponseDTO = {
 export const MOCK_PUBLIC_PROFILE_DETAILS: ProfileResponseDTO = {
   userId: 2,
   fullName: "Nicolas Zingale",
-  careers: ["ESTUDIANTE DE INGENIERIA DE SOFTWARE"],
-  bio: "Alumno de la comunidad UNSTA. Comparte consultas, avisos y recursos utiles para la carrera.",
-  avatarUrl: "https://i.pravatar.cc/150?img=12",
-  coverUrl: "https://images.unsplash.com/photo-1523240795612-9a054b0db644?q=80&w=1000&auto=format&fit=crop",
+  careers: [],
   isOwnProfile: false,
   isFollowing: false,
-  roles: ['Alumno']
 };
 
 export const MOCK_PROFILE_STATS: ProfileStatsDTO = {
@@ -205,10 +210,10 @@ const mapProfileFromApi = (
         asString(root.name) ||
         asString(root.username) ||
         fallbackProfile.fullName,
-      careers: careers.length ? careers : fallbackProfile.careers,
+      careers,
       role: primaryRole,
-      roles: roles.length ? roles : isOwnProfile ? undefined : fallbackProfile.roles,
-      bio: asString(user.bio) || asString(user.description) || fallbackProfile.bio,
+      roles: roles.length ? roles : undefined,
+      bio: asString(user.bio) || asString(user.description) || undefined,
       avatarUrl:
         asString(user.avatarUrl) ||
         asString(user.profileImageUrl) ||
@@ -219,7 +224,7 @@ const mapProfileFromApi = (
         asString(root.avatarUrl) ||
         asString(root.profileImageUrl) ||
         asString(root.photoUrl) ||
-        fallbackProfile.avatarUrl,
+        undefined,
       coverUrl:
         asString(user.coverUrl) ||
         asString(user.coverImageUrl) ||
@@ -227,7 +232,17 @@ const mapProfileFromApi = (
         asString(rootUser.coverImageUrl) ||
         asString(root.coverUrl) ||
         asString(root.coverImageUrl) ||
-        fallbackProfile.coverUrl,
+        undefined,
+      whatsappNotificationsEnabled: asOptionalBoolean(
+        user.whatsappNotificationsEnabled ??
+        user.whatsAppNotificationsEnabled ??
+        user.receiveWhatsappNotifications ??
+        user.receiveWhatsAppNotifications ??
+        data.whatsappNotificationsEnabled ??
+        data.whatsAppNotificationsEnabled ??
+        root.whatsappNotificationsEnabled ??
+        root.whatsAppNotificationsEnabled,
+      ),
       isOwnProfile,
       isFollowing: asBoolean(user.isFollowing ?? user.following ?? rootUser.isFollowing ?? rootUser.following ?? data.isFollowing ?? root.isFollowing, fallbackProfile.isFollowing),
     },

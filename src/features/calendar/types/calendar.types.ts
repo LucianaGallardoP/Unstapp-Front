@@ -7,6 +7,7 @@ export interface CalendarEvent {
   type: CalendarEventType;
   startDate: string;
   endDate: string;
+  careerId?: number | string;
 }
 
 export interface CreateCalendarEventPayload {
@@ -15,4 +16,5 @@ export interface CreateCalendarEventPayload {
   type: CalendarEventType;
   startDate: string;
   endDate: string;
+  careerId?: number;
 }

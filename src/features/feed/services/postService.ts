@@ -1,9 +1,20 @@
 import { apiClient } from '../../../services/apiClient';
 import { commentService } from './commentService';
 import { likeService } from './likeService';
-import type { Post, PostAudience, PostAuthorRole, PostCategory } from '../types/post.types';
+import type { CreatePostOptions, Post, PostAudience, PostAuthorRole, PostCategory } from '../types/post.types';
+import { normalizeRoleKey } from '../../../utils/roleLabels';
 
 type ApiRecord = Record<string, unknown>;
+
+interface GetPostsOptions {
+  page?: number;
+  limit?: number;
+}
+
+interface PostsPageResult {
+  posts: Post[];
+  hasMore: boolean;
+}
 
 const getToken = () => localStorage.getItem('unstapp_token');
 
@@ -21,11 +32,43 @@ const asRecord = (value: unknown): ApiRecord =>
 const asString = (value: unknown, fallback = '') =>
   typeof value === 'string' ? value : fallback;
 
+const asStringList = (value: unknown): string[] => {
+  if (Array.isArray(value)) {
+    return value.flatMap(asStringList);
+  }
+
+  if (typeof value === 'string' && value.trim()) {
+    return [value];
+  }
+
+  const record = asRecord(value);
+  const nestedValue =
+    asString(record.name) ||
+    asString(record.role) ||
+    asString(record.roleName) ||
+    asString(record.displayName) ||
+    asString(record.normalizedName) ||
+    asString(record.description);
+
+  return nestedValue ? [nestedValue] : [];
+};
+
 const asNumber = (value: unknown, fallback = 0) =>
   typeof value === 'number' ? value : fallback;
 
 const asOptionalNumber = (value: unknown) =>
   typeof value === 'number' ? value : undefined;
+
+const asFiniteNumber = (value: unknown) => {
+  if (typeof value === 'number' && Number.isFinite(value)) return value;
+  if (typeof value === 'string' && value.trim()) {
+    const parsedValue = Number(value);
+
+    return Number.isFinite(parsedValue) ? parsedValue : undefined;
+  }
+
+  return undefined;
+};
 
 const asOptionalBoolean = (value: unknown) =>
   typeof value === 'boolean' ? value : undefined;
@@ -34,26 +77,68 @@ const asOptionalId = (value: unknown) =>
   typeof value === 'number' || typeof value === 'string' ? value : undefined;
 
 const normalizeRole = (value: unknown): PostAuthorRole => {
-  const role = asString(value).toLowerCase();
+  const roleKey = normalizeRoleKey(asStringList(value).join(' '));
 
-  if (role.includes('docente')) return 'Docente';
-  if (role.includes('admin')) return 'Administrativo';
-  if (role.includes('bar')) return 'Bar';
+  if (roleKey === 'teacher') return 'Docente';
+  if (roleKey === 'admin') return 'Administrativo';
+  if (roleKey === 'bar') return 'Bar';
 
   return 'Alumno';
 };
 
 const normalizeAudienceFromApi = (value: unknown): PostAudience => {
-  if (value === 1 || value === '1') return 'carrera';
-  if (value === 2 || value === '2') return 'administrativo';
-
-  const category = asString(value).toLowerCase();
+  const category = asStringList(value).join(' ').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
 
   if (category.includes('admin')) return 'administrativo';
-  if (category.includes('carrera') || category.includes('facultad')) return 'carrera';
+  if (
+    category.includes('carrera') ||
+    category.includes('facultad') ||
+    category.includes('alumno') ||
+    category.includes('student') ||
+    category.includes('docente') ||
+    category.includes('profesor') ||
+    category.includes('professor') ||
+    category.includes('teacher')
+  ) {
+    return 'carrera';
+  }
+
+  if (value === 1 || value === '1') return 'carrera';
+  if (value === 2 || value === '2') return 'administrativo';
+  if (value === 0 || value === '0') return 'carrera';
 
   return 'general';
 };
+
+const getPostAudienceSource = (post: ApiRecord, author: ApiRecord) =>
+  post.audience ??
+  post.targetAudience ??
+  post.visibility ??
+  post.scope ??
+  post.category ??
+  post.categoryName ??
+  post.postCategory ??
+  post.type ??
+  author.category ??
+  author.audience;
+
+const getPostRoleSource = (post: ApiRecord, author: ApiRecord, audienceSource: unknown) => [
+  author.roles,
+  author.role,
+  author.roleName,
+  author.rol,
+  author.userRole,
+  author.tipoUsuario,
+  author.type,
+  post.roles,
+  post.role,
+  post.roleName,
+  post.rol,
+  post.authorRole,
+  post.userRole,
+  post.tipoUsuario,
+  audienceSource,
+];
 
 const normalizeCategory = (role: PostAuthorRole): PostCategory => {
   if (role === 'Docente') return 'carrera';
@@ -61,6 +146,66 @@ const normalizeCategory = (role: PostAuthorRole): PostCategory => {
   if (role === 'Bar') return 'bar';
 
   return 'alumno';
+};
+
+const unwrapPostItems = (data: unknown): unknown[] => {
+  if (Array.isArray(data)) return data;
+
+  const record = asRecord(data);
+  const candidates = [
+    record.items,
+    record.posts,
+    record.publications,
+    record.results,
+    record.value,
+    record.data,
+  ];
+
+  for (const candidate of candidates) {
+    if (Array.isArray(candidate)) return candidate;
+
+    const nestedCandidate = unwrapPostItems(candidate);
+    if (nestedCandidate.length > 0) return nestedCandidate;
+  }
+
+  return [];
+};
+
+const getPaginationValue = (data: unknown, keys: string[]) => {
+  const root = asRecord(data);
+  const nested = asRecord(root.data ?? root.value ?? root.result);
+  const meta = asRecord(root.meta ?? root.pagination ?? nested.meta ?? nested.pagination);
+
+  for (const key of keys) {
+    if (root[key] !== undefined) return root[key];
+    if (nested[key] !== undefined) return nested[key];
+    if (meta[key] !== undefined) return meta[key];
+  }
+
+  return undefined;
+};
+
+const getHasMorePosts = (data: unknown, postsLength: number, options?: GetPostsOptions) => {
+  const explicitHasMore = getPaginationValue(data, ['hasMore', 'hasNextPage', 'hasNext']);
+
+  if (typeof explicitHasMore === 'boolean') {
+    return explicitHasMore;
+  }
+
+  const page = options?.page ?? asFiniteNumber(getPaginationValue(data, ['page', 'currentPage', 'pageNumber']));
+  const limit = options?.limit ?? asFiniteNumber(getPaginationValue(data, ['limit', 'pageSize', 'take']));
+  const totalPages = asFiniteNumber(getPaginationValue(data, ['totalPages', 'pagesCount']));
+  const totalCount = asFiniteNumber(getPaginationValue(data, ['totalCount', 'totalItems', 'count']));
+
+  if (page && totalPages) {
+    return page < totalPages;
+  }
+
+  if (page && limit && totalCount !== undefined) {
+    return page * limit < totalCount;
+  }
+
+  return Boolean(limit && postsLength === limit);
 };
 
 const getMediaType = (url: string) => {
@@ -149,11 +294,12 @@ const hydrateAuthorAvatars = async (posts: Post[]) => {
 const mapPostFromApi = (apiPost: unknown, fallbackContent = ''): Post => {
   const post = asRecord(apiPost);
   const author = asRecord(post.author ?? post.user ?? post.createdBy);
-  const audience = normalizeAudienceFromApi(post.category);
+  const audienceSource = getPostAudienceSource(post, author);
+  const audience = normalizeAudienceFromApi(audienceSource);
   const role =
     audience === 'administrativo'
       ? 'Administrativo'
-      : normalizeRole(author.role ?? post.role);
+      : normalizeRole(getPostRoleSource(post, author, audienceSource));
   const visualCategory = normalizeCategory(role);
   const id = post.id ?? post.postId ?? crypto.randomUUID();
   const storedLikes = likeService.getStoredLikeCount(id as number | string);
@@ -216,39 +362,56 @@ const mapPostFromApi = (apiPost: unknown, fallbackContent = ''): Post => {
   };
 };
 
+const hydratePostsWithComments = async (posts: Post[]) =>
+  Promise.all(
+    posts.map(async (post) => {
+      if (!post.commentsCount) {
+        return post;
+      }
+
+      try {
+        const comments = await commentService.getByPostIdFromApi(post.id);
+
+        return {
+          ...post,
+          comments,
+          commentsCount: comments.length || post.commentsCount,
+        };
+      } catch {
+        return post;
+      }
+    }),
+  );
+
+const fetchPosts = async (options?: GetPostsOptions): Promise<PostsPageResult> => {
+  const response = await apiClient.get<unknown>('/posts/', {
+    params: options,
+    headers: getAuthHeaders(),
+  });
+  const posts = unwrapPostItems(response.data);
+
+  if (posts.length === 0) {
+    return { posts: [], hasMore: false };
+  }
+
+  const mappedPosts = await hydrateAuthorAvatars(posts.map((post) => mapPostFromApi(post)));
+  const postsWithComments = await hydratePostsWithComments(mappedPosts);
+
+  return {
+    posts: postsWithComments,
+    hasMore: getHasMorePosts(response.data, posts.length, options),
+  };
+};
+
 export const postService = {
-  getAll: async (): Promise<Post[]> => {
-    const response = await apiClient.get<unknown>('/posts/', {
-      headers: getAuthHeaders(),
-    });
-    const data = response.data;
-    const posts = Array.isArray(data) ? data : asRecord(data).items ?? asRecord(data).data;
+  getPage: async (options: GetPostsOptions): Promise<PostsPageResult> => {
+    return fetchPosts(options);
+  },
 
-    if (!Array.isArray(posts)) {
-      return [];
-    }
+  getAll: async (options?: GetPostsOptions): Promise<Post[]> => {
+    const result = await fetchPosts(options);
 
-    const mappedPosts = await hydrateAuthorAvatars(posts.map((post) => mapPostFromApi(post)));
-
-    return Promise.all(
-      mappedPosts.map(async (post) => {
-        if (!post.commentsCount) {
-          return post;
-        }
-
-        try {
-          const comments = await commentService.getByPostIdFromApi(post.id);
-
-          return {
-            ...post,
-            comments,
-            commentsCount: comments.length || post.commentsCount,
-          };
-        } catch {
-          return post;
-        }
-      }),
-    );
+    return result.posts;
   },
 
   getById: async (postId: number | string): Promise<Post> => {
@@ -273,7 +436,7 @@ export const postService = {
     }
   },
 
-  create: async (content: string, mediaFile?: File): Promise<Post> => {
+  create: async (content: string, mediaFile?: File, options?: CreatePostOptions): Promise<Post> => {
     const formData = new FormData();
     
     // Siempre enviamos el contenido
@@ -282,6 +445,15 @@ export const postService = {
     // Solo adjuntamos el archivo si existe
     if (mediaFile) {
       formData.append('MediaFile', mediaFile);
+    }
+
+    if (options?.isImportant) {
+      formData.append('IsImportant', 'true');
+      formData.append('NotifyAllCareers', String(!options.careerIds?.length));
+
+      options.careerIds?.forEach((careerId) => {
+        formData.append('CareerIds', String(careerId));
+      });
     }
 
     const response = await apiClient.post<unknown>('/posts/create', formData, {

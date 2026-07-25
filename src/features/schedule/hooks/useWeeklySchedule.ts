@@ -15,6 +15,7 @@ export interface StudentContext {
 export interface ScheduleClass {
   id: number;
   day: WeekDayId;
+  year?: string;
   startTime: string;
   durationHours: number;
   subject: string;
@@ -90,6 +91,7 @@ const getScheduleColor = (startTime: string) => {
 const mapScheduleClass = (schedule: ScheduleDto): ScheduleClass => ({
   id: schedule.id,
   day: normalizeWeekDay(schedule.day),
+  year: schedule.year,
   startTime: schedule.startTime,
   durationHours: schedule.durationHours,
   subject: schedule.subject,
@@ -105,7 +107,7 @@ const getCareerContext = (career?: CareerDto): StudentContext => ({
   campus: 'Sede Yerba Buena',
 });
 
-export const useWeeklySchedule = (careerId?: string) => {
+export const useWeeklySchedule = (careerId?: string, selectedYear?: string) => {
   const [selectedDay, setSelectedDay] = useState<WeekDayId>(() => getTodayWeekDay());
   const [scheduleClasses, setScheduleClasses] = useState<ScheduleClass[]>([]);
   const [currentStudentContext, setCurrentStudentContext] = useState<StudentContext>(defaultStudentContext);
@@ -123,14 +125,19 @@ export const useWeeklySchedule = (careerId?: string) => {
     const day = dayOverride ?? selectedDay;
 
     try {
-      const params = careerId ? { careerId, dia: day } : { dia: day };
+      const params = careerId
+        ? { careerId, dia: day, ...(selectedYear ? { year: selectedYear, anio: selectedYear } : {}) }
+        : { dia: day };
       const schedules = await scheduleService.getSchedules(params);
+      const visibleSchedules = selectedYear
+        ? schedules.filter((schedule) => !schedule.year || String(schedule.year).includes(selectedYear))
+        : schedules;
 
-      setScheduleClasses(schedules.map((schedule) => ({ ...mapScheduleClass(schedule), day })));
+      setScheduleClasses(visibleSchedules.map((schedule) => ({ ...mapScheduleClass(schedule), day })));
     } catch {
       setContextError(i18n.t('schedule.loadError'));
     }
-  }, [careerId, selectedDay]);
+  }, [careerId, selectedDay, selectedYear]);
 
   const addScheduleClass = async (newClass: CreateScheduleClassInput) => {
     if (!careerId) return;

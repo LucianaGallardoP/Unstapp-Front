@@ -4,12 +4,24 @@ import { profileService } from '../../profile/services/profileService';
 import { AxiosError } from 'axios';
 import { RoleAvatar } from '../../../components/common/RoleAvatar';
 import { useLanguage } from '../../../store/languageContext';
+import { useCareers } from '../../schedule/hooks/useCareers';
+import type { CreatePostOptions } from '../types/post.types';
 
 interface CreatePostModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onPublish: (content: string, mediaFile?: File) => Promise<void>;
+  onPublish: (content: string, mediaFile?: File, options?: CreatePostOptions) => Promise<void>;
 }
+
+const getIsCurrentUserAdmin = () => {
+  try {
+    const roles = JSON.parse(localStorage.getItem('unstapp_user_roles') ?? '[]');
+
+    return Array.isArray(roles) && roles.some((role) => String(role).toLowerCase().includes('admin'));
+  } catch {
+    return false;
+  }
+};
 
 export const CreatePostModal = ({ isOpen, onClose, onPublish }: CreatePostModalProps) => {
   const { t } = useLanguage();
@@ -17,11 +29,15 @@ export const CreatePostModal = ({ isOpen, onClose, onPublish }: CreatePostModalP
   const [content, setContent] = useState('');
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [isImportant, setIsImportant] = useState(false);
+  const [selectedCareerIds, setSelectedCareerIds] = useState<Array<number | string>>([]);
   const [isPublishing, setIsPublishing] = useState(false);
   const [publishError, setPublishError] = useState<string | null>(null);
   const [profileAvatarUrl, setProfileAvatarUrl] = useState(() => localStorage.getItem('unstapp_user_avatar_url'));
   const trimmedContent = content.trim();
   const isVideo = selectedFile?.type.startsWith('video/');
+  const isCurrentUserAdmin = getIsCurrentUserAdmin();
+  const { careers, loading: careersLoading } = useCareers(isOpen && isCurrentUserAdmin);
   const currentUserAvatarUrl = profileAvatarUrl || localStorage.getItem('unstapp_user_avatar_url');
   const currentUserName = localStorage.getItem('unstapp_user_name') || 'Usuario actual';
   const currentUserRole = (() => {
@@ -100,6 +116,14 @@ export const CreatePostModal = ({ isOpen, onClose, onPublish }: CreatePostModalP
     onClose();
   };
 
+  const toggleCareer = (careerId: number | string) => {
+    setSelectedCareerIds((currentIds) =>
+      currentIds.some((id) => String(id) === String(careerId))
+        ? currentIds.filter((id) => String(id) !== String(careerId))
+        : [...currentIds, careerId],
+    );
+  };
+
   const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
 
@@ -120,8 +144,13 @@ export const CreatePostModal = ({ isOpen, onClose, onPublish }: CreatePostModalP
     try {
       setIsPublishing(true);
       setPublishError(null);
-      await onPublish(trimmedContent, selectedFile ?? undefined);
+      await onPublish(trimmedContent, selectedFile ?? undefined, {
+        isImportant,
+        careerIds: isImportant ? selectedCareerIds : [],
+      });
       setContent('');
+      setIsImportant(false);
+      setSelectedCareerIds([]);
       clearSelectedFile();
       onClose();
     } catch (error) {
@@ -142,7 +171,7 @@ export const CreatePostModal = ({ isOpen, onClose, onPublish }: CreatePostModalP
       aria-modal="true"
       aria-labelledby="create-post-title"
     >
-      <section className="w-full max-w-[315px] rounded-[6px] bg-white px-4 pb-4 pt-3 shadow-[0_24px_70px_rgba(15,23,42,0.28)] sm:max-w-[390px] sm:px-5 sm:pb-5 md:max-w-[460px] md:px-6 md:pt-4">
+      <section className="max-h-[calc(100vh-32px)] w-full max-w-[315px] overflow-y-auto rounded-[6px] bg-white px-4 pb-4 pt-3 shadow-[0_24px_70px_rgba(15,23,42,0.28)] sm:max-w-[390px] sm:px-5 sm:pb-5 md:max-w-[460px] md:px-6 md:pt-4">
         <header className="flex items-start justify-between">
           <h2 id="create-post-title" className="pt-1 text-[16px] font-black uppercase leading-5 text-black md:text-[18px]">
             {t('createPost.title')}
@@ -214,6 +243,62 @@ export const CreatePostModal = ({ isOpen, onClose, onPublish }: CreatePostModalP
                 />
               )}
             </div>
+          </section>
+        )}
+
+        {isCurrentUserAdmin && (
+          <section className="mt-3 rounded-2xl border border-[#D8E0EE] bg-[#EFF6FF] px-3 py-3">
+            <label className="flex items-center gap-2 text-[12px] font-black text-[#1F2937]">
+              <input
+                type="checkbox"
+                checked={isImportant}
+                onChange={(event) => {
+                  setIsImportant(event.target.checked);
+                  if (!event.target.checked) {
+                    setSelectedCareerIds([]);
+                  }
+                }}
+                className="h-4 w-4 accent-[#1E4E9D]"
+                disabled={isPublishing}
+              />
+              {t('createPost.important')}
+            </label>
+
+            {isImportant && (
+              <div className="mt-3">
+                <p className="text-[11px] font-bold text-[#526174]">
+                  {selectedCareerIds.length > 0 ? t('createPost.selectedCareers') : t('createPost.allCareersNotice')}
+                </p>
+
+                <div className="mt-2 flex max-h-32 flex-col gap-2 overflow-y-auto pr-1">
+                  {careersLoading && (
+                    <p className="text-[11px] font-bold text-[#526174]">
+                      {t('schedule.loadingCareers')}
+                    </p>
+                  )}
+
+                  {!careersLoading && careers.map((career) => {
+                    const isSelected = selectedCareerIds.some((id) => String(id) === String(career.id));
+
+                    return (
+                      <label
+                        key={career.id}
+                        className="flex items-center gap-2 rounded-xl bg-white px-3 py-2 text-[11px] font-bold text-[#1F2937]"
+                      >
+                        <input
+                          type="checkbox"
+                          checked={isSelected}
+                          onChange={() => toggleCareer(career.id)}
+                          className="h-4 w-4 accent-[#1E4E9D]"
+                          disabled={isPublishing}
+                        />
+                        <span className="min-w-0 truncate">{career.name}</span>
+                      </label>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
           </section>
         )}
 

@@ -41,3 +41,8 @@ export interface Post {
   commentsCount?: number;
   comments: PostComment[];
 }
+
+export interface CreatePostOptions {
+  isImportant?: boolean;
+  careerIds?: Array<number | string>;
+}

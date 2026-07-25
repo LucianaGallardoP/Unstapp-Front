@@ -5,6 +5,7 @@ import {
   UserRound,
 } from 'lucide-react';
 import type { PostAuthorRole } from '../../features/feed/types/post.types';
+import { normalizeRoleKey } from '../../utils/roleLabels';
 
 type RoleAvatarProps = {
   avatarUrl?: string | null;
@@ -15,11 +16,11 @@ type RoleAvatarProps = {
 };
 
 const normalizeRole = (role?: PostAuthorRole | string | null): PostAuthorRole => {
-  const normalizedRole = String(role ?? '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+  const roleKey = normalizeRoleKey(role);
 
-  if (normalizedRole.includes('admin')) return 'Administrativo';
-  if (normalizedRole.includes('docente') || normalizedRole.includes('profesor')) return 'Docente';
-  if (normalizedRole.includes('bar')) return 'Bar';
+  if (roleKey === 'admin') return 'Administrativo';
+  if (roleKey === 'teacher') return 'Docente';
+  if (roleKey === 'bar') return 'Bar';
 
   return 'Alumno';
 };

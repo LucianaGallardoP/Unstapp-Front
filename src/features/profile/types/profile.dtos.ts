@@ -9,6 +9,7 @@ export interface ProfileResponseDTO {
     bio?: string;
     avatarUrl?: string;
     coverUrl?: string;
+    whatsappNotificationsEnabled?: boolean;
     isOwnProfile: boolean;
     isFollowing: boolean;
     // Agregamos la lista de publicaciones reales que devuelve el endpoint
