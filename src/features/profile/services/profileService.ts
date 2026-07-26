@@ -111,6 +111,15 @@ const normalizeProfilePostRole = (role?: string): PostAuthorRole => {
   return 'Alumno';
 };
 
+const inferRoleFromProfileText = (...values: unknown[]) => {
+  const profileText = values
+    .flatMap(asStringList)
+    .join(' ');
+  const roleKey = normalizeRoleKey(profileText);
+
+  return roleKey === 'student' ? undefined : profileText;
+};
+
 const normalizeProfilePostCategory = (role: PostAuthorRole): PostCategory => {
   if (role === 'Administrativo') return 'administrativo';
   if (role === 'Docente') return 'carrera';
@@ -194,22 +203,34 @@ const mapProfileFromApi = (
     ...asStringList(root.tipoUsuario),
     ...asStringList(root.type),
   ];
-  const primaryRole = roles[0];
+  const fullName =
+    asString(user.fullName) ||
+    asString(user.name) ||
+    asString(user.username) ||
+    asString(rootUser.fullName) ||
+    asString(rootUser.name) ||
+    asString(rootUser.username) ||
+    asString(root.fullName) ||
+    asString(root.name) ||
+    asString(root.username) ||
+    fallbackProfile.fullName;
+  const inferredRole = inferRoleFromProfileText(
+    fullName,
+    user.bio,
+    user.description,
+    rootUser.bio,
+    rootUser.description,
+    data.bio,
+    data.description,
+    root.bio,
+    root.description,
+  );
+  const primaryRole = roles[0] ?? inferredRole;
 
   return {
     profile: {
       userId: asNumber(user.userId ?? user.id ?? rootUser.userId ?? rootUser.id ?? root.userId ?? root.id, fallbackProfile.userId),
-      fullName:
-        asString(user.fullName) ||
-        asString(user.name) ||
-        asString(user.username) ||
-        asString(rootUser.fullName) ||
-        asString(rootUser.name) ||
-        asString(rootUser.username) ||
-        asString(root.fullName) ||
-        asString(root.name) ||
-        asString(root.username) ||
-        fallbackProfile.fullName,
+      fullName,
       careers,
       role: primaryRole,
       roles: roles.length ? roles : undefined,

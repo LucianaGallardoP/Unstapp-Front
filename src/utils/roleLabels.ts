@@ -8,7 +8,12 @@ export const normalizeRoleKey = (role?: string | null): NormalizedRoleKey => {
     .replace(/[\u0300-\u036f]/g, '')
     .toLowerCase();
 
-  if (normalizedRole.includes('admin') || normalizedRole.includes('administrativo')) {
+  if (
+    normalizedRole.includes('admin') ||
+    normalizedRole.includes('administrativo') ||
+    normalizedRole.includes('administracion') ||
+    normalizedRole.includes('institucional')
+  ) {
     return 'admin';
   }
 

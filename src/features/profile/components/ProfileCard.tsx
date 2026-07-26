@@ -247,12 +247,12 @@ export const ProfileCard = ({
               role="switch"
               aria-checked={whatsAppNotificationsEnabled}
               onClick={handleWhatsAppNotificationsToggle}
-              className={`relative h-7 w-12 shrink-0 rounded-full transition-colors ${
+              className={`relative h-7 w-12 shrink-0 overflow-hidden rounded-full transition-colors ${
                 whatsAppNotificationsEnabled ? 'bg-[#1d8c57]' : 'bg-gray-300'
               }`}
             >
               <span
-                className={`absolute top-1 h-5 w-5 rounded-full bg-white shadow transition-transform ${
+                className={`absolute left-0 top-1 h-5 w-5 rounded-full bg-white shadow transition-transform ${
                   whatsAppNotificationsEnabled ? 'translate-x-6' : 'translate-x-1'
                 }`}
               />

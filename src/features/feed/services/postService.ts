@@ -138,6 +138,11 @@ const getPostRoleSource = (post: ApiRecord, author: ApiRecord, audienceSource: u
   post.userRole,
   post.tipoUsuario,
   audienceSource,
+  author.name,
+  author.fullName,
+  author.username,
+  post.userName,
+  post.authorName,
 ];
 
 const normalizeCategory = (role: PostAuthorRole): PostCategory => {

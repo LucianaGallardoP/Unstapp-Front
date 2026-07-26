@@ -32,6 +32,17 @@ body {
   transition: background-color 160ms ease, color 160ms ease;
 }
 
+.unstapp-photo-avatar {
+  background-color: #ffffff !important;
+}
+
+.unstapp-photo-avatar img {
+  background-color: #ffffff;
+  filter: none !important;
+  mix-blend-mode: normal !important;
+  opacity: 1 !important;
+}
+
 .theme-dark body,
 .theme-dark .bg-white,
 .theme-dark .md\:bg-gray-50,

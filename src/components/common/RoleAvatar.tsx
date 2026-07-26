@@ -51,7 +51,7 @@ export const RoleAvatar = ({
 
   return (
     <span
-      className={`flex shrink-0 items-center justify-center overflow-hidden rounded-full ${avatarUrl ? 'bg-gray-100' : roleStyles[normalizedRole]} ${className}`}
+      className={`flex shrink-0 items-center justify-center overflow-hidden rounded-full ${avatarUrl ? 'unstapp-photo-avatar' : roleStyles[normalizedRole]} ${className}`}
       aria-label={`Avatar de ${name}`}
     >
       {avatarUrl ? (
