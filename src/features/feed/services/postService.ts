@@ -168,19 +168,25 @@ const normalizeCategory = (role: PostAuthorRole): PostCategory => {
 
 const unwrapPostItems = (data: unknown): unknown[] => {
   if (Array.isArray(data)) return data;
+  if (!data || typeof data !== 'object') return [];
 
   const record = asRecord(data);
   const candidates = [
-    record.items,
     record.posts,
+    record.items,
     record.publications,
     record.results,
     record.value,
     record.data,
+    record.result,
   ];
 
   for (const candidate of candidates) {
     if (Array.isArray(candidate)) return candidate;
+  }
+
+  for (const candidate of candidates) {
+    if (!candidate || typeof candidate !== 'object' || Array.isArray(candidate)) continue;
 
     const nestedCandidate = unwrapPostItems(candidate);
     if (nestedCandidate.length > 0) return nestedCandidate;
@@ -242,6 +248,7 @@ const getMediaType = (url: string) => {
     normalizedUrl.endsWith('.jpg') ||
     normalizedUrl.endsWith('.jpeg') ||
     normalizedUrl.endsWith('.png') ||
+    normalizedUrl.endsWith('.webp') ||
     normalizedUrl.endsWith('.gif') ||
     normalizedUrl.includes('/image/upload/')
   ) {
@@ -368,10 +375,27 @@ const mapPostFromApi = (apiPost: unknown, fallbackContent = ''): Post => {
       asString(post.date) ||
       new Date().toISOString(),
     content: asString(post.content) || asString(post.text) || asString(post.body) || fallbackContent,
-    media: asString(post.mediaUrl)
+    media: (
+      asString(post.mediaUrl) ||
+      asString(post.mediaFileUrl) ||
+      asString(post.fileUrl) ||
+      asString(post.attachmentUrl) ||
+      asString(post.url)
+    )
       ? {
-          type: getMediaType(asString(post.mediaUrl)),
-          url: asString(post.mediaUrl),
+          type: getMediaType(
+            asString(post.mediaUrl) ||
+            asString(post.mediaFileUrl) ||
+            asString(post.fileUrl) ||
+            asString(post.attachmentUrl) ||
+            asString(post.url),
+          ),
+          url:
+            asString(post.mediaUrl) ||
+            asString(post.mediaFileUrl) ||
+            asString(post.fileUrl) ||
+            asString(post.attachmentUrl) ||
+            asString(post.url),
           alt: 'Contenido multimedia de la publicacion',
         }
       : undefined,
@@ -547,19 +571,22 @@ export const postService = {
 
   create: async (content: string, mediaFile?: File, options?: CreatePostOptions): Promise<Post> => {
     const formData = new FormData();
+    const trimmedContent = content.trim();
     
-    // Siempre enviamos el contenido
-    formData.append('Content', content);
+    if (options?.subjectId !== undefined && options.subjectId !== null) {
+      formData.append('SubjectId', String(options.subjectId));
+    }
+
+    formData.append('Content', trimmedContent);
 
     // Solo adjuntamos el archivo si existe
     if (mediaFile) {
       formData.append('MediaFile', mediaFile);
     }
 
-    if (options?.isImportant) {
-      formData.append('IsImportant', 'true');
-      formData.append('NotifyAllCareers', String(!options.careerIds?.length));
+    formData.append('IsImportant', String(Boolean(options?.isImportant)));
 
+    if (options?.isImportant && options.careerIds?.length) {
       options.careerIds?.forEach((careerId) => {
         formData.append('CareerIds', String(careerId));
       });
@@ -572,7 +599,10 @@ export const postService = {
       }, 
     });
 
-    return mapPostFromApi(response.data, content);
+    const root = asRecord(response.data);
+    const postData = root.data ?? root.value ?? root.post ?? response.data;
+
+    return mapPostFromApi(postData, trimmedContent);
   },
 
   remove: async (postId: number | string) => {

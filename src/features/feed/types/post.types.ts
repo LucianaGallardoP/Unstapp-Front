@@ -43,6 +43,7 @@ export interface Post {
 }
 
 export interface CreatePostOptions {
+  subjectId?: number | string | null;
   isImportant?: boolean;
   careerIds?: Array<number | string>;
 }

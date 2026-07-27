@@ -306,7 +306,7 @@ export const CreatePostModal = ({ isOpen, onClose, onPublish }: CreatePostModalP
           <input
             ref={fileInputRef}
             type="file"
-            accept=".jpg,.jpeg,.png,.mp4,image/jpeg,image/png,video/mp4"
+            accept=".jpg,.jpeg,.png,.webp,.mp4,.webm,.mov,image/jpeg,image/png,image/webp,video/mp4,video/webm,video/quicktime"
             className="hidden"
             onChange={handleFileChange}
           />
