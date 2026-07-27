@@ -164,7 +164,7 @@ export const scheduleService = {
     return unwrapArray(response.data).map(mapCareerFromApi).filter((career) => career.id > 0);
   },
 
-  getSchedules: async (params?: { careerId?: string | number; dia?: string }): Promise<ScheduleDto[]> => {
+  getSchedules: async (params?: { careerId?: string | number; dia?: string; year?: string | number }): Promise<ScheduleDto[]> => {
     try {
       const response = await apiClient.get<unknown>('/horarios', {
         params,

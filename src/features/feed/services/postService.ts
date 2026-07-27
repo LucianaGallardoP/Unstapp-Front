@@ -1,4 +1,5 @@
 import { apiClient } from '../../../services/apiClient';
+import { AxiosError } from 'axios';
 import { commentService } from './commentService';
 import { likeService } from './likeService';
 import type { CreatePostOptions, Post, PostAudience, PostAuthorRole, PostCategory } from '../types/post.types';
@@ -18,6 +19,12 @@ interface PostsPageResult {
 }
 
 export type PostsFilterQuery = 1 | 2 | 3;
+
+type EffectivePostsQuery = {
+  filter: PostsFilterQuery;
+  page: number;
+  limit: number;
+};
 
 const DEFAULT_POSTS_PAGE = 1;
 const DEFAULT_POSTS_LIMIT = 15;
@@ -394,16 +401,67 @@ const hydratePostsWithComments = async (posts: Post[]) =>
     }),
   );
 
+const shouldRetryPostsRequest = (error: unknown) => {
+  if (!(error instanceof AxiosError)) return true;
+
+  const status = error.response?.status;
+
+  return status !== 401 && status !== 403;
+};
+
+const getPostsResponse = async (query: EffectivePostsQuery) => {
+  try {
+    const response = await apiClient.get<unknown>('/posts', {
+      params: query,
+      headers: getAuthHeaders(),
+    });
+
+    return { response, usedLegacyFallback: false };
+  } catch (error) {
+    if (!shouldRetryPostsRequest(error)) throw error;
+  }
+
+  try {
+    const response = await apiClient.get<unknown>('/posts/', {
+      params: query,
+      headers: getAuthHeaders(),
+    });
+
+    return { response, usedLegacyFallback: false };
+  } catch (error) {
+    if (!shouldRetryPostsRequest(error)) throw error;
+  }
+
+  const response = await apiClient.get<unknown>('/posts/', {
+    params: {
+      page: query.page,
+      limit: query.limit,
+    },
+    headers: getAuthHeaders(),
+  });
+
+  return { response, usedLegacyFallback: true };
+};
+
+const filterLegacyPosts = (posts: Post[], filter: PostsFilterQuery) => {
+  if (filter === 2) {
+    return posts.filter((post) => post.audience === 'carrera');
+  }
+
+  if (filter === 3) {
+    return posts.filter((post) => post.audience === 'administrativo');
+  }
+
+  return posts;
+};
+
 const fetchPosts = async (options?: GetPostsOptions): Promise<PostsPageResult> => {
   const query = {
     filter: options?.filter ?? 1,
     page: options?.page ?? DEFAULT_POSTS_PAGE,
     limit: options?.limit ?? DEFAULT_POSTS_LIMIT,
   };
-  const response = await apiClient.get<unknown>('/posts', {
-    params: query,
-    headers: getAuthHeaders(),
-  });
+  const { response, usedLegacyFallback } = await getPostsResponse(query);
   const posts = unwrapPostItems(response.data);
 
   if (posts.length === 0) {
@@ -411,7 +469,8 @@ const fetchPosts = async (options?: GetPostsOptions): Promise<PostsPageResult> =
   }
 
   const mappedPosts = await hydrateAuthorAvatars(posts.map((post) => mapPostFromApi(post)));
-  const postsWithComments = await hydratePostsWithComments(mappedPosts);
+  const visiblePosts = usedLegacyFallback ? filterLegacyPosts(mappedPosts, query.filter) : mappedPosts;
+  const postsWithComments = await hydratePostsWithComments(visiblePosts);
 
   return {
     posts: postsWithComments,

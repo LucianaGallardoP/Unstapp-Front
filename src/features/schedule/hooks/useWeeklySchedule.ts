@@ -88,6 +88,13 @@ const getScheduleColor = (startTime: string) => {
   return '#1E4E9D';
 };
 
+const getYearQueryValue = (yearText?: string) => {
+  const normalizedYear = normalizeText(yearText ?? '');
+  const yearMatch = normalizedYear.match(/\b([1-6])\b/) ?? normalizedYear.match(/([1-6])(?:ro|do|er|to|st|nd|rd|th)/);
+
+  return yearMatch?.[1];
+};
+
 const mapScheduleClass = (schedule: ScheduleDto): ScheduleClass => ({
   id: schedule.id,
   day: normalizeWeekDay(schedule.day),
@@ -123,22 +130,24 @@ export const useWeeklySchedule = (careerId?: string, selectedYear?: string) => {
 
   const fetchSchedules = useCallback(async (dayOverride?: WeekDayId) => {
     const day = dayOverride ?? selectedDay;
+    const year = selectedYear ?? getYearQueryValue(currentStudentContext.year) ?? '1';
 
     try {
-      // Estudiante: filtra por dia. Administracion: trae la carrera completa.
+      // El backend requiere dia y year; admin agrega careerId.
       const params = careerId
-        ? { careerId }
-        : { dia: day };
+        ? { careerId, dia: day, year }
+        : { dia: day, year };
       const schedules = await scheduleService.getSchedules(params);
       const visibleSchedules = selectedYear
         ? schedules.filter((schedule) => !schedule.year || String(schedule.year).includes(selectedYear))
         : schedules;
 
+      setContextError(null);
       setScheduleClasses(visibleSchedules.map(mapScheduleClass));
     } catch {
       setContextError(i18n.t('schedule.loadError'));
     }
-  }, [careerId, selectedDay, selectedYear]);
+  }, [careerId, currentStudentContext.year, selectedDay, selectedYear]);
 
   const addScheduleClass = async (newClass: CreateScheduleClassInput) => {
     if (!careerId) return;
