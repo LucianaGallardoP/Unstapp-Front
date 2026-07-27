@@ -63,6 +63,7 @@
     "feed.loading": "Cargando publicaciones...",
     "feed.updating": "Actualizando publicaciones...",
     "feed.loadingMore": "Cargando más publicaciones...",
+    "feed.endOfFeed": "Llegaste al final de las publicaciones.",
     "feed.emptyCategory": "No hay publicaciones recientes en esta categoría.",
     "post.comments": "Comentarios",
     "post.closeComments": "Cerrar comentarios",

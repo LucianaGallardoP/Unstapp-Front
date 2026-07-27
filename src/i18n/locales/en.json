@@ -63,6 +63,7 @@
     "feed.loading": "Loading posts...",
     "feed.updating": "Updating posts...",
     "feed.loadingMore": "Loading more posts...",
+    "feed.endOfFeed": "You reached the end of the posts.",
     "feed.emptyCategory": "There are no recent posts in this category.",
     "post.comments": "Comments",
     "post.closeComments": "Close comments",

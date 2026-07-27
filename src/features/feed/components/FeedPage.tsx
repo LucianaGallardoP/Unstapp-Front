@@ -184,12 +184,20 @@ export const FeedPage = () => {
           </p>
         )}
 
-        {posts.length > 0 && hasMore && (
-          <div ref={loadMoreRef} className="flex min-h-12 items-center justify-center py-3">
-            {loadingMore && (
-              <span className="flex items-center gap-2 text-[12px] font-bold text-[#526174]">
-                <LoaderCircle size={16} className="animate-spin" />
+        {visiblePosts.length > 0 && (
+          <div
+            ref={loadMoreRef}
+            className="flex min-h-14 items-center justify-center py-4"
+            aria-live="polite"
+          >
+            {hasMore || loadingMore ? (
+              <span className="flex items-center gap-2 rounded-full bg-white px-4 py-2 text-[12px] font-bold text-[#526174] shadow-[0_8px_22px_rgba(15,23,42,0.08)]">
+                <LoaderCircle size={16} className="animate-spin text-[#155DFC]" />
                 {t('feed.loadingMore')}
+              </span>
+            ) : (
+              <span className="text-[11px] font-bold text-gray-400">
+                {t('feed.endOfFeed')}
               </span>
             )}
           </div>
