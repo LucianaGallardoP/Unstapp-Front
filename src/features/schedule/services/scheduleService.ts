@@ -35,13 +35,34 @@ const asNumber = (value: unknown, fallback = 0) => {
   return fallback;
 };
 
-const unwrapArray = (value: unknown) => {
+const unwrapArray = (value: unknown): unknown[] => {
   if (Array.isArray(value)) return value;
+  if (!value || typeof value !== 'object') return [];
 
   const root = asRecord(value);
-  const candidates = [root.data, root.items, root.value, root.results];
+  const candidates = [
+    root.schedules,
+    root.horarios,
+    root.items,
+    root.data,
+    root.value,
+    root.results,
+    root.result,
+  ];
 
-  return candidates.find(Array.isArray) ?? [];
+  for (const candidate of candidates) {
+    if (Array.isArray(candidate)) return candidate;
+  }
+
+  for (const candidate of candidates) {
+    if (!candidate || typeof candidate !== 'object' || Array.isArray(candidate)) continue;
+
+    const nestedCandidate: unknown[] = unwrapArray(candidate);
+
+    if (nestedCandidate.length > 0) return nestedCandidate;
+  }
+
+  return [];
 };
 
 const mapCareerFromApi = (apiCareer: unknown): CareerDto => {
@@ -147,6 +168,45 @@ const mapContextFromApi = (apiContext: unknown): StudentContext => {
   };
 };
 
+type ScheduleQueryParams = {
+  careerId?: string | number;
+  dia?: string;
+  year?: string | number;
+};
+
+const getSchedulePrimaryParams = (params?: ScheduleQueryParams): ScheduleQueryParams | undefined => {
+  if (!params) return undefined;
+
+  if (params.careerId !== undefined) return { careerId: params.careerId };
+  if (params.dia) return { dia: params.dia };
+
+  return params;
+};
+
+const getScheduleFallbackParams = (params?: ScheduleQueryParams): ScheduleQueryParams | undefined => {
+  if (!params) return undefined;
+
+  return {
+    ...(params.careerId !== undefined ? { careerId: params.careerId } : {}),
+    ...(params.dia ? { dia: params.dia } : {}),
+    ...(params.year !== undefined ? { year: params.year } : {}),
+  };
+};
+
+const shouldRetryScheduleRequest = (error: any, params?: ScheduleQueryParams) => {
+  const status = error?.response?.status;
+  const data = asRecord(error?.response?.data);
+  const errors = asRecord(data.errors);
+  const code = asString(data.code);
+
+  if (status !== 400 || !params) return false;
+  if (code === 'YEAR_REQUIRED' && params.year !== undefined) return true;
+  if (errors.dia && params.dia) return true;
+  if (errors.year && params.year !== undefined) return true;
+
+  return false;
+};
+
 export const scheduleService = {
   getMyContext: async () => {
     const response = await apiClient.get<unknown>('/Users/me/context', {
@@ -164,14 +224,35 @@ export const scheduleService = {
     return unwrapArray(response.data).map(mapCareerFromApi).filter((career) => career.id > 0);
   },
 
-  getSchedules: async (params?: { careerId?: string | number; dia?: string; year?: string | number }): Promise<ScheduleDto[]> => {
+  getSchedules: async (params?: ScheduleQueryParams): Promise<ScheduleDto[]> => {
+    const primaryParams = getSchedulePrimaryParams(params);
+
     try {
       const response = await apiClient.get<unknown>('/horarios', {
-        params,
+        params: primaryParams,
         headers: getAuthHeaders(),
       });
       return unwrapArray(response.data).map(mapScheduleFromApi);
     } catch (error: any) {
+      const fallbackParams = getScheduleFallbackParams(params);
+
+      if (shouldRetryScheduleRequest(error, fallbackParams)) {
+        try {
+          const response = await apiClient.get<unknown>('/horarios', {
+            params: fallbackParams,
+            headers: getAuthHeaders(),
+          });
+          return unwrapArray(response.data).map(mapScheduleFromApi);
+        } catch (fallbackError: any) {
+          if (fallbackError && fallbackError.response && fallbackError.response.data) {
+            console.error('[scheduleService.getSchedules] Error del servidor:', JSON.stringify(fallbackError.response.data, null, 2));
+          } else {
+            console.error('[scheduleService.getSchedules] Error al obtener horarios:', fallbackError);
+          }
+          throw fallbackError;
+        }
+      }
+
       if (error && error.response && error.response.data) {
         console.error('[scheduleService.getSchedules] Error del servidor. Detalles de validación:', JSON.stringify(error.response.data, null, 2));
       } else {

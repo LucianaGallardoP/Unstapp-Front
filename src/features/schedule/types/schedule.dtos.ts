@@ -7,7 +7,7 @@ export interface CareerDto {
 export interface ScheduleDto {
   id: number;
   careerId: number;
-  year?: string;
+  year?: string | number;
   subject: string;
   day: string;
   startTime: string;
@@ -24,6 +24,7 @@ export interface CreateScheduleRequest {
   professor: string;
   classroom: string;
   durationHours: number;
+  year: number;
 }
 
 export type UpdateScheduleRequest = CreateScheduleRequest;

@@ -15,7 +15,7 @@ export interface StudentContext {
 export interface ScheduleClass {
   id: number;
   day: WeekDayId;
-  year?: string;
+  year?: string | number;
   startTime: string;
   durationHours: number;
   subject: string;
@@ -153,6 +153,8 @@ export const useWeeklySchedule = (careerId?: string, selectedYear?: string) => {
     if (!careerId) return;
 
     try {
+      const year = Number(selectedYear ?? getYearQueryValue(currentStudentContext.year) ?? 1);
+
       await scheduleService.createSchedule({
         careerId: Number(careerId),
         subject: newClass.subject,
@@ -161,6 +163,7 @@ export const useWeeklySchedule = (careerId?: string, selectedYear?: string) => {
         professor: newClass.teacher,
         classroom: newClass.room,
         durationHours: newClass.durationHours,
+        year: Number.isFinite(year) ? year : 1,
       });
 
       setSelectedDay(newClass.day);
@@ -174,6 +177,8 @@ export const useWeeklySchedule = (careerId?: string, selectedYear?: string) => {
     if (!careerId) return;
 
     try {
+      const year = Number(selectedYear ?? getYearQueryValue(currentStudentContext.year) ?? 1);
+
       await scheduleService.updateSchedule(classId, {
         careerId: Number(careerId),
         subject: values.subject,
@@ -182,6 +187,7 @@ export const useWeeklySchedule = (careerId?: string, selectedYear?: string) => {
         professor: values.teacher,
         classroom: values.room,
         durationHours: values.durationHours,
+        year: Number.isFinite(year) ? year : 1,
       });
 
       setScheduleClasses((currentClasses) =>
@@ -193,6 +199,7 @@ export const useWeeklySchedule = (careerId?: string, selectedYear?: string) => {
                 subject: values.subject,
                 startTime: values.startTime,
                 durationHours: values.durationHours,
+                year: Number.isFinite(year) ? year : 1,
                 teacher: values.teacher,
                 room: values.room,
                 color: getScheduleColor(values.startTime),
