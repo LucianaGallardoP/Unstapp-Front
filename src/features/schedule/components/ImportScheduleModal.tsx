@@ -1,11 +1,20 @@
-import { useState, useRef } from 'react';
-import { X, Upload, FileSpreadsheet, Loader2, CheckCircle2 } from 'lucide-react';
+import { useRef, useState, type ChangeEvent, type DragEvent } from 'react';
+import { CheckCircle2, FileSpreadsheet, Loader2, Upload, X } from 'lucide-react';
 import { scheduleService } from '../services/scheduleService';
 
 interface ImportScheduleModalProps {
   onClose: () => void;
   onSuccess?: () => void;
 }
+
+const validExcelExtensions = ['.xls', '.xlsx'];
+const expectedColumns = ['Carrera', 'Año', 'Materia', 'Día', 'Hora Inicio', 'Duración', 'Profesor', 'Aula'];
+
+const isValidExcelFile = (file: File) => {
+  const fileExtension = file.name.substring(file.name.lastIndexOf('.')).toLowerCase();
+
+  return validExcelExtensions.includes(fileExtension);
+};
 
 export const ImportScheduleModal = ({ onClose, onSuccess }: ImportScheduleModalProps) => {
   const [file, setFile] = useState<File | null>(null);
@@ -14,21 +23,22 @@ export const ImportScheduleModal = ({ onClose, onSuccess }: ImportScheduleModalP
   const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const selectFile = (selectedFile: File) => {
     setError(null);
-    if (e.target.files && e.target.files.length > 0) {
-      const selectedFile = e.target.files[0];
-      const validExtensions = ['.xls', '.xlsx'];
-      const fileExtension = selectedFile.name.substring(selectedFile.name.lastIndexOf('.')).toLowerCase();
-      
-      if (!validExtensions.includes(fileExtension)) {
-        setError('Por favor, selecciona un archivo válido (.xls, .xlsx)');
-        setFile(null);
-        return;
-      }
-      
-      setFile(selectedFile);
+
+    if (!isValidExcelFile(selectedFile)) {
+      setError('Por favor, selecciona un archivo válido (.xls, .xlsx).');
+      setFile(null);
+      return;
     }
+
+    setFile(selectedFile);
+  };
+
+  const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
+    const selectedFile = event.target.files?.[0];
+
+    if (selectedFile) selectFile(selectedFile);
   };
 
   const handleUpload = async () => {
@@ -39,46 +49,36 @@ export const ImportScheduleModal = ({ onClose, onSuccess }: ImportScheduleModalP
 
     try {
       const result = await scheduleService.importSchedules(file);
-      // Assuming result contains a count or just success message
-      const count = result.count || 0;
+      const count = result.count ?? 0;
+
       setSuccessMessage(`¡Éxito! Se importaron ${count > 0 ? count : 'las'} materias correctamente.`);
-      
-      if (onSuccess) {
-        onSuccess();
-      }
+      onSuccess?.();
     } catch (err: any) {
-      const errorMsg = err.response?.data?.message || 'Hubo un error al procesar el archivo. Intenta de nuevo.';
-      setError(errorMsg);
+      const errorMessage =
+        err.response?.data?.message ||
+        err.response?.data?.title ||
+        'Hubo un error al procesar el archivo. Revisá el formato e intentá de nuevo.';
+
+      setError(errorMessage);
     } finally {
       setIsUploading(false);
     }
   };
 
-  const handleDragOver = (e: React.DragEvent) => {
-    e.preventDefault();
+  const handleDragOver = (event: DragEvent<HTMLDivElement>) => {
+    event.preventDefault();
   };
 
-  const handleDrop = (e: React.DragEvent) => {
-    e.preventDefault();
-    setError(null);
-    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-      const droppedFile = e.dataTransfer.files[0];
-      const validExtensions = ['.xls', '.xlsx'];
-      const fileExtension = droppedFile.name.substring(droppedFile.name.lastIndexOf('.')).toLowerCase();
-      
-      if (!validExtensions.includes(fileExtension)) {
-        setError('Por favor, selecciona un archivo válido (.xls, .xlsx)');
-        setFile(null);
-        return;
-      }
-      
-      setFile(droppedFile);
-    }
+  const handleDrop = (event: DragEvent<HTMLDivElement>) => {
+    event.preventDefault();
+
+    const droppedFile = event.dataTransfer.files?.[0];
+    if (droppedFile) selectFile(droppedFile);
   };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/45 px-4 py-6">
-      <section className="relative w-full max-w-[390px] rounded-[18px] bg-white px-6 py-5 shadow-[0_20px_48px_rgba(15,23,42,0.28)]">
+      <section className="relative w-full max-w-[430px] rounded-[18px] bg-white px-6 py-5 shadow-[0_20px_48px_rgba(15,23,42,0.28)]">
         <header className="mb-5 flex items-center justify-center">
           <h2 className="text-[15px] font-black text-[#1E4E9D]">
             Importar Horarios
@@ -100,6 +100,7 @@ export const ImportScheduleModal = ({ onClose, onSuccess }: ImportScheduleModalP
             <CheckCircle2 size={48} className="mb-4 text-green-500" />
             <p className="text-center text-[14px] font-bold text-gray-800">{successMessage}</p>
             <button
+              type="button"
               onClick={onClose}
               className="mt-6 h-8 min-w-36 rounded-full bg-[#1E4E9D] px-8 text-[12px] font-black text-white transition-colors hover:bg-[#155DFC]"
             >
@@ -108,17 +109,19 @@ export const ImportScheduleModal = ({ onClose, onSuccess }: ImportScheduleModalP
           </div>
         ) : (
           <div className="flex flex-col gap-4">
-            <div 
-              className={`flex flex-col items-center justify-center rounded-[12px] border-2 border-dashed p-6 transition-colors ${file ? 'border-[#1E4E9D] bg-[#EFF6FF]' : 'border-gray-300 bg-gray-50 hover:bg-gray-100'}`}
+            <div
+              className={`flex flex-col items-center justify-center rounded-[12px] border-2 border-dashed p-6 transition-colors ${
+                file ? 'border-[#1E4E9D] bg-[#EFF6FF]' : 'border-gray-300 bg-gray-50 hover:bg-gray-100'
+              }`}
               onDragOver={handleDragOver}
               onDrop={handleDrop}
-              onClick={() => fileInputRef.current?.click()}
+              onClick={() => !isUploading && fileInputRef.current?.click()}
               style={{ cursor: isUploading ? 'not-allowed' : 'pointer' }}
             >
-              <input 
-                type="file" 
-                className="hidden" 
-                accept=".xls,.xlsx" 
+              <input
+                type="file"
+                className="hidden"
+                accept=".xls,.xlsx,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
                 onChange={handleFileChange}
                 ref={fileInputRef}
                 disabled={isUploading}
@@ -142,6 +145,22 @@ export const ImportScheduleModal = ({ onClose, onSuccess }: ImportScheduleModalP
               )}
             </div>
 
+            <div className="rounded-[12px] bg-[#EFF6FF] px-3 py-3">
+              <p className="mb-2 text-[10px] font-black uppercase text-[#1E4E9D]">
+                Columnas esperadas
+              </p>
+              <div className="grid grid-cols-2 gap-1 sm:grid-cols-4">
+                {expectedColumns.map((column) => (
+                  <span
+                    key={column}
+                    className="rounded-md bg-white px-2 py-1 text-center text-[10px] font-bold text-[#1B2A44]"
+                  >
+                    {column}
+                  </span>
+                ))}
+              </div>
+            </div>
+
             {error && (
               <p className="rounded-lg bg-[#E7000B]/10 px-3 py-2 text-center text-[10px] font-bold text-[#E7000B]">
                 {error}
@@ -154,7 +173,7 @@ export const ImportScheduleModal = ({ onClose, onSuccess }: ImportScheduleModalP
                 onClick={handleUpload}
                 disabled={!file || isUploading}
                 className={`flex h-8 min-w-36 items-center justify-center rounded-full px-8 text-[12px] font-black text-white transition-colors ${
-                  !file || isUploading ? 'bg-gray-300 cursor-not-allowed' : 'bg-[#1E4E9D] hover:bg-[#155DFC]'
+                  !file || isUploading ? 'cursor-not-allowed bg-gray-300' : 'bg-[#1E4E9D] hover:bg-[#155DFC]'
                 }`}
               >
                 {isUploading ? (

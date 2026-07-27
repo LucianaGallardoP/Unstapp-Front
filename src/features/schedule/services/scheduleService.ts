@@ -313,10 +313,7 @@ export const scheduleService = {
       formData.append('file', file);
       
       const response = await apiClient.post<any>('/horarios/import', formData, {
-        headers: {
-          ...getAuthHeaders(),
-          'Content-Type': 'multipart/form-data',
-        },
+        headers: getAuthHeaders(),
       });
       return response.data;
     } catch (error: any) {
