@@ -7,6 +7,7 @@ import { normalizeRoleKey } from '../../../utils/roleLabels';
 type ApiRecord = Record<string, unknown>;
 
 interface GetPostsOptions {
+  filter?: PostsFilterQuery;
   page?: number;
   limit?: number;
 }
@@ -15,6 +16,11 @@ interface PostsPageResult {
   posts: Post[];
   hasMore: boolean;
 }
+
+export type PostsFilterQuery = 1 | 2 | 3;
+
+const DEFAULT_POSTS_PAGE = 1;
+const DEFAULT_POSTS_LIMIT = 15;
 
 const getToken = () => localStorage.getItem('unstapp_token');
 
@@ -389,8 +395,13 @@ const hydratePostsWithComments = async (posts: Post[]) =>
   );
 
 const fetchPosts = async (options?: GetPostsOptions): Promise<PostsPageResult> => {
-  const response = await apiClient.get<unknown>('/posts/', {
-    params: options,
+  const query = {
+    filter: options?.filter ?? 1,
+    page: options?.page ?? DEFAULT_POSTS_PAGE,
+    limit: options?.limit ?? DEFAULT_POSTS_LIMIT,
+  };
+  const response = await apiClient.get<unknown>('/posts', {
+    params: query,
     headers: getAuthHeaders(),
   });
   const posts = unwrapPostItems(response.data);
@@ -404,7 +415,7 @@ const fetchPosts = async (options?: GetPostsOptions): Promise<PostsPageResult> =
 
   return {
     posts: postsWithComments,
-    hasMore: getHasMorePosts(response.data, posts.length, options),
+    hasMore: getHasMorePosts(response.data, posts.length, query),
   };
 };
 

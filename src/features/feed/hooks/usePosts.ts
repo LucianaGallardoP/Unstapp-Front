@@ -1,12 +1,12 @@
 import { useCallback, useEffect, useState } from 'react';
 import { AxiosError } from 'axios';
 import i18n from '../../../i18n';
-import { postService } from '../services/postService';
+import { postService, type PostsFilterQuery } from '../services/postService';
 import type { CreatePostOptions, Post } from '../types/post.types';
 
 const POSTS_PAGE_SIZE = 15;
 
-export const usePosts = () => {
+export const usePosts = (filter: PostsFilterQuery = 1) => {
   const [posts, setPosts] = useState<Post[]>([]);
   const [removingPostIds, setRemovingPostIds] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
@@ -20,7 +20,7 @@ export const usePosts = () => {
     setError(null);
 
     try {
-      const response = await postService.getPage({ page: 1, limit: POSTS_PAGE_SIZE });
+      const response = await postService.getPage({ filter, page: 1, limit: POSTS_PAGE_SIZE });
 
       setPosts(response.posts);
       setPage(1);
@@ -34,7 +34,7 @@ export const usePosts = () => {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [filter]);
 
   const loadMorePosts = useCallback(async () => {
     if (loading || loadingMore || !hasMore) {
@@ -47,7 +47,7 @@ export const usePosts = () => {
     setError(null);
 
     try {
-      const response = await postService.getPage({ page: nextPage, limit: POSTS_PAGE_SIZE });
+      const response = await postService.getPage({ filter, page: nextPage, limit: POSTS_PAGE_SIZE });
 
       setPosts((currentPosts) => {
         const currentPostIds = new Set(currentPosts.map((post) => String(post.id)));
@@ -66,7 +66,7 @@ export const usePosts = () => {
     } finally {
       setLoadingMore(false);
     }
-  }, [hasMore, loading, loadingMore, page]);
+  }, [filter, hasMore, loading, loadingMore, page]);
 
   useEffect(() => {
     // Diferimos la ejecucion para evitar actualizar el estado de forma sincrona en el efecto

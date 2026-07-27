@@ -1,9 +1,9 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { TopBar } from '../../../components/common/TopBar';
 import { BottomNavigation, type TabType } from '../../../components/common/BottomNavigation';
 import { AddNewBottom } from '../../../components/common/AddNewBottom';
 import { usePosts } from '../hooks/usePosts';
-import type { PostAudience } from '../types/post.types';
+import type { PostsFilterQuery } from '../services/postService';
 import { CreatePostModal } from './CreatePostModal';
 import { PostCard } from '../../../components/common/PostCard';
 import { useSearchParams } from 'react-router-dom';
@@ -12,11 +12,11 @@ import { LoaderCircle } from 'lucide-react';
 
 type FeedFilter = 'todo' | 'carrera' | 'administrativo';
 
-// Categorias visibles por cada filtro.
-const visibleByFilter: Record<FeedFilter, PostAudience[]> = {
-  todo: ['general', 'carrera', 'administrativo'],
-  carrera: ['carrera'],
-  administrativo: ['administrativo'],
+// Filtros esperados por el endpoint GET /posts.
+const backendFilterByFeed: Record<FeedFilter, PostsFilterQuery> = {
+  todo: 1,
+  carrera: 2,
+  administrativo: 3,
 };
 
 export const FeedPage = () => {
@@ -30,6 +30,7 @@ export const FeedPage = () => {
   const shouldOpenComments = searchParams.get('comments') === 'open' || Boolean(requestedCommentId);
   const loadedNotificationTargetRef = useRef<string | null>(null);
   const loadMoreRef = useRef<HTMLDivElement | null>(null);
+  const backendFilter = backendFilterByFeed[activeFilter];
   const {
     posts,
     removingPostIds,
@@ -42,7 +43,7 @@ export const FeedPage = () => {
     refreshPosts,
     loadMorePosts,
     loadPostById,
-  } = usePosts();
+  } = usePosts(backendFilter);
   const filters: { id: FeedFilter; label: string }[] = [
     { id: 'todo', label: t('feed.all') },
     { id: 'carrera', label: t('feed.myCareer') },
@@ -50,8 +51,12 @@ export const FeedPage = () => {
   ];
 
   const handleFilterClick = (filterId: FeedFilter) => {
+    if (filterId === activeFilter) {
+      refreshPosts();
+      return;
+    }
+
     setActiveFilter(filterId);
-    refreshPosts();
   };
 
   useEffect(() => {
@@ -85,12 +90,8 @@ export const FeedPage = () => {
 
     return () => window.clearTimeout(timeoutId);
   }, [loading, requestedPostId, posts]);
-  // Filtra publicaciones segun la pestaña elegida.
-  const visiblePosts = useMemo(() => {
-    const visibleCategories = visibleByFilter[activeFilter];
-
-    return posts.filter((post) => visibleCategories.includes(post.audience));
-  }, [activeFilter, posts]);
+  // El backend ya devuelve las publicaciones filtradas con filter=1/2/3.
+  const visiblePosts = posts;
 
   useEffect(() => {
     const sentinel = loadMoreRef.current;

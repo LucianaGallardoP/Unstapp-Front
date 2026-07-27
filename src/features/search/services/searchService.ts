@@ -1,66 +1,56 @@
 import { apiClient } from '../../../services/apiClient';
 import type { SearchPostDTO, SearchResponseDTO, SearchUserDTO } from '../types/search.dtos';
 
+type ApiRecord = Record<string, unknown>;
+
 const getAuthHeaders = () => {
   const token = localStorage.getItem('unstapp_token');
   return token ? { Authorization: `Bearer ${token}` } : undefined;
 };
 
+const asRecord = (value: unknown): ApiRecord =>
+  value && typeof value === 'object' && !Array.isArray(value) ? (value as ApiRecord) : {};
+
+const asArray = <T>(value: unknown): T[] =>
+  Array.isArray(value) ? (value as T[]) : [];
+
+const getArrayByKeys = <T>(record: ApiRecord, keys: string[]) => {
+  for (const key of keys) {
+    const value = record[key];
+
+    if (Array.isArray(value)) return value as T[];
+  }
+
+  return [];
+};
+
+const normalizeSearchResponse = (payload: unknown): SearchResponseDTO => {
+  if (Array.isArray(payload)) {
+    return { users: asArray<SearchUserDTO>(payload), posts: [] };
+  }
+
+  const root = asRecord(payload);
+  const data = asRecord(root.data ?? root.value ?? root.result ?? root.results ?? root);
+
+  return {
+    users: getArrayByKeys<SearchUserDTO>(data, ['users', 'usuarios', 'people', 'personas']),
+    posts: getArrayByKeys<SearchPostDTO>(data, ['posts', 'publications', 'publicaciones']),
+  };
+};
+
 export const searchService = {
   globalSearch: async (term: string): Promise<SearchResponseDTO> => {
-    const normalizeTerm = (value: string) =>
-      value
-        .normalize('NFD')
-        .replace(/[\u0300-\u036f]/g, '')
-        .toLowerCase();
+    const cleanTerm = term.trim();
 
-    const normalizedTerm = normalizeTerm(term);
-    const queries = normalizedTerm === term ? [term] : [term, normalizedTerm];
-    const responses = await Promise.all(
-      queries.map((query) =>
-        apiClient.get<SearchResponseDTO>(`/search`, {
-          params: { term: query },
-          headers: getAuthHeaders(),
-        }),
-      ),
-    );
+    if (!cleanTerm) {
+      return { users: [], posts: [] };
+    }
 
-    const normalizeResponse = (data: SearchResponseDTO | SearchUserDTO[]): SearchResponseDTO =>
-      Array.isArray(data)
-        ? { users: data, posts: [] }
-        : {
-            users: Array.isArray(data?.users) ? data.users : [],
-            posts: Array.isArray(data?.posts) ? data.posts : [],
-          };
+    const response = await apiClient.get<unknown>('/search', {
+      params: { term: cleanTerm },
+      headers: getAuthHeaders(),
+    });
 
-    return responses.reduce<SearchResponseDTO>(
-      (mergedResults, response) => {
-        const currentResults = normalizeResponse(response.data);
-
-        return {
-          users: [
-            ...mergedResults.users,
-            ...currentResults.users.filter(
-              (user) =>
-                !mergedResults.users.some(
-                  (existingUser) =>
-                    (existingUser.id ?? existingUser.userId) === (user.id ?? user.userId),
-                ),
-            ),
-          ],
-          posts: [
-            ...mergedResults.posts,
-            ...currentResults.posts.filter(
-              (post: SearchPostDTO) =>
-                !mergedResults.posts.some(
-                  (existingPost) =>
-                    (existingPost.id ?? existingPost.postId) === (post.id ?? post.postId),
-                ),
-            ),
-          ],
-        };
-      },
-      { users: [], posts: [] },
-    );
+    return normalizeSearchResponse(response.data);
   }
 };

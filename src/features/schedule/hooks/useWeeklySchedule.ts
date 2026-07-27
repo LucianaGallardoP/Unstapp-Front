@@ -125,15 +125,16 @@ export const useWeeklySchedule = (careerId?: string, selectedYear?: string) => {
     const day = dayOverride ?? selectedDay;
 
     try {
+      // Estudiante: filtra por dia. Administracion: trae la carrera completa.
       const params = careerId
-        ? { careerId, dia: day, ...(selectedYear ? { year: selectedYear, anio: selectedYear } : {}) }
+        ? { careerId }
         : { dia: day };
       const schedules = await scheduleService.getSchedules(params);
       const visibleSchedules = selectedYear
         ? schedules.filter((schedule) => !schedule.year || String(schedule.year).includes(selectedYear))
         : schedules;
 
-      setScheduleClasses(visibleSchedules.map((schedule) => ({ ...mapScheduleClass(schedule), day })));
+      setScheduleClasses(visibleSchedules.map(mapScheduleClass));
     } catch {
       setContextError(i18n.t('schedule.loadError'));
     }
