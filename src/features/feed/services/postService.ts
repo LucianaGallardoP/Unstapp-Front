@@ -343,12 +343,14 @@ const mapPostFromApi = (apiPost: unknown, fallbackContent = ''): Post => {
       role,
       avatarUrl:
         asString(author.avatarUrl) ||
+        asString(author.userAvatarUrl) ||
         asString(author.profileImageUrl) ||
         asString(author.profilePictureUrl) ||
         asString(author.profilePhotoUrl) ||
         asString(author.photoUrl) ||
         asString(author.imageUrl) ||
         asString(post.avatarUrl) ||
+        asString(post.userAvatarUrl) ||
         asString(post.profileImageUrl) ||
         asString(post.profilePictureUrl) ||
         asString(post.profilePhotoUrl) ||
@@ -443,6 +445,30 @@ const getPostsResponse = async (query: EffectivePostsQuery) => {
   return { response, usedLegacyFallback: true };
 };
 
+const getUnfilteredPostsResponse = async (query: EffectivePostsQuery) => {
+  try {
+    const response = await apiClient.get<unknown>('/posts', {
+      params: {
+        page: query.page,
+        limit: query.limit,
+      },
+      headers: getAuthHeaders(),
+    });
+
+    return response;
+  } catch (error) {
+    if (!shouldRetryPostsRequest(error)) throw error;
+  }
+
+  return apiClient.get<unknown>('/posts/', {
+    params: {
+      page: query.page,
+      limit: query.limit,
+    },
+    headers: getAuthHeaders(),
+  });
+};
+
 const filterLegacyPosts = (posts: Post[], filter: PostsFilterQuery) => {
   if (filter === 2) {
     return posts.filter((post) => post.audience === 'carrera');
@@ -462,14 +488,22 @@ const fetchPosts = async (options?: GetPostsOptions): Promise<PostsPageResult> =
     limit: options?.limit ?? DEFAULT_POSTS_LIMIT,
   };
   const { response, usedLegacyFallback } = await getPostsResponse(query);
-  const posts = unwrapPostItems(response.data);
+  let posts = unwrapPostItems(response.data);
+  let shouldApplyLegacyFilter = usedLegacyFallback;
+
+  if (posts.length === 0 && query.filter === 1 && !usedLegacyFallback) {
+    const fallbackResponse = await getUnfilteredPostsResponse(query);
+
+    posts = unwrapPostItems(fallbackResponse.data);
+    shouldApplyLegacyFilter = true;
+  }
 
   if (posts.length === 0) {
     return { posts: [], hasMore: false };
   }
 
   const mappedPosts = await hydrateAuthorAvatars(posts.map((post) => mapPostFromApi(post)));
-  const visiblePosts = usedLegacyFallback ? filterLegacyPosts(mappedPosts, query.filter) : mappedPosts;
+  const visiblePosts = shouldApplyLegacyFilter ? filterLegacyPosts(mappedPosts, query.filter) : mappedPosts;
   const postsWithComments = await hydratePostsWithComments(visiblePosts);
 
   return {
