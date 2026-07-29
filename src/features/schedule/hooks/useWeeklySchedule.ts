@@ -42,10 +42,10 @@ export const weekDays: { id: WeekDayId; label: string }[] = [
 ];
 
 const defaultStudentContext: StudentContext = {
-  career: 'Ingeniería de Software',
-  year: '2do año',
-  commission: 'Comisión B',
-  campus: 'Sede Yerba Buena',
+  career: '',
+  year: '',
+  commission: '',
+  campus: '',
 };
 
 const getTodayWeekDay = (): WeekDayId => {
@@ -108,10 +108,10 @@ const mapScheduleClass = (schedule: ScheduleDto): ScheduleClass => ({
 });
 
 const getCareerContext = (career?: CareerDto): StudentContext => ({
-  career: career?.name ?? defaultStudentContext.career,
-  year: 'Año académico',
-  commission: 'Administración',
-  campus: 'Sede Yerba Buena',
+  career: career?.name ?? '',
+  year: career?.year ?? '',
+  commission: '',
+  campus: '',
 });
 
 export const useWeeklySchedule = (careerId?: string, selectedYear?: string) => {

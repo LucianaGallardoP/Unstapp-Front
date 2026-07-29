@@ -160,6 +160,7 @@
     "schedule.defaultCareer": "Software Engineering",
     "schedule.defaultYear": "2nd year",
     "schedule.defaultCommission": "Commission B",
+    "schedule.contextUnavailable": "Career unavailable",
     "schedule.yearBadgeLabel": "Year",
     "feed.sessionExpired": "Your session expired. Sign in again to view posts.",
     "feed.loadError": "Posts could not be loaded.",

@@ -120,6 +120,22 @@ const inferRoleFromProfileText = (...values: unknown[]) => {
   return roleKey === 'student' ? undefined : profileText;
 };
 
+const getRolePriority = (role?: string) => {
+  const roleKey = normalizeRoleKey(role);
+
+  if (roleKey === 'admin') return 4;
+  if (roleKey === 'teacher') return 3;
+  if (roleKey === 'bar') return 2;
+
+  return 1;
+};
+
+const pickPrimaryRole = (roles: string[], inferredRole?: string) => {
+  const candidates = [...roles, inferredRole].filter((role): role is string => Boolean(role));
+
+  return candidates.sort((a, b) => getRolePriority(b) - getRolePriority(a))[0];
+};
+
 const normalizeProfilePostCategory = (role: PostAuthorRole): PostCategory => {
   if (role === 'Administrativo') return 'administrativo';
   if (role === 'Docente') return 'carrera';
@@ -225,7 +241,7 @@ const mapProfileFromApi = (
     root.bio,
     root.description,
   );
-  const primaryRole = roles[0] ?? inferredRole;
+  const primaryRole = pickPrimaryRole(roles, inferredRole);
 
   return {
     profile: {

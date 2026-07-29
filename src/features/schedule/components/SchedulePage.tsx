@@ -85,7 +85,14 @@ export const SchedulePage = () => {
         ? t('schedule.defaultCareer')
         : studentContext.career,
   };
-  const yearBadge = getYearBadgeParts(displayStudentContext.year, t('schedule.yearBadgeLabel'));
+  const hasAcademicDetails = Boolean(
+    displayStudentContext.year ||
+    displayStudentContext.commission ||
+    displayStudentContext.campus,
+  );
+  const yearBadge = displayStudentContext.year
+    ? getYearBadgeParts(displayStudentContext.year, t('schedule.yearBadgeLabel'))
+    : null;
 
   const handleEdit = async (values: CreateScheduleClassInput) => {
     if (!editingClass) return;
@@ -145,38 +152,50 @@ export const SchedulePage = () => {
                   </p>
                 )}
                 <h1 className="text-[12px] font-black uppercase leading-4 text-black sm:text-[14px]">
-                  {displayStudentContext.career}
+                  {displayStudentContext.career || t('schedule.contextUnavailable')}
                 </h1>
 
-                <div className="mt-2 grid grid-cols-2 gap-2 text-center">
-                  <div>
-                    <p className="text-[9px] font-black uppercase leading-3 text-[#1E4E9D]">
-                      {displayStudentContext.year}
-                    </p>
-                    <p className="text-[7px] font-black uppercase leading-3 text-[#526174]">
-                      {displayStudentContext.commission}
-                    </p>
+                {hasAcademicDetails && (
+                  <div className="mt-2 grid grid-cols-2 gap-2 text-center">
+                    {(displayStudentContext.year || displayStudentContext.commission) && (
+                      <div>
+                        {displayStudentContext.year && (
+                          <p className="text-[9px] font-black uppercase leading-3 text-[#1E4E9D]">
+                            {displayStudentContext.year}
+                          </p>
+                        )}
+                        {displayStudentContext.commission && (
+                          <p className="text-[7px] font-black uppercase leading-3 text-[#526174]">
+                            {displayStudentContext.commission}
+                          </p>
+                        )}
+                      </div>
+                    )}
+                    {displayStudentContext.campus && (
+                      <div>
+                        <p className="text-[9px] font-black uppercase leading-3 text-[#526174]">
+                          {t('schedule.campus')}
+                        </p>
+                        <p className="text-[7px] font-black uppercase leading-3 text-[#526174]">
+                          {displayStudentContext.campus}
+                        </p>
+                      </div>
+                    )}
                   </div>
-                  <div>
-                    <p className="text-[9px] font-black uppercase leading-3 text-[#526174]">
-                      {t('schedule.campus')}
-                    </p>
-                    <p className="text-[7px] font-black uppercase leading-3 text-[#526174]">
-                      {displayStudentContext.campus}
-                    </p>
-                  </div>
-                </div>
+                )}
               </div>
             </div>
 
-            <div className="mt-3 flex gap-2">
-              <span className="flex h-5 w-8 items-center justify-center rounded bg-white text-[9px] font-black uppercase text-[#1E4E9D] shadow-sm ring-1 ring-[#D8E0EE]">
-                {yearBadge.ordinal}
-              </span>
-              <span className="flex h-5 w-8 items-center justify-center rounded bg-white text-[7px] font-black uppercase text-[#1E4E9D] shadow-sm ring-1 ring-[#D8E0EE]">
-                {yearBadge.label}
-              </span>
-            </div>
+            {yearBadge && (
+              <div className="mt-3 flex gap-2">
+                <span className="flex h-5 w-8 items-center justify-center rounded bg-white text-[9px] font-black uppercase text-[#1E4E9D] shadow-sm ring-1 ring-[#D8E0EE]">
+                  {yearBadge.ordinal}
+                </span>
+                <span className="flex h-5 w-8 items-center justify-center rounded bg-white text-[7px] font-black uppercase text-[#1E4E9D] shadow-sm ring-1 ring-[#D8E0EE]">
+                  {yearBadge.label}
+                </span>
+              </div>
+            )}
 
             {contextError && (
               <p className="mt-3 rounded-lg bg-[#E7000B]/10 px-3 py-2 text-[10px] font-bold text-[#E7000B]">

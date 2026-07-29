@@ -258,7 +258,7 @@ const getMediaType = (url: string) => {
   return 'file';
 };
 
-const getProfileAvatarFromApi = async (authorId: number | string) => {
+const getProfileSummaryFromApi = async (authorId: number | string): Promise<{ avatarUrl?: string; role?: PostAuthorRole }> => {
   try {
     const response = await apiClient.get<unknown>(`/profile/${authorId}`, {
       headers: getAuthHeaders(),
@@ -267,31 +267,60 @@ const getProfileAvatarFromApi = async (authorId: number | string) => {
     const data = asRecord(root.data ?? root.value ?? root.profile ?? root);
     const user = asRecord(data.user ?? data.profile ?? data.person ?? data);
     const rootUser = asRecord(root.user ?? root.profile ?? root.person);
+    const roles = [
+      user.roles,
+      user.role,
+      user.roleName,
+      user.rol,
+      user.userRole,
+      user.tipoUsuario,
+      data.roles,
+      data.role,
+      data.roleName,
+      data.rol,
+      data.userRole,
+      data.tipoUsuario,
+      rootUser.roles,
+      rootUser.role,
+      rootUser.roleName,
+      rootUser.rol,
+      rootUser.userRole,
+      rootUser.tipoUsuario,
+      root.roles,
+      root.role,
+      root.roleName,
+      root.rol,
+      root.userRole,
+      root.tipoUsuario,
+    ];
+    const roleValues = roles.flatMap(asStringList);
 
-    return (
-      asString(user.avatarUrl) ||
-      asString(user.profileImageUrl) ||
-      asString(user.profilePictureUrl) ||
-      asString(user.profilePhotoUrl) ||
-      asString(user.photoUrl) ||
-      asString(rootUser.avatarUrl) ||
-      asString(rootUser.profileImageUrl) ||
-      asString(rootUser.profilePictureUrl) ||
-      asString(rootUser.profilePhotoUrl) ||
-      asString(rootUser.photoUrl) ||
-      asString(root.avatarUrl) ||
-      asString(root.profileImageUrl) ||
-      asString(root.profilePictureUrl) ||
-      asString(root.profilePhotoUrl) ||
-      asString(root.photoUrl) ||
-      undefined
-    );
+    return {
+      avatarUrl:
+        asString(user.avatarUrl) ||
+        asString(user.profileImageUrl) ||
+        asString(user.profilePictureUrl) ||
+        asString(user.profilePhotoUrl) ||
+        asString(user.photoUrl) ||
+        asString(rootUser.avatarUrl) ||
+        asString(rootUser.profileImageUrl) ||
+        asString(rootUser.profilePictureUrl) ||
+        asString(rootUser.profilePhotoUrl) ||
+        asString(rootUser.photoUrl) ||
+        asString(root.avatarUrl) ||
+        asString(root.profileImageUrl) ||
+        asString(root.profilePictureUrl) ||
+        asString(root.profilePhotoUrl) ||
+        asString(root.photoUrl) ||
+        undefined,
+      role: roleValues.length ? normalizeRole(roleValues) : undefined,
+    };
   } catch {
-    return undefined;
+    return {};
   }
 };
 
-const hydrateAuthorAvatars = async (posts: Post[]) => {
+const hydrateAuthorProfiles = async (posts: Post[]) => {
   const uniqueAuthorIds = Array.from(
     new Set(
       posts
@@ -299,19 +328,22 @@ const hydrateAuthorAvatars = async (posts: Post[]) => {
         .filter((authorId): authorId is number | string => typeof authorId === 'number' || typeof authorId === 'string'),
     ),
   );
-  const avatarEntries = await Promise.all(
-    uniqueAuthorIds.map(async (authorId) => [String(authorId), await getProfileAvatarFromApi(authorId)] as const),
+  const profileEntries = await Promise.all(
+    uniqueAuthorIds.map(async (authorId) => [String(authorId), await getProfileSummaryFromApi(authorId)] as const),
   );
-  const avatarsByAuthorId = new Map(avatarEntries);
+  const profilesByAuthorId = new Map(profileEntries);
 
-  // Completa la foto real del perfil cuando el endpoint de posts no la incluye.
+  // Completa foto y rol reales cuando el endpoint de posts no los incluye.
   return posts.map((post) => ({
     ...post,
     author: {
       ...post.author,
       avatarUrl:
-        avatarsByAuthorId.get(String(post.author.id)) ||
+        profilesByAuthorId.get(String(post.author.id))?.avatarUrl ||
         post.author.avatarUrl,
+      role:
+        profilesByAuthorId.get(String(post.author.id))?.role ||
+        post.author.role,
     },
   }));
 };
@@ -526,7 +558,7 @@ const fetchPosts = async (options?: GetPostsOptions): Promise<PostsPageResult> =
     return { posts: [], hasMore: false };
   }
 
-  const mappedPosts = await hydrateAuthorAvatars(posts.map((post) => mapPostFromApi(post)));
+  const mappedPosts = await hydrateAuthorProfiles(posts.map((post) => mapPostFromApi(post)));
   const visiblePosts = shouldApplyLegacyFilter ? filterLegacyPosts(mappedPosts, query.filter) : mappedPosts;
   const postsWithComments = await hydratePostsWithComments(visiblePosts);
 
@@ -554,7 +586,7 @@ export const postService = {
     const data = response.data;
     const root = asRecord(data);
     const postData = root.data ?? root.value ?? root.post ?? data;
-    const [post] = await hydrateAuthorAvatars([mapPostFromApi(postData)]);
+    const [post] = await hydrateAuthorProfiles([mapPostFromApi(postData)]);
 
     try {
       const comments = await commentService.getByPostIdFromApi(post.id);
