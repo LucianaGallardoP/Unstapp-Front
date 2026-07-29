@@ -17,20 +17,6 @@ const getIsCurrentUserAdmin = () => {
   }
 };
 
-const getYearBadgeParts = (yearText: string, yearLabel: string) => {
-  const normalizedYear = yearText
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .toLowerCase();
-  const numberMatch = normalizedYear.match(/\b([1-6])\b/) ?? normalizedYear.match(/([1-6])(?:ro|do|er|to|st|nd|rd|th)/);
-  const yearNumber = numberMatch?.[1] ?? '1';
-
-  return {
-    ordinal: `${yearNumber}\u00b0`,
-    label: yearLabel,
-  };
-};
-
 export const SchedulePage = () => {
   const { language, t } = useLanguage();
   const [isCreateSubjectModalOpen, setIsCreateSubjectModalOpen] = useState(false);
@@ -85,15 +71,6 @@ export const SchedulePage = () => {
         ? t('schedule.defaultCareer')
         : studentContext.career,
   };
-  const hasAcademicDetails = Boolean(
-    displayStudentContext.year ||
-    displayStudentContext.commission ||
-    displayStudentContext.campus,
-  );
-  const yearBadge = displayStudentContext.year
-    ? getYearBadgeParts(displayStudentContext.year, t('schedule.yearBadgeLabel'))
-    : null;
-
   const handleEdit = async (values: CreateScheduleClassInput) => {
     if (!editingClass) return;
 
@@ -136,7 +113,7 @@ export const SchedulePage = () => {
               </button>
             )}
 
-            <div className="flex items-center gap-3 pr-8">
+            <div className="flex items-center gap-3 pr-8 sm:gap-4">
               <div className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-[10px] bg-[#1E4E9D] p-1.5">
                 <img
                   src="/UNSTA-logo.png"
@@ -151,51 +128,22 @@ export const SchedulePage = () => {
                     {t('schedule.loadingContext')}
                   </p>
                 )}
-                <h1 className="text-[12px] font-black uppercase leading-4 text-black sm:text-[14px]">
+                <h1 className="text-[14px] font-black uppercase leading-5 text-black sm:text-[16px] md:text-[17px]">
                   {displayStudentContext.career || t('schedule.contextUnavailable')}
                 </h1>
-
-                {hasAcademicDetails && (
-                  <div className="mt-2 grid grid-cols-2 gap-2 text-center">
-                    {(displayStudentContext.year || displayStudentContext.commission) && (
-                      <div>
-                        {displayStudentContext.year && (
-                          <p className="text-[9px] font-black uppercase leading-3 text-[#1E4E9D]">
-                            {displayStudentContext.year}
-                          </p>
-                        )}
-                        {displayStudentContext.commission && (
-                          <p className="text-[7px] font-black uppercase leading-3 text-[#526174]">
-                            {displayStudentContext.commission}
-                          </p>
-                        )}
-                      </div>
-                    )}
-                    {displayStudentContext.campus && (
-                      <div>
-                        <p className="text-[9px] font-black uppercase leading-3 text-[#526174]">
-                          {t('schedule.campus')}
-                        </p>
-                        <p className="text-[7px] font-black uppercase leading-3 text-[#526174]">
-                          {displayStudentContext.campus}
-                        </p>
-                      </div>
-                    )}
-                  </div>
-                )}
               </div>
+
+              {displayStudentContext.campus && (
+                <div className="shrink-0 text-right">
+                  <p className="text-[9px] font-black uppercase leading-3 text-[#526174]">
+                    {t('schedule.campus')}
+                  </p>
+                  <p className="mt-0.5 max-w-[110px] text-[7px] font-black uppercase leading-3 text-[#526174] sm:max-w-[150px]">
+                    {displayStudentContext.campus}
+                  </p>
+                </div>
+              )}
             </div>
-
-            {yearBadge && (
-              <div className="mt-3 flex gap-2">
-                <span className="flex h-5 w-8 items-center justify-center rounded bg-white text-[9px] font-black uppercase text-[#1E4E9D] shadow-sm ring-1 ring-[#D8E0EE]">
-                  {yearBadge.ordinal}
-                </span>
-                <span className="flex h-5 w-8 items-center justify-center rounded bg-white text-[7px] font-black uppercase text-[#1E4E9D] shadow-sm ring-1 ring-[#D8E0EE]">
-                  {yearBadge.label}
-                </span>
-              </div>
-            )}
 
             {contextError && (
               <p className="mt-3 rounded-lg bg-[#E7000B]/10 px-3 py-2 text-[10px] font-bold text-[#E7000B]">
