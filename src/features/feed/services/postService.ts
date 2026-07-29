@@ -99,6 +99,23 @@ const normalizeRole = (value: unknown): PostAuthorRole => {
   return 'Alumno';
 };
 
+const getRolePriority = (role?: string) => {
+  const roleKey = normalizeRoleKey(role);
+
+  if (roleKey === 'admin') return 4;
+  if (roleKey === 'teacher') return 3;
+  if (roleKey === 'bar') return 2;
+
+  return 1;
+};
+
+const pickStrongestRole = (...values: unknown[]): PostAuthorRole | undefined => {
+  const roleValues = values.flatMap(asStringList);
+  const strongestRole = roleValues.sort((a, b) => getRolePriority(b) - getRolePriority(a))[0];
+
+  return strongestRole ? normalizeRole(strongestRole) : undefined;
+};
+
 const normalizeAudienceFromApi = (value: unknown): PostAudience => {
   const category = asStringList(value).join(' ').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
 
@@ -293,7 +310,28 @@ const getProfileSummaryFromApi = async (authorId: number | string): Promise<{ av
       root.userRole,
       root.tipoUsuario,
     ];
-    const roleValues = roles.flatMap(asStringList);
+    const inferredRoleValues = [
+      user.bio,
+      user.description,
+      user.about,
+      user.position,
+      user.title,
+      data.bio,
+      data.description,
+      data.about,
+      data.position,
+      data.title,
+      rootUser.bio,
+      rootUser.description,
+      rootUser.about,
+      rootUser.position,
+      rootUser.title,
+      root.bio,
+      root.description,
+      root.about,
+      root.position,
+      root.title,
+    ];
 
     return {
       avatarUrl:
@@ -313,7 +351,7 @@ const getProfileSummaryFromApi = async (authorId: number | string): Promise<{ av
         asString(root.profilePhotoUrl) ||
         asString(root.photoUrl) ||
         undefined,
-      role: roleValues.length ? normalizeRole(roleValues) : undefined,
+      role: pickStrongestRole(roles, inferredRoleValues),
     };
   } catch {
     return {};
