@@ -397,10 +397,11 @@ const mapPostFromApi = (apiPost: unknown, fallbackContent = ''): Post => {
   const author = asRecord(post.author ?? post.user ?? post.createdBy);
   const audienceSource = getPostAudienceSource(post, author);
   const audience = normalizeAudienceFromApi(audienceSource);
+  const inferredRole = normalizeRole(getPostRoleSource(post, author, audienceSource));
   const role =
-    audience === 'administrativo'
+    audience === 'administrativo' && inferredRole === 'Alumno'
       ? 'Administrativo'
-      : normalizeRole(getPostRoleSource(post, author, audienceSource));
+      : inferredRole;
   const visualCategory = normalizeCategory(role);
   const id = post.id ?? post.postId ?? crypto.randomUUID();
   const storedLikes = likeService.getStoredLikeCount(id as number | string);
