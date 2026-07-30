@@ -7,6 +7,9 @@ export const useCareers = (enabled = true) => {
   const [careers, setCareers] = useState<CareerDto[]>([]);
   const [loading, setLoading] = useState(enabled);
   const [error, setError] = useState<string | null>(null);
+  const [trigger, setTrigger] = useState(0);
+
+  const refresh = () => setTrigger((prev) => prev + 1);
 
   useEffect(() => {
     if (!enabled) {
@@ -42,7 +45,7 @@ export const useCareers = (enabled = true) => {
     return () => {
       isMounted = false;
     };
-  }, [enabled]);
+  }, [enabled, trigger]);
 
-  return { careers, loading, error };
+  return { careers, loading, error, refresh };
 };

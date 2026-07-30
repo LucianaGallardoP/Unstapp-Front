@@ -177,7 +177,14 @@ type ScheduleQueryParams = {
 const getSchedulePrimaryParams = (params?: ScheduleQueryParams): ScheduleQueryParams | undefined => {
   if (!params) return undefined;
 
-  if (params.careerId !== undefined) return { careerId: params.careerId };
+  if (params.careerId !== undefined) {
+    return {
+      careerId: params.careerId,
+      ...(params.dia ? { dia: params.dia } : {}),
+      ...(params.year !== undefined ? { year: params.year } : {}),
+    };
+  }
+
   if (params.dia) return { dia: params.dia };
 
   return params;
@@ -313,7 +320,10 @@ export const scheduleService = {
       formData.append('file', file);
       
       const response = await apiClient.post<any>('/horarios/import', formData, {
-        headers: getAuthHeaders(),
+        headers: {
+          ...getAuthHeaders(),
+          'Content-Type': undefined,
+        },
       });
       return response.data;
     } catch (error: any) {

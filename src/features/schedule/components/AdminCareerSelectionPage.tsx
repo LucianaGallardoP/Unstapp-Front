@@ -19,7 +19,7 @@ const formatCareerYear = (year: string | undefined, yearLabel: string) => {
 
 export const AdminCareerSelectionPage = () => {
   const navigate = useNavigate();
-  const { careers, loading, error } = useCareers();
+  const { careers, loading, error, refresh } = useCareers();
   const { t } = useLanguage();
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
 
@@ -46,7 +46,7 @@ export const AdminCareerSelectionPage = () => {
             <ImportScheduleModal
               onClose={() => setIsImportModalOpen(false)}
               onSuccess={() => {
-                // Optionally reload or do something else here
+                refresh();
               }}
             />
           )}
