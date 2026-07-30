@@ -175,18 +175,6 @@ type ScheduleQueryParams = {
 };
 
 const getSchedulePrimaryParams = (params?: ScheduleQueryParams): ScheduleQueryParams | undefined => {
-  if (!params) return undefined;
-
-  if (params.careerId !== undefined) {
-    return {
-      careerId: params.careerId,
-      ...(params.dia ? { dia: params.dia } : {}),
-      ...(params.year !== undefined ? { year: params.year } : {}),
-    };
-  }
-
-  if (params.dia) return { dia: params.dia };
-
   return params;
 };
 
@@ -314,7 +302,7 @@ export const scheduleService = {
     }
   },
 
-  importSchedules: async (file: File): Promise<{ message: string; count?: number }> => {
+  importSchedules: async (file: File): Promise<{ message: string; count?: number; createdCount?: number }> => {
     try {
       const formData = new FormData();
       formData.append('file', file);

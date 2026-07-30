@@ -128,22 +128,44 @@ export const useWeeklySchedule = (careerId?: string, selectedYear?: string) => {
     [scheduleClasses, selectedDay],
   );
 
+  const fullDayNames: Record<WeekDayId, string> = {
+    lun: 'Lunes',
+    mar: 'Martes',
+    mie: 'Miércoles',
+    jue: 'Jueves',
+    vie: 'Viernes',
+  };
+
   const fetchSchedules = useCallback(async (dayOverride?: WeekDayId) => {
     const day = dayOverride ?? selectedDay;
     const year = selectedYear ?? getYearQueryValue(currentStudentContext.year) ?? '1';
 
     try {
-      // El backend requiere dia y year; admin agrega careerId.
-      const params = careerId
-        ? { careerId, dia: day, year }
-        : { dia: day, year };
-      const schedules = await scheduleService.getSchedules(params);
+      const fullDay = fullDayNames[day];
+      const paramsShort = careerId ? { careerId, dia: day, year } : { dia: day, year };
+      const paramsFull = careerId ? { careerId, dia: fullDay, year } : { dia: fullDay, year };
+
+      // Se piden ambos formatos porque los creados manualmente se guardan como 'lun'
+      // y los importados por excel como 'Lunes' (match exacto del backend)
+      const [schedulesShort, schedulesFull] = await Promise.all([
+        scheduleService.getSchedules(paramsShort).catch(() => []),
+        scheduleService.getSchedules(paramsFull).catch(() => []),
+      ]);
+
+      const schedules = [...schedulesShort, ...schedulesFull];
+      
       const visibleSchedules = selectedYear
         ? schedules.filter((schedule) => !schedule.year || String(schedule.year).includes(selectedYear))
         : schedules;
 
+      // Eliminar duplicados por ID (por si acaso el backend devuelve los mismos en ambos)
+      const uniqueSchedules = Array.from(new Map(visibleSchedules.map(item => [item.id, item])).values());
+
       setContextError(null);
-      setScheduleClasses(visibleSchedules.map(mapScheduleClass));
+      setScheduleClasses(uniqueSchedules.map((schedule) => ({
+        ...mapScheduleClass(schedule),
+        day, // Se fuerza el día porque el backend a veces omite el campo
+      })));
     } catch {
       setContextError(i18n.t('schedule.loadError'));
     }

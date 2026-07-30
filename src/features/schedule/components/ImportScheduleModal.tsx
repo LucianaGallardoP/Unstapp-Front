@@ -49,7 +49,7 @@ export const ImportScheduleModal = ({ onClose, onSuccess }: ImportScheduleModalP
 
     try {
       const result = await scheduleService.importSchedules(file);
-      const count = result.count ?? 0;
+      const count = result.createdCount ?? result.count ?? 0;
 
       setSuccessMessage(`¡Éxito! Se importaron ${count > 0 ? count : 'las'} materias correctamente.`);
       onSuccess?.();
