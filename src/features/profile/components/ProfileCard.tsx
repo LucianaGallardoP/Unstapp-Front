@@ -4,6 +4,7 @@ import type { ProfileResponseDTO, ProfileStatsDTO } from '../types/profile.dtos'
 import { RoleAvatar } from '../../../components/common/RoleAvatar';
 import { useLanguage } from '../../../store/languageContext';
 import { getRoleBadgeClass, shouldShowVerifiedForRole, translateRole } from '../../../utils/roleLabels';
+import { profileService } from '../services/profileService';
 
 const formatCompactNumber = (value: string | number) => {
   const numericValue = typeof value === 'number' ? value : Number(value);
@@ -70,8 +71,10 @@ export const ProfileCard = ({
   const [whatsAppNotificationsEnabled, setWhatsAppNotificationsEnabled] = useState(() =>
     getStoredWhatsAppNotifications(profile.userId, profile.whatsappNotificationsEnabled ?? true),
   );
+  const [isWhatsAppNotificationsLoading, setIsWhatsAppNotificationsLoading] = useState(false);
   const [isFollowLoading, setIsFollowLoading] = useState(false);
   const [followError, setFollowError] = useState<string | null>(null);
+  const [whatsAppError, setWhatsAppError] = useState<string | null>(null);
   const rawRole = useMemo(() => {
     const roles = profile.roles?.length ? profile.roles : profile.isOwnProfile ? getStoredRoles() : [];
 
@@ -126,14 +129,26 @@ export const ProfileCard = ({
     }
   };
 
-  const handleWhatsAppNotificationsToggle = () => {
-    setWhatsAppNotificationsEnabled((currentValue) => {
-      const nextValue = !currentValue;
+  const handleWhatsAppNotificationsToggle = async () => {
+    if (isWhatsAppNotificationsLoading) return;
 
-      localStorage.setItem(getWhatsAppNotificationsKey(profile.userId), String(nextValue));
+    const previousValue = whatsAppNotificationsEnabled;
+    const nextValue = !previousValue;
 
-      return nextValue;
-    });
+    setWhatsAppError(null);
+    setIsWhatsAppNotificationsLoading(true);
+    setWhatsAppNotificationsEnabled(nextValue);
+    localStorage.setItem(getWhatsAppNotificationsKey(profile.userId), String(nextValue));
+
+    try {
+      await profileService.updateWhatsAppNotifications(nextValue);
+    } catch {
+      setWhatsAppNotificationsEnabled(previousValue);
+      localStorage.setItem(getWhatsAppNotificationsKey(profile.userId), String(previousValue));
+      setWhatsAppError(t('profile.whatsappUpdateError'));
+    } finally {
+      setIsWhatsAppNotificationsLoading(false);
+    }
   };
 
   return (
@@ -247,9 +262,10 @@ export const ProfileCard = ({
               role="switch"
               aria-checked={whatsAppNotificationsEnabled}
               onClick={handleWhatsAppNotificationsToggle}
+              disabled={isWhatsAppNotificationsLoading}
               className={`relative h-7 w-12 shrink-0 overflow-hidden rounded-full transition-colors ${
                 whatsAppNotificationsEnabled ? 'bg-[#1d8c57]' : 'bg-gray-300'
-              }`}
+              } disabled:cursor-wait disabled:opacity-70`}
             >
               <span
                 className={`absolute left-0 top-1 h-5 w-5 rounded-full bg-white shadow transition-transform ${
@@ -258,6 +274,12 @@ export const ProfileCard = ({
               />
             </button>
           </div>
+        )}
+
+        {whatsAppError && (
+          <p className="mt-2 text-[11px] font-bold text-[#E7000B]">
+            {whatsAppError}
+          </p>
         )}
       </div>
 

@@ -2,6 +2,7 @@ import React from 'react';
 import { Plus, X } from 'lucide-react';
 import { useLanguage } from '../../../store/languageContext';
 import type { CalendarEvent, CalendarEventType } from '../types/calendar.types';
+import { normalizeRoleKey } from '../../../utils/roleLabels';
 
 interface DailyEventsCardProps {
   selectedDate: Date;
@@ -40,6 +41,16 @@ const formatTime = (date: string, language: 'es' | 'en') =>
     minute: '2-digit',
   }).format(new Date(date));
 
+const getCurrentCalendarRoleKey = () => {
+  try {
+    const roles = JSON.parse(localStorage.getItem('unstapp_user_roles') ?? '[]');
+
+    return normalizeRoleKey(Array.isArray(roles) ? roles.join(' ') : String(roles ?? ''));
+  } catch {
+    return 'student';
+  }
+};
+
 export const DailyEventsCard: React.FC<DailyEventsCardProps> = ({
   selectedDate,
   events,
@@ -49,16 +60,8 @@ export const DailyEventsCard: React.FC<DailyEventsCardProps> = ({
   onEventClick,
 }) => {
   const { language, t } = useLanguage();
-  const isAlumno = (() => {
-    try {
-      const rolesStr = localStorage.getItem('unstapp_user_roles');
-      if (!rolesStr) return false;
-      const roles = JSON.parse(rolesStr);
-      return roles.includes('Alumno');
-    } catch {
-      return false;
-    }
-  })();
+  const currentRoleKey = getCurrentCalendarRoleKey();
+  const canManageEvents = currentRoleKey === 'admin' || currentRoleKey === 'teacher';
 
   return (
     <div className="relative w-full max-w-[420px] rounded-[2.5rem] bg-white p-8 font-sans shadow-[0_12px_40px_-10px_rgb(0,0,0,0.15)]">
@@ -131,7 +134,7 @@ export const DailyEventsCard: React.FC<DailyEventsCardProps> = ({
         )}
       </div>
 
-      {!isAlumno && (
+      {canManageEvents && (
         <div className="flex justify-center">
           <button
             type="button"

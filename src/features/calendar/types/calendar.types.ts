@@ -17,4 +17,5 @@ export interface CreateCalendarEventPayload {
   startDate: string;
   endDate: string;
   careerId?: number;
+  reminderDaysBefore?: number[];
 }

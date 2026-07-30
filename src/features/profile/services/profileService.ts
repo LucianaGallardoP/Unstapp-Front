@@ -393,4 +393,21 @@ export const profileService = {
         undefined,
     };
   },
+
+  updateWhatsAppNotifications: async (enabled: boolean) => {
+    const formData = new FormData();
+
+    // Mantiene sincronizada la preferencia para que el backend pueda decidir si envía WhatsApp.
+    formData.append('WhatsappNotificationsEnabled', String(enabled));
+    formData.append('WhatsAppNotificationsEnabled', String(enabled));
+    formData.append('ReceiveWhatsappNotifications', String(enabled));
+    formData.append('ReceiveWhatsAppNotifications', String(enabled));
+
+    await apiClient.patch('/profile', formData, {
+      headers: {
+        ...getAuthHeaders(),
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+  },
 };

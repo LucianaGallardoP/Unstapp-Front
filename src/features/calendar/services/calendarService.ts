@@ -217,6 +217,9 @@ export const calendarService = {
       startDate: payload.startDate,
       endDate: payload.endDate,
       ...(payload.careerId ? { careerId: payload.careerId } : {}),
+      ...(payload.reminderDaysBefore?.length
+        ? { reminderDaysBefore: payload.reminderDaysBefore }
+        : {}),
     };
 
     const response = await apiClient.post<unknown>('/calendar/events', requestPayload, {

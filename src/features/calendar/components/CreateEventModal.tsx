@@ -7,6 +7,7 @@ import type {
   CalendarEventType,
   CreateCalendarEventPayload,
 } from '../types/calendar.types';
+import { normalizeRoleKey } from '../../../utils/roleLabels';
 
 interface CreateEventModalProps {
   selectedDate: Date;
@@ -71,6 +72,22 @@ const buildLocalEndDateTime = (date: Date, time: string) => {
   return `${formatDatePart(eventDate)}T${formatTimePart(eventDate)}`;
 };
 
+const getCurrentCalendarRoleKey = () => {
+  try {
+    const roles = JSON.parse(localStorage.getItem('unstapp_user_roles') ?? '[]');
+
+    return normalizeRoleKey(Array.isArray(roles) ? roles.join(' ') : String(roles ?? ''));
+  } catch {
+    return 'student';
+  }
+};
+
+const teacherEventTypeOptions = [
+  { id: 2 as CalendarEventType, labelKey: 'calendar.consultationClass', color: 'bg-[#4db2cd]' },
+];
+
+const examReminderDaysBefore = [5, 1];
+
 export const CreateEventModal: React.FC<CreateEventModalProps> = ({
   selectedDate,
   isSubmitting = false,
@@ -78,24 +95,16 @@ export const CreateEventModal: React.FC<CreateEventModalProps> = ({
   onCreate,
 }) => {
   const { language, t } = useLanguage();
+  const currentRoleKey = getCurrentCalendarRoleKey();
+  const isTeacher = currentRoleKey === 'teacher';
+  const canCreateEvent = currentRoleKey === 'admin' || isTeacher;
   const { careers, loading: careersLoading } = useCareers();
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
-  const [type, setType] = useState<CalendarEventType>(3);
+  const [type, setType] = useState<CalendarEventType>(isTeacher ? 2 : 3);
   const [time, setTime] = useState('08:00');
   const [selectedCareerId, setSelectedCareerId] = useState('');
   const [formError, setFormError] = useState<string | null>(null);
-
-  const isAlumno = (() => {
-    try {
-      const rolesStr = localStorage.getItem('unstapp_user_roles');
-      if (!rolesStr) return false;
-      const roles = JSON.parse(rolesStr);
-      return roles.includes('Alumno');
-    } catch {
-      return false;
-    }
-  })();
 
   const canSubmit = title.trim().length > 0 && time.trim().length > 0 && !isSubmitting;
 
@@ -108,6 +117,7 @@ export const CreateEventModal: React.FC<CreateEventModalProps> = ({
 
     const startDate = buildLocalDateTime(selectedDate, time);
     const endDate = buildLocalEndDateTime(selectedDate, time);
+    const eventType = isTeacher ? 2 : type;
 
     setFormError(null);
 
@@ -115,10 +125,11 @@ export const CreateEventModal: React.FC<CreateEventModalProps> = ({
       await onCreate({
         title: title.trim(),
         description: description.trim(),
-        type,
+        type: eventType,
         startDate,
         endDate,
         careerId: selectedCareerId ? Number(selectedCareerId) : undefined,
+        reminderDaysBefore: eventType === 1 ? examReminderDaysBefore : undefined,
       });
       onClose?.();
     } catch {
@@ -126,7 +137,7 @@ export const CreateEventModal: React.FC<CreateEventModalProps> = ({
     }
   };
 
-  if (isAlumno) {
+  if (!canCreateEvent) {
     return null;
   }
 
@@ -163,7 +174,17 @@ export const CreateEventModal: React.FC<CreateEventModalProps> = ({
 
         <label className="flex flex-col gap-2 text-[14px] font-[800] text-[#2c2c2c]">
           {t('calendar.eventTypeLabel')}
-          <EventTypeDropdown value={type} onChange={setType} />
+          <EventTypeDropdown
+            value={isTeacher ? 2 : type}
+            onChange={setType}
+            options={isTeacher ? teacherEventTypeOptions : undefined}
+            disabled={isTeacher}
+          />
+          {!isTeacher && type === 1 && (
+            <p className="rounded-2xl bg-[#EFF6FF] px-3 py-2 text-[11px] font-semibold leading-4 text-[#1E4E9D]">
+              {t('calendar.examReminderNotice')}
+            </p>
+          )}
         </label>
 
         <label className="flex flex-col gap-2 text-[14px] font-[800] text-[#2c2c2c]">

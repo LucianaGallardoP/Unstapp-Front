@@ -9,6 +9,7 @@ import { DailyEventsCard } from './DailyEventsCard';
 import { EventDetailModal } from './EventDetailModal';
 import type { CalendarEvent, CalendarEventType } from '../types/calendar.types';
 import { useLanguage } from '../../../store/languageContext';
+import { normalizeRoleKey } from '../../../utils/roleLabels';
 
 const formatLocalDate = (date: Date) => {
   const year = date.getFullYear();
@@ -80,6 +81,16 @@ const formatTime = (date: string) =>
     minute: '2-digit',
   }).format(new Date(date));
 
+const getCurrentCalendarRoleKey = () => {
+  try {
+    const roles = JSON.parse(localStorage.getItem('unstapp_user_roles') ?? '[]');
+
+    return normalizeRoleKey(Array.isArray(roles) ? roles.join(' ') : String(roles ?? ''));
+  } catch {
+    return 'student';
+  }
+};
+
 export const CalendarPage = () => {
   const { language, t } = useLanguage();
   const weekDays = language === 'en'
@@ -110,16 +121,8 @@ export const CalendarPage = () => {
     createEvent,
     deleteEvent,
   } = useCalendarEvents(visibleDate, selectedDate);
-  const isAlumno = (() => {
-    try {
-      const rolesStr = localStorage.getItem('unstapp_user_roles');
-      if (!rolesStr) return false;
-      const roles = JSON.parse(rolesStr);
-      return roles.includes('Alumno');
-    } catch {
-      return false;
-    }
-  })();
+  const currentRoleKey = getCurrentCalendarRoleKey();
+  const canManageEvents = currentRoleKey === 'admin' || currentRoleKey === 'teacher';
   const viewFilters = viewFilterBase.map((filter) => ({
     ...filter,
     label:
@@ -264,7 +267,7 @@ export const CalendarPage = () => {
               <h2 className="text-[17px] font-black uppercase tracking-tight text-black sm:text-[20px]">
                 {t('calendar.dayEvents')}
               </h2>
-              {!isAlumno && (
+              {canManageEvents && (
                 <button
                   type="button"
                   onClick={() => setIsCreateModalOpen(true)}
@@ -402,7 +405,7 @@ export const CalendarPage = () => {
           event={selectedEvent}
           isDeleting={isDeletingEvent}
           onClose={() => setSelectedEvent(null)}
-          onDelete={!isAlumno ? handleDeleteEvent : undefined}
+          onDelete={canManageEvents ? handleDeleteEvent : undefined}
         />
       )}
       {eventToDelete && (

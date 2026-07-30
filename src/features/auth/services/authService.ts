@@ -1,4 +1,5 @@
 ﻿import { apiClient } from '../../../services/apiClient';
+import { AxiosError } from 'axios';
 import type { 
   LoginRequest, 
   LoginResponse,
@@ -9,6 +10,21 @@ import type {
   ForgotPasswordRequest,
   ForgotPasswordResponse
 } from '../types/auth.dtos';
+
+const passwordRecoveryEndpoints = [
+  '/Auth/forgot-password',
+  '/Auth/request-password-reset',
+  '/Auth/recover-password',
+  '/Auth/verify-first-time',
+];
+
+const shouldTryNextRecoveryEndpoint = (error: unknown) => {
+  if (!(error instanceof AxiosError)) return false;
+
+  const status = error.response?.status;
+
+  return status === 404 || status === 405 || status === 501;
+};
 
 export const authService = {
   // Endpoint de Login (Metodo POST)
@@ -28,8 +44,23 @@ export const authService = {
   },
 
   forgotPassword: async (data: ForgotPasswordRequest): Promise<ForgotPasswordResponse> => {
-    const response = await apiClient.post<ForgotPasswordResponse>('/Auth/verify-first-time', data);
-    return response.data;
+    let lastError: unknown;
+
+    for (const endpoint of passwordRecoveryEndpoints) {
+      try {
+        const response = await apiClient.post<ForgotPasswordResponse>(endpoint, data);
+
+        return response.data;
+      } catch (error) {
+        lastError = error;
+
+        if (!shouldTryNextRecoveryEndpoint(error)) {
+          throw error;
+        }
+      }
+    }
+
+    throw lastError;
   },
   setInitialPassword: async (data: SetInitialPasswordRequest) => {
     const response = await apiClient.post('/Auth/set-initial-password', data);

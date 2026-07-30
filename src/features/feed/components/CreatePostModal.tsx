@@ -6,6 +6,7 @@ import { RoleAvatar } from '../../../components/common/RoleAvatar';
 import { useLanguage } from '../../../store/languageContext';
 import { useCareers } from '../../schedule/hooks/useCareers';
 import type { CreatePostOptions } from '../types/post.types';
+import { normalizeRoleKey } from '../../../utils/roleLabels';
 
 interface CreatePostModalProps {
   isOpen: boolean;
@@ -13,13 +14,13 @@ interface CreatePostModalProps {
   onPublish: (content: string, mediaFile?: File, options?: CreatePostOptions) => Promise<void>;
 }
 
-const getIsCurrentUserAdmin = () => {
+const getCurrentUserRoles = () => {
   try {
     const roles = JSON.parse(localStorage.getItem('unstapp_user_roles') ?? '[]');
 
-    return Array.isArray(roles) && roles.some((role) => String(role).toLowerCase().includes('admin'));
+    return Array.isArray(roles) ? roles.map(String) : [];
   } catch {
-    return false;
+    return [];
   }
 };
 
@@ -36,8 +37,9 @@ export const CreatePostModal = ({ isOpen, onClose, onPublish }: CreatePostModalP
   const [profileAvatarUrl, setProfileAvatarUrl] = useState(() => localStorage.getItem('unstapp_user_avatar_url'));
   const trimmedContent = content.trim();
   const isVideo = selectedFile?.type.startsWith('video/');
-  const isCurrentUserAdmin = getIsCurrentUserAdmin();
-  const { careers, loading: careersLoading } = useCareers(isOpen && isCurrentUserAdmin);
+  const currentUserRoles = getCurrentUserRoles();
+  const canCreateImportantPost = ['admin', 'teacher'].includes(normalizeRoleKey(currentUserRoles.join(' ')));
+  const { careers, loading: careersLoading } = useCareers(isOpen && canCreateImportantPost);
   const currentUserAvatarUrl = profileAvatarUrl || localStorage.getItem('unstapp_user_avatar_url');
   const currentUserName = localStorage.getItem('unstapp_user_name') || 'Usuario actual';
   const currentUserRole = (() => {
@@ -246,7 +248,7 @@ export const CreatePostModal = ({ isOpen, onClose, onPublish }: CreatePostModalP
           </section>
         )}
 
-        {isCurrentUserAdmin && (
+        {canCreateImportantPost && (
           <section className="mt-3 rounded-2xl border border-[#D8E0EE] bg-[#EFF6FF] px-3 py-3">
             <label className="flex items-center gap-2 text-[12px] font-black text-[#1F2937]">
               <input

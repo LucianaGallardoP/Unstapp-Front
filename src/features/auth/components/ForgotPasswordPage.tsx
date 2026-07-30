@@ -16,6 +16,45 @@ const getResponseMessage = (response: unknown, fallback: string): string => {
   return fallback;
 };
 
+const tokenKeys = new Set([
+  'token',
+  'resettoken',
+  'passwordtoken',
+  'setpasswordtoken',
+  'registrationtoken',
+  'initialpasswordtoken',
+]);
+
+const getPasswordResetToken = (response: unknown): string => {
+  const visitedObjects = new Set<object>();
+
+  const findToken = (value: unknown): string => {
+    if (!value || typeof value !== 'object' || visitedObjects.has(value)) {
+      return '';
+    }
+
+    visitedObjects.add(value);
+
+    for (const [key, entryValue] of Object.entries(value as Record<string, unknown>)) {
+      if (typeof entryValue === 'string' && tokenKeys.has(key.toLowerCase()) && entryValue.trim()) {
+        return entryValue.trim();
+      }
+    }
+
+    for (const entryValue of Object.values(value as Record<string, unknown>)) {
+      const nestedToken = findToken(entryValue);
+
+      if (nestedToken) {
+        return nestedToken;
+      }
+    }
+
+    return '';
+  };
+
+  return findToken(response);
+};
+
 export const ForgotPasswordPage = () => {
   const { t } = useLanguage();
   const navigate = useNavigate();
@@ -37,6 +76,14 @@ export const ForgotPasswordPage = () => {
 
     try {
       const response = await authService.forgotPassword({ dni });
+      const token = getPasswordResetToken(response);
+
+      if (token) {
+        setDni('');
+        navigate(`/restablecer-clave?token=${encodeURIComponent(token)}`);
+        return;
+      }
+
       setSuccessMessage(getResponseMessage(response, t('auth.recoverSuccess')));
       setDni('');
     } catch {
