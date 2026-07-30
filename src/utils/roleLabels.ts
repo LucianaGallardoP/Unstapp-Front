@@ -1,6 +1,6 @@
 type TranslateFn = (key: string) => string;
 
-export type NormalizedRoleKey = 'admin' | 'teacher' | 'bar' | 'student';
+export type NormalizedRoleKey = 'admin' | 'teacher' | 'bar' | 'library' | 'copyCenter' | 'student';
 
 export const normalizeRoleKey = (role?: string | null): NormalizedRoleKey => {
   const normalizedRole = String(role ?? '')
@@ -32,6 +32,24 @@ export const normalizeRoleKey = (role?: string | null): NormalizedRoleKey => {
     return 'bar';
   }
 
+  if (
+    normalizedRole.includes('biblioteca') ||
+    normalizedRole.includes('bibliotecario') ||
+    normalizedRole.includes('library')
+  ) {
+    return 'library';
+  }
+
+  if (
+    normalizedRole.includes('fotocopiadora') ||
+    normalizedRole.includes('fotocopia') ||
+    normalizedRole.includes('copiadora') ||
+    normalizedRole.includes('copy') ||
+    normalizedRole.includes('photocopy')
+  ) {
+    return 'copyCenter';
+  }
+
   return 'student';
 };
 
@@ -41,6 +59,8 @@ export const getRoleTranslationKey = (role?: string | null) => {
   if (roleKey === 'admin') return 'profile.role.admin';
   if (roleKey === 'teacher') return 'profile.role.teacher';
   if (roleKey === 'bar') return 'profile.role.bar';
+  if (roleKey === 'library') return 'profile.role.library';
+  if (roleKey === 'copyCenter') return 'profile.role.copyCenter';
 
   return 'profile.role.student';
 };
@@ -57,6 +77,8 @@ export const getRoleBadgeClass = (role?: string | null) => {
   if (roleKey === 'admin') return 'bg-[#E7000B] text-white';
   if (roleKey === 'teacher') return 'bg-[#1d8c57] text-white';
   if (roleKey === 'bar') return 'bg-[#155DFC] text-white';
+  if (roleKey === 'library') return 'bg-[#4Fbed6] text-white';
+  if (roleKey === 'copyCenter') return 'bg-[#155DFC] text-white';
 
   return 'bg-[#FF751F] text-white';
 };

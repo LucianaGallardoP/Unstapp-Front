@@ -23,6 +23,8 @@ const getCurrentUserRole = (): PostAuthorRole => {
     if (roleKey === 'admin') return 'Administrativo';
     if (roleKey === 'teacher') return 'Docente';
     if (roleKey === 'bar') return 'Bar';
+    if (roleKey === 'library') return 'Biblioteca';
+    if (roleKey === 'copyCenter') return 'Fotocopiadora';
 
     return 'Alumno';
   } catch {

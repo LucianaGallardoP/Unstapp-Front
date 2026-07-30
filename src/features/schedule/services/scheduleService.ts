@@ -6,6 +6,8 @@ type ApiRecord = Record<string, unknown>;
 
 const getToken = () => localStorage.getItem('unstapp_token');
 
+const getStoredUserId = () => localStorage.getItem('unstapp_user_id');
+
 const getAuthHeaders = () => {
   const token = getToken();
 
@@ -23,6 +25,27 @@ const asOptionalString = (value: unknown) => {
   if (typeof value === 'number' && Number.isFinite(value)) return String(value);
 
   return undefined;
+};
+
+const asStringList = (value: unknown): string[] => {
+  if (Array.isArray(value)) {
+    return value.flatMap(asStringList);
+  }
+
+  if (typeof value === 'string' && value.trim()) {
+    return [value];
+  }
+
+  const record = asRecord(value);
+  const nestedValue =
+    asString(record.name) ||
+    asString(record.nombre) ||
+    asString(record.careerName) ||
+    asString(record.carreraNombre) ||
+    asString(record.title) ||
+    asString(record.description);
+
+  return nestedValue ? [nestedValue] : [];
 };
 
 const asNumber = (value: unknown, fallback = 0) => {
@@ -168,6 +191,69 @@ const mapContextFromApi = (apiContext: unknown): StudentContext => {
   };
 };
 
+const normalizeContextText = (value: string) =>
+  value
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .trim();
+
+const isHardcodedContextValue = (value: string) => {
+  const normalizedValue = normalizeContextText(value);
+
+  return (
+    normalizedValue === 'ingenieria de software' ||
+    normalizedValue === '2do ano' ||
+    normalizedValue === 'comision b'
+  );
+};
+
+const removeHardcodedContextValues = (context: StudentContext): StudentContext => ({
+  ...context,
+  career: isHardcodedContextValue(context.career) ? '' : context.career,
+  year: isHardcodedContextValue(context.year) ? '' : context.year,
+  commission: isHardcodedContextValue(context.commission) ? '' : context.commission,
+});
+
+const getCareerFromProfileApi = (apiProfile: unknown) => {
+  const root = asRecord(apiProfile);
+  const data = asRecord(root.data ?? root.value ?? root.profile ?? root);
+  const user = asRecord(data.user ?? data.profile ?? data.person ?? data);
+  const rootUser = asRecord(root.user ?? root.profile ?? root.person);
+  const careers = [
+    ...asStringList(user.careers),
+    ...asStringList(user.career),
+    ...asStringList(user.carrera),
+    ...asStringList(data.careers),
+    ...asStringList(data.career),
+    ...asStringList(data.carrera),
+    ...asStringList(rootUser.careers),
+    ...asStringList(rootUser.career),
+    ...asStringList(rootUser.carrera),
+    ...asStringList(root.careers),
+    ...asStringList(root.career),
+    ...asStringList(root.carrera),
+  ];
+
+  return careers[0];
+};
+
+const getProfileCareer = async () => {
+  const userId = getStoredUserId();
+
+  if (!userId) return undefined;
+
+  try {
+    const response = await apiClient.get<unknown>(`/profile/${userId}`, {
+      headers: getAuthHeaders(),
+    });
+
+    return getCareerFromProfileApi(response.data);
+  } catch {
+    return undefined;
+  }
+};
+
 type ScheduleQueryParams = {
   careerId?: string | number;
   dia?: string;
@@ -204,11 +290,18 @@ const shouldRetryScheduleRequest = (error: any, params?: ScheduleQueryParams) =>
 
 export const scheduleService = {
   getMyContext: async () => {
-    const response = await apiClient.get<unknown>('/Users/me/context', {
-      headers: getAuthHeaders(),
-    });
+    const [contextResponse, profileCareer] = await Promise.all([
+      apiClient.get<unknown>('/Users/me/context', {
+        headers: getAuthHeaders(),
+      }),
+      getProfileCareer(),
+    ]);
+    const context = removeHardcodedContextValues(mapContextFromApi(contextResponse.data));
 
-    return mapContextFromApi(response.data);
+    return {
+      ...context,
+      career: profileCareer || context.career,
+    };
   },
 
   getCareers: async (): Promise<CareerDto[]> => {

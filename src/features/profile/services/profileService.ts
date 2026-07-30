@@ -107,6 +107,8 @@ const normalizeProfilePostRole = (role?: string): PostAuthorRole => {
   if (roleKey === 'admin') return 'Administrativo';
   if (roleKey === 'teacher') return 'Docente';
   if (roleKey === 'bar') return 'Bar';
+  if (roleKey === 'library') return 'Biblioteca';
+  if (roleKey === 'copyCenter') return 'Fotocopiadora';
 
   return 'Alumno';
 };
@@ -126,6 +128,8 @@ const getRolePriority = (role?: string) => {
   if (roleKey === 'admin') return 4;
   if (roleKey === 'teacher') return 3;
   if (roleKey === 'bar') return 2;
+  if (roleKey === 'library') return 2;
+  if (roleKey === 'copyCenter') return 2;
 
   return 1;
 };
@@ -140,6 +144,8 @@ const normalizeProfilePostCategory = (role: PostAuthorRole): PostCategory => {
   if (role === 'Administrativo') return 'administrativo';
   if (role === 'Docente') return 'carrera';
   if (role === 'Bar') return 'bar';
+  if (role === 'Biblioteca') return 'biblioteca';
+  if (role === 'Fotocopiadora') return 'fotocopiadora';
 
   return 'alumno';
 };

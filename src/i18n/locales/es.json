@@ -133,6 +133,8 @@
     "profile.role.admin": "Administrador",
     "profile.role.teacher": "Docente",
     "profile.role.bar": "Bar",
+    "profile.role.library": "Biblioteca",
+    "profile.role.copyCenter": "Fotocopiadora",
     "profile.role.student": "Alumno",
     "schedule.backToCareers": "Volver a Carreras",
     "schedule.loadingContext": "Cargando contexto...",

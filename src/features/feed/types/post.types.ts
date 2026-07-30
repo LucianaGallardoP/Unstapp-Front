@@ -1,5 +1,5 @@
-export type PostAuthorRole = 'Alumno' | 'Docente' | 'Administrativo' | 'Bar';
-export type PostCategory = 'alumno' | 'carrera' | 'administrativo' | 'bar';
+export type PostAuthorRole = 'Alumno' | 'Docente' | 'Administrativo' | 'Bar' | 'Biblioteca' | 'Fotocopiadora';
+export type PostCategory = 'alumno' | 'carrera' | 'administrativo' | 'bar' | 'biblioteca' | 'fotocopiadora';
 export type PostAudience = 'general' | 'carrera' | 'administrativo';
 
 // Datos basicos del autor.

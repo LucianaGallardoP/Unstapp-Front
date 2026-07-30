@@ -1,7 +1,9 @@
 import {
   BriefcaseBusiness,
+  BookOpen,
   Coffee,
   GraduationCap,
+  Printer,
   UserRound,
 } from 'lucide-react';
 import type { PostAuthorRole } from '../../features/feed/types/post.types';
@@ -21,6 +23,8 @@ const normalizeRole = (role?: PostAuthorRole | string | null): PostAuthorRole =>
   if (roleKey === 'admin') return 'Administrativo';
   if (roleKey === 'teacher') return 'Docente';
   if (roleKey === 'bar') return 'Bar';
+  if (roleKey === 'library') return 'Biblioteca';
+  if (roleKey === 'copyCenter') return 'Fotocopiadora';
 
   return 'Alumno';
 };
@@ -30,6 +34,8 @@ const roleStyles: Record<PostAuthorRole, string> = {
   Docente: 'bg-[#1d8c57]/10 text-[#1d8c57]',
   Administrativo: 'bg-[#E7000B]/10 text-[#E7000B]',
   Bar: 'bg-[#155DFC]/10 text-[#155DFC]',
+  Biblioteca: 'bg-[#4Fbed6]/10 text-[#4Fbed6]',
+  Fotocopiadora: 'bg-[#155DFC]/10 text-[#155DFC]',
 };
 
 const roleIcons = {
@@ -37,6 +43,8 @@ const roleIcons = {
   Docente: GraduationCap,
   Administrativo: BriefcaseBusiness,
   Bar: Coffee,
+  Biblioteca: BookOpen,
+  Fotocopiadora: Printer,
 };
 
 export const RoleAvatar = ({

@@ -12,6 +12,28 @@ interface CreateSubjectModalProps {
   onCreate: (values: CreateScheduleClassInput) => void | Promise<void>;
 }
 
+const allowedMinutes = [0, 15, 30, 45];
+
+const padTimePart = (value: number) => String(value).padStart(2, '0');
+
+const timeOptions = Array.from({ length: 24 * allowedMinutes.length }, (_, index) => {
+  const hour = Math.floor(index / allowedMinutes.length);
+  const minute = allowedMinutes[index % allowedMinutes.length];
+
+  return `${padTimePart(hour)}:${padTimePart(minute)}`;
+});
+
+const normalizeQuarterTime = (value: string) => {
+  const [rawHour = '15', rawMinute = '00'] = value.split(':');
+  const hour = Math.min(Math.max(Number(rawHour), 0), 23);
+  const minute = Number(rawMinute);
+  const nearestMinute = allowedMinutes.reduce((closestMinute, currentMinute) =>
+    Math.abs(currentMinute - minute) < Math.abs(closestMinute - minute) ? currentMinute : closestMinute,
+  );
+
+  return `${padTimePart(Number.isFinite(hour) ? hour : 15)}:${padTimePart(nearestMinute)}`;
+};
+
 export const CreateSubjectModal = ({
   initialDay,
   initialValues,
@@ -22,7 +44,7 @@ export const CreateSubjectModal = ({
   const { language, t } = useLanguage();
   const [selectedDay, setSelectedDay] = useState<WeekDayId>(initialValues?.day ?? initialDay);
   const [subject, setSubject] = useState(initialValues?.subject ?? '');
-  const [startTime, setStartTime] = useState(initialValues?.startTime ?? '15:00');
+  const [startTime, setStartTime] = useState(normalizeQuarterTime(initialValues?.startTime ?? '15:00'));
   const [durationHours, setDurationHours] = useState(initialValues?.durationHours ?? 2);
   const [teacher, setTeacher] = useState(initialValues?.teacher ?? '');
   const [room, setRoom] = useState(initialValues?.room ?? '');
@@ -104,13 +126,17 @@ export const CreateSubjectModal = ({
 
           <label className="grid grid-cols-[78px_1fr] items-center gap-3 text-[11px] font-black text-[#1F2937]">
             {t('schedule.timeLabel')}
-            <input
-              type="time"
-              step={900}
+            <select
               value={startTime}
               onChange={(event) => setStartTime(event.target.value)}
               className={fieldClass(isStartTimeValid)}
-            />
+            >
+              {timeOptions.map((timeOption) => (
+                <option key={timeOption} value={timeOption}>
+                  {timeOption}
+                </option>
+              ))}
+            </select>
           </label>
 
           <label className="grid grid-cols-[78px_1fr] items-center gap-3 text-[11px] font-black text-[#1F2937]">
