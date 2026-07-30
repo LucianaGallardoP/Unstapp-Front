@@ -175,6 +175,7 @@ export const FeedPage = () => {
               highlighted={String(post.id) === String(requestedPostId)}
               initialCommentsOpen={String(post.id) === String(requestedPostId) && shouldOpenComments}
               focusedCommentId={String(post.id) === String(requestedPostId) ? requestedCommentId : null}
+              showRoleBadge={false}
             />
           ))}
         </section>

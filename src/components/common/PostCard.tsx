@@ -28,6 +28,7 @@ interface PostCardProps {
   highlighted?: boolean;
   initialCommentsOpen?: boolean;
   focusedCommentId?: number | string | null;
+  showRoleBadge?: boolean;
 }
 
 const getCurrentUserId = () => localStorage.getItem('unstapp_user_id');
@@ -52,6 +53,7 @@ export const PostCard = ({
   highlighted = false,
   initialCommentsOpen = false,
   focusedCommentId = null,
+  showRoleBadge = true,
 }: PostCardProps) => {
   const navigate = useNavigate();
   const { language, t } = useLanguage();
@@ -227,11 +229,13 @@ export const PostCard = ({
             </div>
 
             <div className="relative flex shrink-0 items-start gap-1">
-              <span
-                className={`rounded-full px-2 py-1 text-[8px] font-black tracking-wide sm:text-[9px] ${getRoleBadgeClass(post.author.role)}`}
-              >
-                {translateRole(post.author.role, t).toUpperCase()}
-              </span>
+              {showRoleBadge && (
+                <span
+                  className={`rounded-full px-2 py-1 text-[8px] font-black tracking-wide sm:text-[9px] ${getRoleBadgeClass(post.author.role)}`}
+                >
+                  {translateRole(post.author.role, t).toUpperCase()}
+                </span>
+              )}
 
               {canShowDeleteAction && (
                 <div className="relative">
