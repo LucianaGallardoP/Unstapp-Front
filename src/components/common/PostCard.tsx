@@ -14,7 +14,7 @@ import { usePostInteractions } from '../../features/feed/hooks/usePostInteractio
 import type { Post } from '../../features/feed/types/post.types';
 import { formatRelativeTime } from '../../features/feed/utils/formatRelativeTime';
 import { useLanguage } from '../../store/languageContext';
-import { getRoleBadgeClass, shouldShowVerifiedForRole, translateRole } from '../../utils/roleLabels';
+import { shouldShowVerifiedForRole } from '../../utils/roleLabels';
 import { CommentItem } from './CommentItem';
 import { RoleAvatar } from './RoleAvatar';
 
@@ -28,7 +28,6 @@ interface PostCardProps {
   highlighted?: boolean;
   initialCommentsOpen?: boolean;
   focusedCommentId?: number | string | null;
-  showRoleBadge?: boolean;
 }
 
 const getCurrentUserId = () => localStorage.getItem('unstapp_user_id');
@@ -53,7 +52,6 @@ export const PostCard = ({
   highlighted = false,
   initialCommentsOpen = false,
   focusedCommentId = null,
-  showRoleBadge = true,
 }: PostCardProps) => {
   const navigate = useNavigate();
   const { language, t } = useLanguage();
@@ -229,14 +227,6 @@ export const PostCard = ({
             </div>
 
             <div className="relative flex shrink-0 items-start gap-1">
-              {showRoleBadge && (
-                <span
-                  className={`rounded-full px-2 py-1 text-[8px] font-black tracking-wide sm:text-[9px] ${getRoleBadgeClass(post.author.role)}`}
-                >
-                  {translateRole(post.author.role, t).toUpperCase()}
-                </span>
-              )}
-
               {canShowDeleteAction && (
                 <div className="relative">
                   <button

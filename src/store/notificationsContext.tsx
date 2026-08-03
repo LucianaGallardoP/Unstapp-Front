@@ -49,6 +49,32 @@ const saveRemovedNotificationIds = (ids: Set<string>) => {
   localStorage.setItem(REMOVED_NOTIFICATIONS_KEY, JSON.stringify([...ids]));
 };
 
+const isPublicAuthPath = () => {
+  const pathname = window.location.pathname.toLowerCase();
+
+  return (
+    pathname === '/login' ||
+    pathname === '/forgot-password' ||
+    pathname.startsWith('/register') ||
+    pathname.startsWith('/set-password') ||
+    pathname.startsWith('/reset-password') ||
+    pathname.startsWith('/crear-clave') ||
+    pathname.startsWith('/crear-contrasena') ||
+    pathname.startsWith('/crear-contraseña') ||
+    pathname.startsWith('/restablecer-clave') ||
+    pathname.startsWith('/restablecer-contrasena') ||
+    pathname.startsWith('/restablecer-contraseña') ||
+    pathname.startsWith('/cambiar-clave') ||
+    pathname.startsWith('/cambiar-contrasena') ||
+    pathname.startsWith('/cambiar-contraseña') ||
+    pathname.startsWith('/auth/set-initial-password') ||
+    pathname.startsWith('/auth/reset-password')
+  );
+};
+
+const canRequestNotifications = () =>
+  Boolean(localStorage.getItem('unstapp_token')) && !isPublicAuthPath();
+
 export const NotificationsProvider = ({ children }: { children: ReactNode }) => {
   const [notifications, setNotifications] = useState<AppNotification[]>([]);
   const [hasUnreadFromApi, setHasUnreadFromApi] = useState(false);
@@ -60,6 +86,13 @@ export const NotificationsProvider = ({ children }: { children: ReactNode }) => 
     (hasUnreadFromApi || unreadCount > 0) && !isUnreadIndicatorHidden;
 
   const refreshNotifications = useCallback(async () => {
+    if (!canRequestNotifications()) {
+      setNotifications([]);
+      setHasUnreadFromApi(false);
+      setLoading(false);
+      return;
+    }
+
     setLoading(true);
 
     try {

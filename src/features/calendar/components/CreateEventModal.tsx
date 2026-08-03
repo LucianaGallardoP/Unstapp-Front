@@ -86,8 +86,6 @@ const teacherEventTypeOptions = [
   { id: 2 as CalendarEventType, labelKey: 'calendar.consultationClass', color: 'bg-[#4db2cd]' },
 ];
 
-const examReminderDaysBefore = [5, 1];
-
 export const CreateEventModal: React.FC<CreateEventModalProps> = ({
   selectedDate,
   isSubmitting = false,
@@ -132,7 +130,6 @@ export const CreateEventModal: React.FC<CreateEventModalProps> = ({
         startDate,
         endDate,
         careerIds: selectedCareerIds,
-        reminderDaysBefore: eventType === 1 ? examReminderDaysBefore : undefined,
       });
       onClose?.();
     } catch {
@@ -183,11 +180,6 @@ export const CreateEventModal: React.FC<CreateEventModalProps> = ({
             options={isTeacher ? teacherEventTypeOptions : undefined}
             disabled={isTeacher}
           />
-          {!isTeacher && type === 1 && (
-            <p className="rounded-2xl bg-[#EFF6FF] px-3 py-2 text-[11px] font-semibold leading-4 text-[#1E4E9D]">
-              {t('calendar.examReminderNotice')}
-            </p>
-          )}
         </label>
 
         <label className="flex flex-col gap-2 text-[14px] font-[800] text-[#2c2c2c]">

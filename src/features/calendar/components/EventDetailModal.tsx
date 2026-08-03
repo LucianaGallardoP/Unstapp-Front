@@ -1,6 +1,8 @@
-import { CalendarDays, Clock, FileText, Loader2, Tag, Trash2, X } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { Bell, CalendarDays, Clock, FileText, Loader2, Tag, Trash2, X } from 'lucide-react';
 import type { CalendarEvent, CalendarEventType } from '../types/calendar.types';
 import { useLanguage } from '../../../store/languageContext';
+import { normalizeRoleKey } from '../../../utils/roleLabels';
 
 interface EventDetailModalProps {
   event: CalendarEvent;
@@ -30,6 +32,21 @@ const formatTime = (date: string, language: 'es' | 'en') =>
     minute: '2-digit',
   }).format(new Date(date));
 
+const getCurrentUserId = () => localStorage.getItem('unstapp_user_id') ?? 'anonymous';
+
+const getCurrentRoleKey = () => {
+  try {
+    const roles = JSON.parse(localStorage.getItem('unstapp_user_roles') ?? '[]');
+
+    return normalizeRoleKey(Array.isArray(roles) ? roles.join(' ') : String(roles ?? ''));
+  } catch {
+    return 'student';
+  }
+};
+
+const getExamReminderKey = (eventId: number | string) =>
+  `unstapp_exam_whatsapp_reminder_${getCurrentUserId()}_${eventId}`;
+
 export const EventDetailModal = ({
   event,
   isDeleting = false,
@@ -37,11 +54,27 @@ export const EventDetailModal = ({
   onDelete,
 }: EventDetailModalProps) => {
   const { language, t } = useLanguage();
+  const isStudent = getCurrentRoleKey() === 'student';
+  const shouldShowExamReminder = event.type === 1 && isStudent;
+  const [wantsExamReminder, setWantsExamReminder] = useState(() =>
+    localStorage.getItem(getExamReminderKey(event.id)) === 'true',
+  );
   const translatedTypeLabels: Record<CalendarEventType, string> = {
     1: t('calendar.exams'),
     2: t('calendar.classes'),
     3: t('calendar.events'),
     4: t('calendar.holidays'),
+  };
+
+  useEffect(() => {
+    setWantsExamReminder(localStorage.getItem(getExamReminderKey(event.id)) === 'true');
+  }, [event.id]);
+
+  const handleExamReminderToggle = () => {
+    const nextValue = !wantsExamReminder;
+
+    setWantsExamReminder(nextValue);
+    localStorage.setItem(getExamReminderKey(event.id), String(nextValue));
   };
 
   return (
@@ -109,6 +142,28 @@ export const EventDetailModal = ({
             </dd>
           </div>
         </div>
+
+        {shouldShowExamReminder && (
+          <label className="flex cursor-pointer items-center justify-between gap-4 rounded-2xl bg-[#EFF6FF] px-4 py-3 text-[#1F2937]">
+            <span className="flex min-w-0 gap-3">
+              <Bell size={18} className="mt-0.5 shrink-0 text-[#1E4E9D]" />
+              <span className="min-w-0">
+                <span className="block text-[12px] font-black uppercase text-[#1E4E9D]">
+                  {t('calendar.whatsappExamReminder')}
+                </span>
+                <span className="mt-0.5 block text-[11px] font-semibold leading-4 text-gray-500">
+                  {t('calendar.whatsappExamReminderHint')}
+                </span>
+              </span>
+            </span>
+            <input
+              type="checkbox"
+              checked={wantsExamReminder}
+              onChange={handleExamReminderToggle}
+              className="h-5 w-5 shrink-0 accent-[#1E4E9D]"
+            />
+          </label>
+        )}
       </dl>
 
       {onDelete && (

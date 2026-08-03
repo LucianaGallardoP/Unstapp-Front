@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import {
   Bell,
+  CheckCircle2,
   Globe2,
   Heart,
   Megaphone,
@@ -18,6 +19,7 @@ import { useNotifications, type NotificationType } from '../../store/notificatio
 import { useTheme } from '../../store/themeContext';
 import { useLanguage } from '../../store/languageContext';
 import { RoleAvatar } from './RoleAvatar';
+import { shouldShowVerifiedForRole } from '../../utils/roleLabels';
 
 interface TopBarProps {
   simple?: boolean;
@@ -318,6 +320,7 @@ export const TopBar = ({ simple = false }: TopBarProps) => {
                           notification.action.includes('me gusta')
                             ? Heart
                             : notificationIcons[notification.type];
+                        const showVerified = shouldShowVerifiedForRole(notification.actorRole);
 
                         return (
                           <article
@@ -355,7 +358,16 @@ export const TopBar = ({ simple = false }: TopBarProps) => {
 
                             <div className="min-w-0 flex-1">
                               <h3 className="text-[12px] leading-4 text-[#1F2937] md:text-[13px]">
-                                <span className="font-black">{notification.actor}</span>
+                                <span className="inline-flex max-w-full items-center gap-1 align-bottom">
+                                  <span className="truncate font-black">{notification.actor}</span>
+                                  {showVerified && (
+                                    <CheckCircle2
+                                      size={12}
+                                      className="shrink-0 text-[#155DFC]"
+                                      aria-label="Usuario verificado"
+                                    />
+                                  )}
+                                </span>
                                 <span className="font-semibold"> {translatedAction}</span>
                               </h3>
                               <p className="mt-0.5 line-clamp-2 text-[11px] font-semibold leading-4 text-[#526174] md:text-[12px]">

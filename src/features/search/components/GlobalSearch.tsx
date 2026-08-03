@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import { useSearch } from '../hooks/useSearch';
-import { Search, Loader2, X } from 'lucide-react';
+import { CheckCircle2, Search, Loader2, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { RoleAvatar } from '../../../components/common/RoleAvatar';
 import { useLanguage } from '../../../store/languageContext';
+import { shouldShowVerifiedForRole } from '../../../utils/roleLabels';
 
 export const GlobalSearch = () => {
   const { t } = useLanguage();
@@ -84,6 +85,7 @@ export const GlobalSearch = () => {
                   const avatar = user.avatarUrl || user.avatar || user.profilePicture;
                   const userId = user.id || user.userId;
                   const role = user.role || user.roles?.[0];
+                  const showVerified = shouldShowVerifiedForRole(role);
 
                   return (
                     <li key={`user-${userId || index}`} className="list-none">
@@ -100,8 +102,17 @@ export const GlobalSearch = () => {
                         className="h-8 w-8"
                         iconClassName="h-5 w-5"
                       />
-                      <div>
-                        <p className="text-sm font-medium text-gray-900">{displayName}</p>
+                      <div className="min-w-0">
+                        <p className="flex min-w-0 items-center gap-1 text-sm font-medium text-gray-900">
+                          <span className="truncate">{displayName}</span>
+                          {showVerified && (
+                            <CheckCircle2
+                              size={13}
+                              className="shrink-0 text-[#155DFC]"
+                              aria-label="Usuario verificado"
+                            />
+                          )}
+                        </p>
                       </div>
                       </button>
                     </li>

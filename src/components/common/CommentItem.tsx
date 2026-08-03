@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import {
+  CheckCircle2,
   MoreVertical,
   Trash2,
 } from 'lucide-react';
@@ -9,7 +10,7 @@ import { searchService } from '../../features/search/services/searchService';
 import type { PostComment } from '../../features/feed/types/post.types';
 import { formatRelativeTime } from '../../features/feed/utils/formatRelativeTime';
 import { useLanguage } from '../../store/languageContext';
-import { translateRole } from '../../utils/roleLabels';
+import { shouldShowVerifiedForRole, translateRole } from '../../utils/roleLabels';
 import { RoleAvatar } from './RoleAvatar';
 
 interface CommentItemProps {
@@ -52,6 +53,7 @@ export const CommentItem = ({ comment, currentDate, onDelete, canDelete = false 
   const menuRef = useRef<HTMLDivElement>(null);
 
   const canOpenAuthorProfile = Boolean(comment.author.id || comment.author.name);
+  const shouldShowAuthorVerified = shouldShowVerifiedForRole(comment.author.role);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -128,6 +130,13 @@ export const CommentItem = ({ comment, currentDate, onDelete, canDelete = false 
           >
             {comment.author.name}
           </button>
+          {shouldShowAuthorVerified && (
+            <CheckCircle2
+              size={12}
+              className="shrink-0 text-[#155DFC]"
+              aria-label="Usuario verificado"
+            />
+          )}
           <span className="text-[10px] font-semibold leading-4 text-gray-400">
             {translateRole(comment.author.role, t)}
           </span>
