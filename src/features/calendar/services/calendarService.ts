@@ -36,6 +36,13 @@ const asNumberArray = (value: unknown): number[] => {
     .filter((item): item is number => typeof item === 'number');
 };
 
+const asBoolean = (value: unknown) =>
+  typeof value === 'boolean'
+    ? value
+    : typeof value === 'string'
+      ? value.toLowerCase() === 'true'
+      : undefined;
+
 const normalizeText = (value: string) =>
   value
     .normalize('NFD')
@@ -154,6 +161,14 @@ const mapEventFromApi = (apiEvent: unknown): CalendarEvent => {
     endDate: getEventEndDate(event, startDate),
     careerId: event.careerId as number | string | undefined,
     careerIds: asNumberArray(event.careerIds ?? event.CareerIds),
+    reminderEnabled: asBoolean(
+      event.reminderEnabled ??
+      event.ReminderEnabled ??
+      event.hasReminder ??
+      event.HasReminder ??
+      event.whatsappReminderEnabled ??
+      event.WhatsappReminderEnabled,
+    ),
   };
 };
 
@@ -240,6 +255,12 @@ export const calendarService = {
 
   deleteEvent: async (eventId: number | string): Promise<void> => {
     await apiClient.delete(`/calendar/events/${eventId}`, {
+      headers: getAuthHeaders(),
+    });
+  },
+
+  toggleEventReminder: async (eventId: number | string, enabled: boolean): Promise<void> => {
+    await apiClient.patch(`/calendar/events/${eventId}/reminder`, { enabled }, {
       headers: getAuthHeaders(),
     });
   },

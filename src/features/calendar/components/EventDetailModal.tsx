@@ -3,6 +3,7 @@ import { Bell, CalendarDays, Clock, FileText, Loader2, Tag, Trash2, X } from 'lu
 import type { CalendarEvent, CalendarEventType } from '../types/calendar.types';
 import { useLanguage } from '../../../store/languageContext';
 import { normalizeRoleKey } from '../../../utils/roleLabels';
+import { calendarService } from '../services/calendarService';
 
 interface EventDetailModalProps {
   event: CalendarEvent;
@@ -47,6 +48,14 @@ const getCurrentRoleKey = () => {
 const getEventReminderKey = (eventId: number | string) =>
   `unstapp_event_whatsapp_reminder_${getCurrentUserId()}_${eventId}`;
 
+const getStoredEventReminder = (event: CalendarEvent) => {
+  if (typeof event.reminderEnabled === 'boolean') {
+    return event.reminderEnabled;
+  }
+
+  return localStorage.getItem(getEventReminderKey(event.id)) === 'true';
+};
+
 export const EventDetailModal = ({
   event,
   isDeleting = false,
@@ -57,8 +66,10 @@ export const EventDetailModal = ({
   const isStudent = getCurrentRoleKey() === 'student';
   const shouldShowEventReminder = isStudent;
   const [wantsEventReminder, setWantsEventReminder] = useState(() =>
-    localStorage.getItem(getEventReminderKey(event.id)) === 'true',
+    getStoredEventReminder(event),
   );
+  const [isReminderLoading, setIsReminderLoading] = useState(false);
+  const [reminderError, setReminderError] = useState<string | null>(null);
   const translatedTypeLabels: Record<CalendarEventType, string> = {
     1: t('calendar.exams'),
     2: t('calendar.classes'),
@@ -67,14 +78,30 @@ export const EventDetailModal = ({
   };
 
   useEffect(() => {
-    setWantsEventReminder(localStorage.getItem(getEventReminderKey(event.id)) === 'true');
-  }, [event.id]);
+    setWantsEventReminder(getStoredEventReminder(event));
+    setReminderError(null);
+  }, [event]);
 
-  const handleEventReminderToggle = () => {
+  const handleEventReminderToggle = async () => {
+    if (isReminderLoading) return;
+
+    const previousValue = wantsEventReminder;
     const nextValue = !wantsEventReminder;
 
+    setReminderError(null);
+    setIsReminderLoading(true);
     setWantsEventReminder(nextValue);
     localStorage.setItem(getEventReminderKey(event.id), String(nextValue));
+
+    try {
+      await calendarService.toggleEventReminder(event.id, nextValue);
+    } catch {
+      setWantsEventReminder(previousValue);
+      localStorage.setItem(getEventReminderKey(event.id), String(previousValue));
+      setReminderError(t('calendar.reminderUpdateError'));
+    } finally {
+      setIsReminderLoading(false);
+    }
   };
 
   return (
@@ -159,12 +186,19 @@ export const EventDetailModal = ({
             <input
               type="checkbox"
               checked={wantsEventReminder}
+              disabled={isReminderLoading}
               onChange={handleEventReminderToggle}
-              className="h-5 w-5 shrink-0 accent-[#1E4E9D]"
+              className="h-5 w-5 shrink-0 accent-[#1E4E9D] disabled:cursor-wait disabled:opacity-70"
             />
           </label>
         )}
       </dl>
+
+      {reminderError && (
+        <p className="mt-3 rounded-2xl border border-[#E7000B]/20 bg-[#E7000B]/10 px-4 py-3 text-center text-[12px] font-bold text-[#E7000B]">
+          {reminderError}
+        </p>
+      )}
 
       {onDelete && (
         <button

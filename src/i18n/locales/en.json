@@ -114,6 +114,7 @@
     "calendar.consultationClass": "Consultation class",
     "calendar.whatsappEventReminder": "Receive WhatsApp reminder",
     "calendar.whatsappEventReminderHint": "You will receive the reminder 2 days before the event.",
+    "calendar.reminderUpdateError": "The event reminder could not be updated.",
     "calendar.events": "Events",
     "calendar.holidays": "Holidays",
     "calendar.deleteEvent": "Delete event",

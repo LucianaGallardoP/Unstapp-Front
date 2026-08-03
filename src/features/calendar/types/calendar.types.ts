@@ -9,6 +9,7 @@ export interface CalendarEvent {
   endDate: string;
   careerId?: number | string;
   careerIds?: Array<number | string>;
+  reminderEnabled?: boolean;
 }
 
 export interface CreateCalendarEventPayload {
