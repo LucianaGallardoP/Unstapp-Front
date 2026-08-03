@@ -291,7 +291,7 @@ export const SchedulePage = () => {
               {t('schedule.problemText')}
             </p>
             <a
-              href="https://wa.me/549381248492?text=Hola%2C%20quiero%20reportar%20un%20problema%20con%20mi%20horario."
+              href="https://wa.me/5493816248492?text=Hola%2C%20quiero%20reportar%20un%20problema%20con%20mi%20horario."
               target="_blank"
               rel="noopener noreferrer"
               className="mt-4 rounded-full bg-white px-6 py-2 text-[10px] font-black uppercase text-[#4c1d95] transition-all hover:bg-gray-100 hover:scale-105 hover:shadow-lg active:scale-95"
