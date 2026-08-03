@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { CheckCircle2 } from 'lucide-react';
 import type { ProfileResponseDTO, ProfileStatsDTO } from '../types/profile.dtos';
+import { ImageLightbox } from '../../../components/common/ImageLightbox';
 import { RoleAvatar } from '../../../components/common/RoleAvatar';
 import { useLanguage } from '../../../store/languageContext';
 import { getRoleBadgeClass, shouldShowVerifiedForRole, translateRole } from '../../../utils/roleLabels';
@@ -75,6 +76,7 @@ export const ProfileCard = ({
   const [isFollowLoading, setIsFollowLoading] = useState(false);
   const [followError, setFollowError] = useState<string | null>(null);
   const [whatsAppError, setWhatsAppError] = useState<string | null>(null);
+  const [selectedImageUrl, setSelectedImageUrl] = useState<string | null>(null);
   const rawRole = useMemo(() => {
     const roles = profile.roles?.length ? profile.roles : profile.isOwnProfile ? getStoredRoles() : [];
 
@@ -152,26 +154,51 @@ export const ProfileCard = ({
   };
 
   return (
+    <>
     <article className="relative mx-auto w-full max-w-[430px] overflow-hidden rounded-[16px] border border-gray-200 bg-white pb-6 shadow-[0_2px_8px_rgba(0,0,0,0.04)] sm:max-w-[560px] md:max-w-[600px]">
       <div className="h-32 w-full bg-gray-200 sm:h-40">
         {profile.coverUrl && (
-          <img
-            src={profile.coverUrl}
-            alt="Portada del perfil"
-            className="h-full w-full object-cover"
-          />
+          <button
+            type="button"
+            onClick={() => setSelectedImageUrl(profile.coverUrl ?? null)}
+            className="h-full w-full cursor-zoom-in"
+            aria-label="Ver portada del perfil"
+          >
+            <img
+              src={profile.coverUrl}
+              alt="Portada del perfil"
+              className="h-full w-full object-cover"
+            />
+          </button>
         )}
       </div>
 
       <div className="px-5 flex items-end justify-between -mt-10 mb-3 sm:-mt-12 sm:mb-4">
         <div className="relative shrink-0">
-          <RoleAvatar
-            avatarUrl={profile.avatarUrl}
-            name={profile.fullName}
-            role={rawRole}
-            className="h-[84px] w-[84px] rounded-[15px] sm:h-[100px] sm:w-[100px]"
-            iconClassName="h-11 w-11 sm:h-12 sm:w-12"
-          />
+          {profile.avatarUrl ? (
+            <button
+              type="button"
+              onClick={() => setSelectedImageUrl(profile.avatarUrl ?? null)}
+              className="cursor-zoom-in rounded-[15px]"
+              aria-label={`Ver foto de perfil de ${profile.fullName}`}
+            >
+              <RoleAvatar
+                avatarUrl={profile.avatarUrl}
+                name={profile.fullName}
+                role={rawRole}
+                className="h-[84px] w-[84px] rounded-[15px] sm:h-[100px] sm:w-[100px]"
+                iconClassName="h-11 w-11 sm:h-12 sm:w-12"
+              />
+            </button>
+          ) : (
+            <RoleAvatar
+              avatarUrl={profile.avatarUrl}
+              name={profile.fullName}
+              role={rawRole}
+              className="h-[84px] w-[84px] rounded-[15px] sm:h-[100px] sm:w-[100px]"
+              iconClassName="h-11 w-11 sm:h-12 sm:w-12"
+            />
+          )}
         </div>
 
         {profile.isOwnProfile ? (
@@ -298,5 +325,14 @@ export const ProfileCard = ({
         </div>
       </div>
     </article>
+    {selectedImageUrl && (
+      <ImageLightbox
+        imageUrl={selectedImageUrl}
+        alt={`Imagen de perfil de ${profile.fullName}`}
+        closeLabel={t('post.closeImage')}
+        onClose={() => setSelectedImageUrl(null)}
+      />
+    )}
+    </>
   );
 };

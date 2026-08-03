@@ -44,8 +44,8 @@ const getCurrentRoleKey = () => {
   }
 };
 
-const getExamReminderKey = (eventId: number | string) =>
-  `unstapp_exam_whatsapp_reminder_${getCurrentUserId()}_${eventId}`;
+const getEventReminderKey = (eventId: number | string) =>
+  `unstapp_event_whatsapp_reminder_${getCurrentUserId()}_${eventId}`;
 
 export const EventDetailModal = ({
   event,
@@ -55,9 +55,9 @@ export const EventDetailModal = ({
 }: EventDetailModalProps) => {
   const { language, t } = useLanguage();
   const isStudent = getCurrentRoleKey() === 'student';
-  const shouldShowExamReminder = event.type === 1 && isStudent;
-  const [wantsExamReminder, setWantsExamReminder] = useState(() =>
-    localStorage.getItem(getExamReminderKey(event.id)) === 'true',
+  const shouldShowEventReminder = isStudent;
+  const [wantsEventReminder, setWantsEventReminder] = useState(() =>
+    localStorage.getItem(getEventReminderKey(event.id)) === 'true',
   );
   const translatedTypeLabels: Record<CalendarEventType, string> = {
     1: t('calendar.exams'),
@@ -67,14 +67,14 @@ export const EventDetailModal = ({
   };
 
   useEffect(() => {
-    setWantsExamReminder(localStorage.getItem(getExamReminderKey(event.id)) === 'true');
+    setWantsEventReminder(localStorage.getItem(getEventReminderKey(event.id)) === 'true');
   }, [event.id]);
 
-  const handleExamReminderToggle = () => {
-    const nextValue = !wantsExamReminder;
+  const handleEventReminderToggle = () => {
+    const nextValue = !wantsEventReminder;
 
-    setWantsExamReminder(nextValue);
-    localStorage.setItem(getExamReminderKey(event.id), String(nextValue));
+    setWantsEventReminder(nextValue);
+    localStorage.setItem(getEventReminderKey(event.id), String(nextValue));
   };
 
   return (
@@ -143,23 +143,23 @@ export const EventDetailModal = ({
           </div>
         </div>
 
-        {shouldShowExamReminder && (
+        {shouldShowEventReminder && (
           <label className="flex cursor-pointer items-center justify-between gap-4 rounded-2xl bg-[#EFF6FF] px-4 py-3 text-[#1F2937]">
             <span className="flex min-w-0 gap-3">
               <Bell size={18} className="mt-0.5 shrink-0 text-[#1E4E9D]" />
               <span className="min-w-0">
                 <span className="block text-[12px] font-black uppercase text-[#1E4E9D]">
-                  {t('calendar.whatsappExamReminder')}
+                  {t('calendar.whatsappEventReminder')}
                 </span>
                 <span className="mt-0.5 block text-[11px] font-semibold leading-4 text-gray-500">
-                  {t('calendar.whatsappExamReminderHint')}
+                  {t('calendar.whatsappEventReminderHint')}
                 </span>
               </span>
             </span>
             <input
               type="checkbox"
-              checked={wantsExamReminder}
-              onChange={handleExamReminderToggle}
+              checked={wantsEventReminder}
+              onChange={handleEventReminderToggle}
               className="h-5 w-5 shrink-0 accent-[#1E4E9D]"
             />
           </label>

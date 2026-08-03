@@ -16,6 +16,7 @@ import { formatRelativeTime } from '../../features/feed/utils/formatRelativeTime
 import { useLanguage } from '../../store/languageContext';
 import { shouldShowVerifiedForRole } from '../../utils/roleLabels';
 import { CommentItem } from './CommentItem';
+import { ImageLightbox } from './ImageLightbox';
 import { RoleAvatar } from './RoleAvatar';
 
 interface PostCardProps {
@@ -98,17 +99,6 @@ export const PostCard = ({
 
     return () => window.clearInterval(intervalId);
   }, []);
-
-  useEffect(() => {
-    if (!selectedImageUrl) return;
-
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
-
-    return () => {
-      document.body.style.overflow = previousOverflow;
-    };
-  }, [selectedImageUrl]);
 
   useEffect(() => {
     if (initialCommentsOpen) {
@@ -468,28 +458,12 @@ export const PostCard = ({
       )}
 
       {selectedImageUrl && (
-        <div
-          className="fixed inset-0 z-[100] flex touch-none items-center justify-center overflow-hidden bg-black/95 px-3 py-16"
-          role="dialog"
-          aria-modal="true"
-          aria-label={t('post.imageAlt')}
-          onClick={() => setSelectedImageUrl(null)}
-        >
-          <button
-            type="button"
-            onClick={() => setSelectedImageUrl(null)}
-            className="fixed left-4 top-4 z-[101] flex h-11 w-11 items-center justify-center rounded-full bg-black/40 text-white transition-colors hover:bg-white/15 focus:outline-none focus:ring-2 focus:ring-white/70"
-            aria-label={t('post.closeImage')}
-          >
-            <X size={24} strokeWidth={2.2} />
-          </button>
-          <img
-            src={selectedImageUrl}
-            alt={post.media?.alt ?? t('post.imageAlt')}
-            className="max-h-[calc(100vh-96px)] max-w-[min(100vw-24px,980px)] select-none object-contain"
-            onClick={(event) => event.stopPropagation()}
-          />
-        </div>
+        <ImageLightbox
+          imageUrl={selectedImageUrl}
+          alt={post.media?.alt ?? t('post.imageAlt')}
+          closeLabel={t('post.closeImage')}
+          onClose={() => setSelectedImageUrl(null)}
+        />
       )}
     </>
   );
