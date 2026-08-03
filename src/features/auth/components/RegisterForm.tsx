@@ -75,6 +75,18 @@ const readTokenFromParams = (searchParams: URLSearchParams, hash: string, pathTo
   return pathToken ? normalizeToken(decodeURIComponent(pathToken)) : '';
 };
 
+const isResetPasswordPath = (pathname: string) => {
+  const normalizedPath = pathname.toLowerCase();
+
+  return (
+    normalizedPath.includes('reset-password') ||
+    normalizedPath.includes('restablecer') ||
+    normalizedPath.includes('cambiar-clave') ||
+    normalizedPath.includes('cambiar-contrasena') ||
+    normalizedPath.includes('cambiar-contraseña')
+  );
+};
+
 export const RegisterForm = ({ onLoginClick }: RegisterFormProps) => {
   const { t } = useLanguage();
   const [showPassword, setShowPassword] = useState(false);
@@ -85,7 +97,8 @@ export const RegisterForm = ({ onLoginClick }: RegisterFormProps) => {
   const [searchParams] = useSearchParams();
   const params = useParams<{ token?: string }>();
   const token = readTokenFromParams(searchParams, location.hash, params.token);
-  const { setInitialPassword, loading, error } = useSetInitialPassword();
+  const isPasswordReset = isResetPasswordPath(location.pathname);
+  const { setInitialPassword, resetPassword, loading, error } = useSetInitialPassword();
   const [localError, setLocalError] = useState<string | null>(null);
   
   const [formData, setFormData] = useState({
@@ -111,7 +124,7 @@ export const RegisterForm = ({ onLoginClick }: RegisterFormProps) => {
     setLocalError(null);
 
     if (!token) {
-      setLocalError(t('auth.invalidToken'));
+      setLocalError(isPasswordReset ? t('auth.invalidResetToken') : t('auth.invalidToken'));
       return;
     }
 
@@ -121,11 +134,17 @@ export const RegisterForm = ({ onLoginClick }: RegisterFormProps) => {
     }
 
     try {
-      const response = await setInitialPassword({
-        token,
-        password: formData.password,
-        confirmPassword: formData.repeatPassword
-      });
+      const response = isPasswordReset
+        ? await resetPassword({
+            token,
+            newPassword: formData.password,
+          })
+        : await setInitialPassword({
+            token,
+            password: formData.password,
+            confirmPassword: formData.repeatPassword,
+          });
+
       saveSessionIfPresent(response);
       setIsSuccess(true);
     } catch {
@@ -156,10 +175,10 @@ export const RegisterForm = ({ onLoginClick }: RegisterFormProps) => {
             type="button" 
             fullWidth 
             className="hover:bg-[#122b54] py-3.5 mt-4" 
-            onClick={() => navigate('/feed')}
+            onClick={() => navigate(isPasswordReset ? '/login' : '/feed')}
           > 
             <span className="flex items-center justify-center gap-2 w-full text-[16px]">
-              {t('auth.start')}
+              {isPasswordReset ? t('login.submit') : t('auth.start')}
               <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                 <line x1="5" y1="12" x2="19" y2="12"></line>
                 <polyline points="12 5 19 12 12 19"></polyline>
@@ -178,10 +197,10 @@ export const RegisterForm = ({ onLoginClick }: RegisterFormProps) => {
           <img src={unstaLogo} alt="Logo UNSTA" className="w-20 h-20 object-contain" />
         </div>
         <h1 className="text-[2.5rem] font-bold text-black text-center leading-tight mb-2">
-          {t('auth.createPassword')}
+          {isPasswordReset ? t('auth.resetPassword') : t('auth.createPassword')}
         </h1>
         <p className="text-gray-500 text-[15px] text-center mb-8 leading-snug">
-          {t('auth.createPasswordSubtitle')}
+          {isPasswordReset ? t('auth.resetPasswordSubtitle') : t('auth.createPasswordSubtitle')}
         </p>
 
         <form className="flex flex-col gap-5" onSubmit={handleSubmit}>
@@ -193,7 +212,7 @@ export const RegisterForm = ({ onLoginClick }: RegisterFormProps) => {
           
           {!token && !isSuccess && (
             <div className="bg-[#FFF8E6] text-[#B38000] p-4 rounded-xl text-[14.5px] leading-snug font-medium text-center border border-[#FFE5B4]">
-              {t('auth.invalidToken')}
+              {isPasswordReset ? t('auth.invalidResetToken') : t('auth.invalidToken')}
             </div>
           )}
 
@@ -289,7 +308,7 @@ export const RegisterForm = ({ onLoginClick }: RegisterFormProps) => {
               </span>
             ) : (
               <span className="flex items-center gap-2">
-                {t('auth.savePassword')}
+                {isPasswordReset ? t('auth.saveNewPassword') : t('auth.savePassword')}
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                   <line x1="5" y1="12" x2="19" y2="12"></line>
                   <polyline points="12 5 19 12 12 19"></polyline>

@@ -21,7 +21,7 @@ apiClient.interceptors.response.use(
   (error) => {
     const status = error?.response?.status;
     const requestUrl = String(error?.config?.url ?? '').toLowerCase();
-    const isAuthRequest = requestUrl.includes('/auth/login') || requestUrl.includes('/auth/verify-first-time') || requestUrl.includes('/auth/set-initial-password') || requestUrl.includes('/auth/forgot-password') || requestUrl.includes('/auth/request-password-reset') || requestUrl.includes('/auth/recover-password');
+    const isAuthRequest = requestUrl.includes('/auth/login') || requestUrl.includes('/auth/verify-first-time') || requestUrl.includes('/auth/set-initial-password') || requestUrl.includes('/auth/forgot-password') || requestUrl.includes('/auth/reset-password') || requestUrl.includes('/auth/request-password-reset') || requestUrl.includes('/auth/recover-password');
 
     if (status === 401 && !isAuthRequest) {
       clearStoredSession();

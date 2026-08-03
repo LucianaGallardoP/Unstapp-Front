@@ -1,33 +1,18 @@
-﻿import { apiClient } from '../../../services/apiClient';
-import { AxiosError } from 'axios';
-import type { 
-  LoginRequest, 
+import { apiClient } from '../../../services/apiClient';
+import type {
+  LoginRequest,
   LoginResponse,
   RegisterRequest,
   VerifyFirstTimeRequest,
   SetInitialPasswordRequest,
+  ResetPasswordRequest,
   VerifyFirstTimeResponse,
   ForgotPasswordRequest,
-  ForgotPasswordResponse
+  ForgotPasswordResponse,
 } from '../types/auth.dtos';
 
-const passwordRecoveryEndpoints = [
-  '/Auth/forgot-password',
-  '/Auth/request-password-reset',
-  '/Auth/recover-password',
-  '/Auth/verify-first-time',
-];
-
-const shouldTryNextRecoveryEndpoint = (error: unknown) => {
-  if (!(error instanceof AxiosError)) return false;
-
-  const status = error.response?.status;
-
-  return status === 404 || status === 405 || status === 501;
-};
-
 export const authService = {
-  // Endpoint de Login (Metodo POST)
+  // Inicia sesion con DNI y contraseña.
   login: async (credentials: LoginRequest): Promise<LoginResponse> => {
     const response = await apiClient.post<LoginResponse>('/auth/login', credentials);
     return response.data;
@@ -38,46 +23,41 @@ export const authService = {
     return response.data;
   },
 
+  // Valida primer ingreso y obtiene el token para crear contraseña inicial.
   verifyFirstTime: async (data: VerifyFirstTimeRequest): Promise<VerifyFirstTimeResponse> => {
     const response = await apiClient.post<VerifyFirstTimeResponse>('/Auth/verify-first-time', data);
     return response.data;
   },
 
+  // Solicita el enlace/token de recuperacion de contraseña.
   forgotPassword: async (data: ForgotPasswordRequest): Promise<ForgotPasswordResponse> => {
-    let lastError: unknown;
-
-    for (const endpoint of passwordRecoveryEndpoints) {
-      try {
-        const response = await apiClient.post<ForgotPasswordResponse>(endpoint, data);
-
-        return response.data;
-      } catch (error) {
-        lastError = error;
-
-        if (!shouldTryNextRecoveryEndpoint(error)) {
-          throw error;
-        }
-      }
-    }
-
-    throw lastError;
+    const response = await apiClient.post<ForgotPasswordResponse>('/Auth/forgot-password', data);
+    return response.data;
   },
+
+  // Crea la contraseña inicial del primer ingreso.
   setInitialPassword: async (data: SetInitialPasswordRequest) => {
     const response = await apiClient.post('/Auth/set-initial-password', data);
     return response.data;
   },
 
-  // Endpoint de prueba publica (Metodo GET)
+  // Cambia la contraseña desde el flujo de recuperacion.
+  resetPassword: async (data: ResetPasswordRequest) => {
+    const response = await apiClient.post('/Auth/reset-password', data);
+    return response.data;
+  },
+
+  // Endpoint de prueba publica.
   testPublic: async () => {
     const response = await apiClient.get('/testAuth/public');
     return response.data;
   },
 
-  // Endpoint de datos del usuario (Requiere Token)
+  // Endpoint de datos del usuario autenticado.
   getMe: async (token: string): Promise<LoginResponse> => {
     const response = await apiClient.get('/testAuth/me', {
-      headers: { Authorization: `Bearer ${token}` }
+      headers: { Authorization: `Bearer ${token}` },
     });
     return response.data;
-  }
+  },
 };

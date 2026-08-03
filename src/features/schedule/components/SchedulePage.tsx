@@ -290,13 +290,14 @@ export const SchedulePage = () => {
             <p className="mx-auto mt-1 max-w-[320px] text-[9.5px] font-bold uppercase leading-snug text-white/90">
               {t('schedule.problemText')}
             </p>
-            <button
-              type="button"
-              onClick={() => navigate('/404')}
+            <a
+              href="https://wa.me/549381248492?text=Hola%2C%20quiero%20reportar%20un%20problema%20con%20mi%20horario."
+              target="_blank"
+              rel="noopener noreferrer"
               className="mt-4 rounded-full bg-white px-6 py-2 text-[10px] font-black uppercase text-[#4c1d95] transition-all hover:bg-gray-100 hover:scale-105 hover:shadow-lg active:scale-95"
             >
               {t('schedule.report')}
-            </button>
+            </a>
           </section>
         </section>
       </main>

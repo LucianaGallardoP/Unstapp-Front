@@ -43,6 +43,12 @@ export interface SetInitialPasswordRequest {
   password: string;
   confirmPassword: string;
 }
+
+export interface ResetPasswordRequest {
+  token: string;
+  newPassword: string;
+}
+
 export interface ForgotPasswordRequest {
   dni: string;
 }

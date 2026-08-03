@@ -37,6 +37,10 @@ const passwordRoutes = [
   '/cambiar-contraseña/:token',
   '/auth/set-initial-password',
   '/Auth/set-initial-password',
+  '/auth/reset-password',
+  '/auth/reset-password/:token',
+  '/Auth/reset-password',
+  '/Auth/reset-password/:token',
 ];
 
 function App() {

@@ -8,6 +8,7 @@ export interface CalendarEvent {
   startDate: string;
   endDate: string;
   careerId?: number | string;
+  careerIds?: Array<number | string>;
 }
 
 export interface CreateCalendarEventPayload {
@@ -17,5 +18,6 @@ export interface CreateCalendarEventPayload {
   startDate: string;
   endDate: string;
   careerId?: number;
+  careerIds?: number[];
   reminderDaysBefore?: number[];
 }

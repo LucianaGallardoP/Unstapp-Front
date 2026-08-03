@@ -118,6 +118,9 @@ export const CreateEventModal: React.FC<CreateEventModalProps> = ({
     const startDate = buildLocalDateTime(selectedDate, time);
     const endDate = buildLocalEndDateTime(selectedDate, time);
     const eventType = isTeacher ? 2 : type;
+    const selectedCareerIds = selectedCareerId
+      ? [Number(selectedCareerId)]
+      : careers.map((career) => Number(career.id)).filter(Number.isFinite);
 
     setFormError(null);
 
@@ -128,7 +131,7 @@ export const CreateEventModal: React.FC<CreateEventModalProps> = ({
         type: eventType,
         startDate,
         endDate,
-        careerId: selectedCareerId ? Number(selectedCareerId) : undefined,
+        careerIds: selectedCareerIds,
         reminderDaysBefore: eventType === 1 ? examReminderDaysBefore : undefined,
       });
       onClose?.();

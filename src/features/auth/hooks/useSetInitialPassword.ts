@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { authService } from '../services/authService';
-import type { SetInitialPasswordRequest } from '../types/auth.dtos';
+import type { ResetPasswordRequest, SetInitialPasswordRequest } from '../types/auth.dtos';
 
 type ApiErrorRecord = Record<string, unknown>;
 
@@ -77,5 +77,21 @@ export const useSetInitialPassword = () => {
     }
   };
 
-  return { setInitialPassword, loading, error };
+  const resetPassword = async (data: ResetPasswordRequest) => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      const response = await authService.resetPassword(data);
+      return response;
+    } catch (err) {
+      const errorMessage = getErrorMessage(err);
+      setError(errorMessage);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return { setInitialPassword, resetPassword, loading, error };
 };

@@ -28,6 +28,14 @@ const asNumber = (value: unknown) =>
       ? Number(value)
       : undefined;
 
+const asNumberArray = (value: unknown): number[] => {
+  if (!Array.isArray(value)) return [];
+
+  return value
+    .map(asNumber)
+    .filter((item): item is number => typeof item === 'number');
+};
+
 const normalizeText = (value: string) =>
   value
     .normalize('NFD')
@@ -144,6 +152,8 @@ const mapEventFromApi = (apiEvent: unknown): CalendarEvent => {
     ),
     startDate,
     endDate: getEventEndDate(event, startDate),
+    careerId: event.careerId as number | string | undefined,
+    careerIds: asNumberArray(event.careerIds ?? event.CareerIds),
   };
 };
 
@@ -167,6 +177,7 @@ const mapCreatedEvent = (data: unknown, payload: CreateCalendarEventPayload): Ca
       type: payload.type,
       startDate: payload.startDate,
       endDate: payload.endDate,
+      careerIds: payload.careerIds,
     };
   }
 
@@ -179,6 +190,7 @@ const mapCreatedEvent = (data: unknown, payload: CreateCalendarEventPayload): Ca
     type: event.type === 3 && payload.type !== 3 ? payload.type : event.type,
     startDate: getEventStartDate(eventRecord) || payload.startDate,
     endDate: getEventEndDate(eventRecord, payload.endDate),
+    careerIds: event.careerIds?.length ? event.careerIds : payload.careerIds,
   };
 };
 
@@ -216,7 +228,7 @@ export const calendarService = {
       type: payload.type,
       startDate: payload.startDate,
       endDate: payload.endDate,
-      ...(payload.careerId ? { careerId: payload.careerId } : {}),
+      careerIds: payload.careerIds ?? (payload.careerId ? [payload.careerId] : []),
       ...(payload.reminderDaysBefore?.length
         ? { reminderDaysBefore: payload.reminderDaysBefore }
         : {}),
