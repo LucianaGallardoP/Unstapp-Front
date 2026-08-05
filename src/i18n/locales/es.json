@@ -173,6 +173,7 @@
     "schedule.defaultCommission": "Comisión B",
     "schedule.contextUnavailable": "Carrera no disponible",
     "schedule.yearBadgeLabel": "Año",
+    "schedule.myYear": "Mi año",
     "feed.sessionExpired": "Tu sesión venció. Volvé a iniciar sesión para ver las publicaciones.",
     "feed.loadError": "No se pudieron cargar las publicaciones.",
     "feed.loadPostError": "No se pudo cargar la publicación solicitada.",

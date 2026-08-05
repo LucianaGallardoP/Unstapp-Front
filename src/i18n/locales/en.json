@@ -173,6 +173,7 @@
     "schedule.defaultCommission": "Commission B",
     "schedule.contextUnavailable": "Career unavailable",
     "schedule.yearBadgeLabel": "Year",
+    "schedule.myYear": "My year",
     "feed.sessionExpired": "Your session expired. Sign in again to view posts.",
     "feed.loadError": "Posts could not be loaded.",
     "feed.loadPostError": "The requested post could not be loaded.",
