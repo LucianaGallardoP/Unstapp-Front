@@ -6,15 +6,29 @@ import { TopBar } from '../../../components/common/TopBar';
 import { useWeeklySchedule, type CreateScheduleClassInput, type ScheduleClass } from '../hooks/useWeeklySchedule';
 import { CreateSubjectModal } from './CreateSubjectModal';
 import { useLanguage } from '../../../store/languageContext';
+import { normalizeRoleKey } from '../../../utils/roleLabels';
 
-const getIsCurrentUserAdmin = () => {
+const getCurrentUserRoleKey = () => {
   try {
     const roles = JSON.parse(localStorage.getItem('unstapp_user_roles') ?? '[]');
 
-    return Array.isArray(roles) && roles.some((role) => String(role).toLowerCase().includes('admin'));
+    return normalizeRoleKey(Array.isArray(roles) ? roles.join(' ') : String(roles ?? ''));
   } catch {
-    return false;
+    return 'student';
   }
+};
+
+const normalizeText = (value: string) =>
+  value
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase();
+
+const getYearValue = (yearText?: string) => {
+  const normalizedYear = normalizeText(yearText ?? '');
+  const yearMatch = normalizedYear.match(/\b([1-6])\b/) ?? normalizedYear.match(/([1-6])(?:ro|do|er|to|st|nd|rd|th)/);
+
+  return yearMatch?.[1];
 };
 
 export const SchedulePage = () => {
@@ -22,11 +36,12 @@ export const SchedulePage = () => {
   const [isCreateSubjectModalOpen, setIsCreateSubjectModalOpen] = useState(false);
   const [editingClass, setEditingClass] = useState<ScheduleClass | null>(null);
   const [classToDelete, setClassToDelete] = useState<ScheduleClass | null>(null);
-  const [selectedYearFilter, setSelectedYearFilter] = useState('1');
+  const [selectedYearFilter, setSelectedYearFilter] = useState('');
   const { careerId } = useParams<{ careerId?: string }>();
   const navigate = useNavigate();
-  const isCurrentUserAdmin = getIsCurrentUserAdmin();
-  const shouldShowYearFilters = Boolean(isCurrentUserAdmin && careerId);
+  const currentUserRoleKey = getCurrentUserRoleKey();
+  const isCurrentUserAdmin = currentUserRoleKey === 'admin';
+  const shouldShowYearFilters = ['admin', 'teacher', 'student'].includes(currentUserRoleKey);
   const {
     studentContext,
     isContextLoading,
@@ -39,7 +54,7 @@ export const SchedulePage = () => {
     removeScheduleClass,
     setSelectedDay,
     fetchSchedules,
-  } = useWeeklySchedule(careerId, shouldShowYearFilters ? selectedYearFilter : undefined);
+  } = useWeeklySchedule(careerId, shouldShowYearFilters && selectedYearFilter ? selectedYearFilter : undefined);
   const visibleWeekDays = weekDays.map((day) => ({
     ...day,
     label: language === 'en'
@@ -71,6 +86,7 @@ export const SchedulePage = () => {
         ? t('schedule.defaultCareer')
         : studentContext.career,
   };
+  const activeYearFilter = selectedYearFilter || getYearValue(displayStudentContext.year) || '1';
   const handleEdit = async (values: CreateScheduleClassInput) => {
     if (!editingClass) return;
 
@@ -156,7 +172,7 @@ export const SchedulePage = () => {
             <nav className="mt-4" aria-label={t('schedule.yearFilter')}>
               <ul className="grid grid-cols-6 gap-2">
                 {['1', '2', '3', '4', '5', '6'].map((year) => {
-                  const isActive = selectedYearFilter === year;
+                  const isActive = activeYearFilter === year;
 
                   return (
                     <li key={year}>
