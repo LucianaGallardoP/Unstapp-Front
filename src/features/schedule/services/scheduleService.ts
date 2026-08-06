@@ -64,6 +64,10 @@ const unwrapArray = (value: unknown): unknown[] => {
 
   const root = asRecord(value);
   const candidates = [
+    root.careers,
+    root.carreras,
+    root.careerList,
+    root.carrerasRegistradas,
     root.schedules,
     root.horarios,
     root.items,

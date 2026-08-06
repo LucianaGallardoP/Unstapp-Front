@@ -52,6 +52,12 @@ export const CreatePostModal = ({ isOpen, onClose, onPublish }: CreatePostModalP
     currentUserRoleKey === 'teacher' &&
     selectedCareerIds.length === 0 &&
     (careersLoading || assignedCareersLoading);
+  const isMissingTeacherCareerFallback =
+    isImportant &&
+    currentUserRoleKey === 'teacher' &&
+    selectedCareerIds.length === 0 &&
+    !isResolvingTeacherCareerFallback &&
+    teacherFallbackCareerIds.length === 0;
   const currentUserAvatarUrl = profileAvatarUrl || localStorage.getItem('unstapp_user_avatar_url');
   const currentUserName = localStorage.getItem('unstapp_user_name') || 'Usuario actual';
   const currentUserRole = (() => {
@@ -159,6 +165,11 @@ export const CreatePostModal = ({ isOpen, onClose, onPublish }: CreatePostModalP
 
   const handleSubmit = async () => {
     if ((!trimmedContent && !selectedFile) || isPublishing || isResolvingTeacherCareerFallback) {
+      return;
+    }
+
+    if (isMissingTeacherCareerFallback) {
+      setPublishError(t('createPost.assignedCareersError'));
       return;
     }
 
@@ -330,6 +341,12 @@ export const CreatePostModal = ({ isOpen, onClose, onPublish }: CreatePostModalP
                     );
                   })}
                 </div>
+
+                {isMissingTeacherCareerFallback && (
+                  <p className="mt-2 rounded-xl bg-[#E7000B]/10 px-3 py-2 text-[11px] font-bold text-[#E7000B]">
+                    {t('createPost.assignedCareersError')}
+                  </p>
+                )}
               </div>
             )}
           </section>
@@ -357,7 +374,7 @@ export const CreatePostModal = ({ isOpen, onClose, onPublish }: CreatePostModalP
           <button
             type="button"
             onClick={handleSubmit}
-            disabled={(!trimmedContent && !selectedFile) || isPublishing || isResolvingTeacherCareerFallback}
+            disabled={(!trimmedContent && !selectedFile) || isPublishing || isResolvingTeacherCareerFallback || isMissingTeacherCareerFallback}
             className="flex h-9 min-w-0 flex-1 items-center justify-center gap-2 rounded-full bg-[#1E4E9D] px-5 text-[13px] font-black uppercase text-white transition-colors hover:bg-[#155DFC] disabled:cursor-not-allowed disabled:bg-gray-200 disabled:text-gray-400 min-[360px]:max-w-[174px] md:h-11 md:max-w-[240px] md:text-[14px]"
           >
             {isPublishing && <LoaderCircle size={16} className="animate-spin" />}

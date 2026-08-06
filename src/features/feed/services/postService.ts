@@ -144,6 +144,39 @@ const normalizeAudienceFromApi = (value: unknown): PostAudience => {
   return 'general';
 };
 
+const normalizeComparableText = (value: string) =>
+  value
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/\s+/g, ' ')
+    .trim();
+
+const getCurrentUserAuthorFallback = (authorId: number | string | undefined, authorName: string) => {
+  const currentUserId = localStorage.getItem('unstapp_user_id');
+  const currentUserName = localStorage.getItem('unstapp_user_name') ?? '';
+  const isCurrentUserPost =
+    Boolean(authorId && currentUserId && String(authorId) === String(currentUserId)) ||
+    Boolean(currentUserName && normalizeComparableText(authorName) === normalizeComparableText(currentUserName));
+
+  if (!isCurrentUserPost) {
+    return undefined;
+  }
+
+  try {
+    const roles = JSON.parse(localStorage.getItem('unstapp_user_roles') ?? '[]');
+    const role = normalizeRole(Array.isArray(roles) ? roles : []);
+
+    return {
+      avatarUrl: localStorage.getItem('unstapp_user_avatar_url') || undefined,
+      role,
+      verified: normalizeRoleKey(role) !== 'student',
+    };
+  } catch {
+    return undefined;
+  }
+};
+
 const getPostAudienceSource = (post: ApiRecord, author: ApiRecord) =>
   post.audience ??
   post.targetAudience ??
@@ -178,6 +211,63 @@ const getPostRoleSource = (post: ApiRecord, author: ApiRecord, audienceSource: u
   post.userName,
   post.authorName,
 ];
+
+const getPostAuthorRecord = (post: ApiRecord) => {
+  const candidates = [
+    post.author,
+    post.user,
+    post.createdBy,
+    post.createdByUser,
+    post.creator,
+    post.owner,
+    post.publisher,
+    post.account,
+    post.profile,
+    post.userProfile,
+    post.authorProfile,
+    post.person,
+  ];
+
+  for (const candidate of candidates) {
+    const record = asRecord(candidate);
+
+    if (Object.keys(record).length > 0) {
+      return record;
+    }
+  }
+
+  return {};
+};
+
+const getPostAuthorId = (post: ApiRecord, author: ApiRecord) =>
+  asOptionalId(
+    author.id ??
+    author.userId ??
+    author.authorId ??
+    author.profileId ??
+    author.personId ??
+    post.userId ??
+    post.authorId ??
+    post.authorUserId ??
+    post.createdById ??
+    post.createdByUserId ??
+    post.creatorId ??
+    post.ownerId ??
+    post.publisherId ??
+    post.profileId,
+  );
+
+const getPostAuthorName = (post: ApiRecord, author: ApiRecord) =>
+  asString(author.name) ||
+  asString(author.fullName) ||
+  asString(author.username) ||
+  asString(author.displayName) ||
+  asString(post.userName) ||
+  asString(post.authorName) ||
+  asString(post.createdByName) ||
+  asString(post.creatorName) ||
+  asString(post.publisherName) ||
+  'Usuario';
 
 const normalizeCategory = (role: PostAuthorRole): PostCategory => {
   if (role === 'Docente') return 'carrera';
@@ -394,14 +484,18 @@ const hydrateAuthorProfiles = async (posts: Post[]) => {
 
 const mapPostFromApi = (apiPost: unknown, fallbackContent = ''): Post => {
   const post = asRecord(apiPost);
-  const author = asRecord(post.author ?? post.user ?? post.createdBy);
+  const author = getPostAuthorRecord(post);
   const audienceSource = getPostAudienceSource(post, author);
   const audience = normalizeAudienceFromApi(audienceSource);
   const inferredRole = normalizeRole(getPostRoleSource(post, author, audienceSource));
+  const authorId = getPostAuthorId(post, author);
+  const authorName = getPostAuthorName(post, author);
+  const currentUserFallback = getCurrentUserAuthorFallback(authorId, authorName);
   const role =
-    audience === 'administrativo' && inferredRole === 'Alumno'
+    currentUserFallback?.role ??
+    (audience === 'administrativo' && inferredRole === 'Alumno'
       ? 'Administrativo'
-      : inferredRole;
+      : inferredRole);
   const visualCategory = normalizeCategory(role);
   const id = post.id ?? post.postId ?? crypto.randomUUID();
   const storedLikes = likeService.getStoredLikeCount(id as number | string);
@@ -417,15 +511,11 @@ const mapPostFromApi = (apiPost: unknown, fallbackContent = ''): Post => {
   return {
     id: typeof id === 'number' || typeof id === 'string' ? id : crypto.randomUUID(),
     author: {
-      id: asOptionalId(author.id ?? author.userId ?? post.userId ?? post.authorId ?? post.createdById),
-      name:
-        asString(author.name) ||
-        asString(author.fullName) ||
-        asString(author.username) ||
-        asString(post.userName) ||
-        asString(post.authorName, 'Usuario'),
+      id: authorId,
+      name: authorName,
       role,
       avatarUrl:
+        currentUserFallback?.avatarUrl ||
         asString(author.avatarUrl) ||
         asString(author.userAvatarUrl) ||
         asString(author.profileImageUrl) ||
@@ -441,7 +531,7 @@ const mapPostFromApi = (apiPost: unknown, fallbackContent = ''): Post => {
         asString(post.photoUrl) ||
         asString(post.imageUrl) ||
         undefined,
-      verified: Boolean(author.verified ?? post.verified),
+      verified: currentUserFallback?.verified || Boolean(author.verified ?? post.verified),
     },
     category: visualCategory,
     audience,

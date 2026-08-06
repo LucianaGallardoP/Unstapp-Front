@@ -243,7 +243,11 @@ export const calendarService = {
       type: payload.type,
       startDate: payload.startDate,
       endDate: payload.endDate,
-      careerIds: payload.careerIds ?? (payload.careerId ? [payload.careerId] : []),
+      ...(payload.careerIds?.length
+        ? { careerIds: payload.careerIds }
+        : payload.careerId
+          ? { careerIds: [payload.careerId] }
+          : {}),
     };
 
     const response = await apiClient.post<unknown>('/calendar/events', requestPayload, {

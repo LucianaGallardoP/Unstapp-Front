@@ -170,6 +170,7 @@ export const CreateEventModal: React.FC<CreateEventModalProps> = ({
       : isTeacher
         ? teacherFallbackCareerIds
         : careers.map((career) => Number(career.id)).filter(Number.isFinite);
+    const targetCareerIds = selectedCareerIds.length > 0 ? selectedCareerIds : undefined;
 
     setFormError(null);
 
@@ -180,7 +181,7 @@ export const CreateEventModal: React.FC<CreateEventModalProps> = ({
         type: eventType,
         startDate,
         endDate,
-        careerIds: selectedCareerIds,
+        careerIds: targetCareerIds,
       });
       onClose?.();
     } catch {
