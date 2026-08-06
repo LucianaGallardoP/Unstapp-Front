@@ -65,19 +65,42 @@ const unwrapArray = (value: unknown): unknown[] => {
   const root = asRecord(value);
   const candidates = [
     root.careers,
+    root.Careers,
     root.carreras,
+    root.Carreras,
     root.careerList,
+    root.CareerList,
     root.carrerasRegistradas,
+    root.CarrerasRegistradas,
+    root.programs,
+    root.Programs,
+    root.programas,
+    root.Programas,
+    root.degrees,
+    root.Degrees,
+    root.academicPrograms,
+    root.AcademicPrograms,
     root.schedules,
+    root.Schedules,
     root.horarios,
+    root.Horarios,
     root.items,
+    root.Items,
     root.data,
+    root.Data,
     root.value,
+    root.Value,
     root.results,
+    root.Results,
     root.result,
+    root.Result,
   ];
 
   for (const candidate of candidates) {
+    if (Array.isArray(candidate)) return candidate;
+  }
+
+  for (const candidate of Object.values(root)) {
     if (Array.isArray(candidate)) return candidate;
   }
 
@@ -94,16 +117,74 @@ const unwrapArray = (value: unknown): unknown[] => {
 
 const mapCareerFromApi = (apiCareer: unknown): CareerDto => {
   const career = asRecord(apiCareer);
+  const nestedCareer = asRecord(
+    career.career ??
+    career.Career ??
+    career.carrera ??
+    career.Carrera ??
+    career.program ??
+    career.Program ??
+    career.programa ??
+    career.Programa ??
+    career.degree ??
+    career.Degree ??
+    career.academicProgram,
+  );
+  const source = Object.keys(nestedCareer).length > 0 ? nestedCareer : career;
 
   return {
-    id: asNumber(career.id ?? career.careerId ?? career.carreraId),
+    id: asNumber(
+      source.id ??
+      source.Id ??
+      source.careerId ??
+      source.CareerId ??
+      source.carreraId ??
+      source.CarreraId ??
+      source.programId ??
+      source.ProgramId ??
+      source.programaId ??
+      source.ProgramaId ??
+      source.degreeId ??
+      source.DegreeId ??
+      career.id ??
+      career.Id ??
+      career.careerId ??
+      career.CareerId ??
+      career.carreraId ??
+      career.CarreraId,
+    ),
     name:
+      asString(source.name) ||
+      asString(source.Name) ||
+      asString(source.nombre) ||
+      asString(source.Nombre) ||
+      asString(source.careerName) ||
+      asString(source.CareerName) ||
+      asString(source.carreraNombre) ||
+      asString(source.CarreraNombre) ||
+      asString(source.programName) ||
+      asString(source.ProgramName) ||
+      asString(source.programaNombre) ||
+      asString(source.ProgramaNombre) ||
+      asString(source.degreeName) ||
+      asString(source.DegreeName) ||
+      asString(source.title) ||
+      asString(source.Title) ||
       asString(career.name) ||
+      asString(career.Name) ||
       asString(career.nombre) ||
+      asString(career.Nombre) ||
       asString(career.careerName) ||
+      asString(career.CareerName) ||
       asString(career.carreraNombre) ||
+      asString(career.CarreraNombre) ||
       'Carrera sin nombre',
     year:
+      asOptionalString(source.yearName) ||
+      asOptionalString(source.academicYear) ||
+      asOptionalString(source.year) ||
+      asOptionalString(source.anio) ||
+      asOptionalString(source['aÃ±o']) ||
       asOptionalString(career.yearName) ||
       asOptionalString(career.academicYear) ||
       asOptionalString(career.year) ||

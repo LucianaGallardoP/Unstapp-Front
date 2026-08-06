@@ -4,6 +4,13 @@ import { commentService } from './commentService';
 import { likeService } from './likeService';
 import type { CreatePostOptions, Post, PostAudience, PostAuthorRole, PostCategory } from '../types/post.types';
 import { normalizeRoleKey } from '../../../utils/roleLabels';
+import {
+  getAvatarUrlFromRecords,
+  getRoleCandidatesFromRecord,
+  inferRoleFromText,
+  normalizeRoleLabel,
+  pickStrongestRoleCandidate,
+} from '../../../utils/apiRoleMapping';
 
 type ApiRecord = Record<string, unknown>;
 
@@ -90,34 +97,11 @@ const asOptionalId = (value: unknown) =>
   typeof value === 'number' || typeof value === 'string' ? value : undefined;
 
 const normalizeRole = (value: unknown): PostAuthorRole => {
-  const roleKey = normalizeRoleKey(asStringList(value).join(' '));
-
-  if (roleKey === 'teacher') return 'Docente';
-  if (roleKey === 'admin') return 'Administrativo';
-  if (roleKey === 'bar') return 'Bar';
-  if (roleKey === 'library') return 'Biblioteca';
-  if (roleKey === 'copyCenter') return 'Fotocopiadora';
-
-  return 'Alumno';
-};
-
-const getRolePriority = (role?: string) => {
-  const roleKey = normalizeRoleKey(role);
-
-  if (roleKey === 'admin') return 4;
-  if (roleKey === 'teacher') return 3;
-  if (roleKey === 'bar') return 2;
-  if (roleKey === 'library') return 2;
-  if (roleKey === 'copyCenter') return 2;
-
-  return 1;
+  return normalizeRoleLabel(asStringList(value).join(' '));
 };
 
 const pickStrongestRole = (...values: unknown[]): PostAuthorRole | undefined => {
-  const roleValues = values.flatMap(asStringList);
-  const strongestRole = roleValues.sort((a, b) => getRolePriority(b) - getRolePriority(a))[0];
-
-  return strongestRole ? normalizeRole(strongestRole) : undefined;
+  return pickStrongestRoleCandidate(...values);
 };
 
 const normalizeAudienceFromApi = (value: unknown): PostAudience => {
@@ -179,17 +163,29 @@ const getCurrentUserAuthorFallback = (authorId: number | string | undefined, aut
 
 const getPostAudienceSource = (post: ApiRecord, author: ApiRecord) =>
   post.audience ??
+  post.Audience ??
   post.targetAudience ??
+  post.TargetAudience ??
   post.visibility ??
+  post.Visibility ??
   post.scope ??
+  post.Scope ??
   post.category ??
+  post.Category ??
   post.categoryName ??
+  post.CategoryName ??
   post.postCategory ??
+  post.PostCategory ??
   post.type ??
+  post.Type ??
   author.category ??
-  author.audience;
+  author.Category ??
+  author.audience ??
+  author.Audience;
 
 const getPostRoleSource = (post: ApiRecord, author: ApiRecord, audienceSource: unknown) => [
+  ...getRoleCandidatesFromRecord(author),
+  ...getRoleCandidatesFromRecord(post),
   author.roles,
   author.role,
   author.roleName,
@@ -206,26 +202,43 @@ const getPostRoleSource = (post: ApiRecord, author: ApiRecord, audienceSource: u
   post.tipoUsuario,
   audienceSource,
   author.name,
+  author.Name,
   author.fullName,
+  author.FullName,
   author.username,
+  author.Username,
   post.userName,
+  post.UserName,
   post.authorName,
+  post.AuthorName,
 ];
 
 const getPostAuthorRecord = (post: ApiRecord) => {
   const candidates = [
     post.author,
+    post.Author,
     post.user,
+    post.User,
     post.createdBy,
+    post.CreatedBy,
     post.createdByUser,
+    post.CreatedByUser,
     post.creator,
+    post.Creator,
     post.owner,
+    post.Owner,
     post.publisher,
+    post.Publisher,
     post.account,
+    post.Account,
     post.profile,
+    post.Profile,
     post.userProfile,
+    post.UserProfile,
     post.authorProfile,
+    post.AuthorProfile,
     post.person,
+    post.Person,
   ];
 
   for (const candidate of candidates) {
@@ -242,31 +255,53 @@ const getPostAuthorRecord = (post: ApiRecord) => {
 const getPostAuthorId = (post: ApiRecord, author: ApiRecord) =>
   asOptionalId(
     author.id ??
+    author.Id ??
     author.userId ??
+    author.UserId ??
     author.authorId ??
+    author.AuthorId ??
     author.profileId ??
+    author.ProfileId ??
     author.personId ??
+    author.PersonId ??
     post.userId ??
+    post.UserId ??
     post.authorId ??
+    post.AuthorId ??
     post.authorUserId ??
+    post.AuthorUserId ??
     post.createdById ??
+    post.CreatedById ??
     post.createdByUserId ??
+    post.CreatedByUserId ??
     post.creatorId ??
+    post.CreatorId ??
     post.ownerId ??
+    post.OwnerId ??
     post.publisherId ??
+    post.PublisherId ??
     post.profileId,
   );
 
 const getPostAuthorName = (post: ApiRecord, author: ApiRecord) =>
   asString(author.name) ||
+  asString(author.Name) ||
   asString(author.fullName) ||
+  asString(author.FullName) ||
   asString(author.username) ||
+  asString(author.Username) ||
   asString(author.displayName) ||
+  asString(author.DisplayName) ||
   asString(post.userName) ||
+  asString(post.UserName) ||
   asString(post.authorName) ||
+  asString(post.AuthorName) ||
   asString(post.createdByName) ||
+  asString(post.CreatedByName) ||
   asString(post.creatorName) ||
+  asString(post.CreatorName) ||
   asString(post.publisherName) ||
+  asString(post.PublisherName) ||
   'Usuario';
 
 const normalizeCategory = (role: PostAuthorRole): PostCategory => {
@@ -371,99 +406,162 @@ const getMediaType = (url: string) => {
   return 'file';
 };
 
-const getProfileSummaryFromApi = async (authorId: number | string): Promise<{ avatarUrl?: string; role?: PostAuthorRole }> => {
+const unwrapSearchUsers = (payload: unknown): unknown[] => {
+  if (Array.isArray(payload)) return payload;
+  if (!payload || typeof payload !== 'object') return [];
+
+  const root = asRecord(payload);
+  const data = asRecord(root.data ?? root.value ?? root.result ?? root.results ?? root);
+  const candidates = [
+    data.users,
+    data.usuarios,
+    data.people,
+    data.personas,
+    root.users,
+    root.usuarios,
+    root.people,
+    root.personas,
+  ];
+
+  for (const candidate of candidates) {
+    if (Array.isArray(candidate)) return candidate;
+  }
+
+  return [];
+};
+
+const getSearchUserSummaryFromApi = async (
+  authorId: number | string,
+  authorName?: string,
+): Promise<{ avatarUrl?: string; role?: PostAuthorRole }> => {
+  if (!authorName || authorName === 'Usuario') {
+    return {};
+  }
+
   try {
-    const response = await apiClient.get<unknown>(`/profile/${authorId}`, {
+    const response = await apiClient.get<unknown>('/search', {
+      params: { term: authorName },
       headers: getAuthHeaders(),
     });
-    const root = asRecord(response.data);
-    const data = asRecord(root.data ?? root.value ?? root.profile ?? root);
-    const user = asRecord(data.user ?? data.profile ?? data.person ?? data);
-    const rootUser = asRecord(root.user ?? root.profile ?? root.person);
-    const roles = [
-      user.roles,
-      user.role,
-      user.roleName,
-      user.rol,
-      user.userRole,
-      user.tipoUsuario,
-      data.roles,
-      data.role,
-      data.roleName,
-      data.rol,
-      data.userRole,
-      data.tipoUsuario,
-      rootUser.roles,
-      rootUser.role,
-      rootUser.roleName,
-      rootUser.rol,
-      rootUser.userRole,
-      rootUser.tipoUsuario,
-      root.roles,
-      root.role,
-      root.roleName,
-      root.rol,
-      root.userRole,
-      root.tipoUsuario,
-    ];
-    const inferredRoleValues = [
-      user.bio,
-      user.description,
-      user.about,
-      user.position,
-      user.title,
-      data.bio,
-      data.description,
-      data.about,
-      data.position,
-      data.title,
-      rootUser.bio,
-      rootUser.description,
-      rootUser.about,
-      rootUser.position,
-      rootUser.title,
-      root.bio,
-      root.description,
-      root.about,
-      root.position,
-      root.title,
-    ];
+    const normalizedAuthorName = normalizeComparableText(authorName);
+    const users = unwrapSearchUsers(response.data)
+      .map(asRecord)
+      .filter((user) => Object.keys(user).length > 0);
+    const matchedUser = users.find((user) => {
+      const userId = user.id ?? user.Id ?? user.userId ?? user.UserId ?? user.profileId ?? user.ProfileId;
+      const userName =
+        asString(user.fullName) ||
+        asString(user.FullName) ||
+        asString(user.name) ||
+        asString(user.Name) ||
+        asString(user.userName) ||
+        asString(user.UserName) ||
+        asString(user.username) ||
+        asString(user.Username) ||
+        asString(user.displayName);
+
+      return (
+        (userId !== undefined && String(userId) === String(authorId)) ||
+        normalizeComparableText(userName) === normalizedAuthorName
+      );
+    });
+
+    if (!matchedUser) {
+      return {};
+    }
 
     return {
-      avatarUrl:
-        asString(user.avatarUrl) ||
-        asString(user.profileImageUrl) ||
-        asString(user.profilePictureUrl) ||
-        asString(user.profilePhotoUrl) ||
-        asString(user.photoUrl) ||
-        asString(rootUser.avatarUrl) ||
-        asString(rootUser.profileImageUrl) ||
-        asString(rootUser.profilePictureUrl) ||
-        asString(rootUser.profilePhotoUrl) ||
-        asString(rootUser.photoUrl) ||
-        asString(root.avatarUrl) ||
-        asString(root.profileImageUrl) ||
-        asString(root.profilePictureUrl) ||
-        asString(root.profilePhotoUrl) ||
-        asString(root.photoUrl) ||
-        undefined,
-      role: pickStrongestRole(roles, inferredRoleValues),
+      avatarUrl: getAvatarUrlFromRecords(matchedUser),
+      role: pickStrongestRole(getRoleCandidatesFromRecord(matchedUser)),
     };
   } catch {
     return {};
   }
 };
 
+const getProfileSummaryFromApi = async (
+  authorId: number | string,
+  authorName?: string,
+): Promise<{ avatarUrl?: string; role?: PostAuthorRole }> => {
+  try {
+    const response = await apiClient.get<unknown>(`/profile/${authorId}`, {
+      headers: getAuthHeaders(),
+    });
+    const root = asRecord(response.data);
+    const data = asRecord(root.data ?? root.Data ?? root.value ?? root.Value ?? root.profile ?? root.Profile ?? root);
+    const user = asRecord(data.user ?? data.User ?? data.profile ?? data.Profile ?? data.person ?? data.Person ?? data);
+    const rootUser = asRecord(root.user ?? root.User ?? root.profile ?? root.Profile ?? root.person ?? root.Person);
+    const roles = [
+      ...getRoleCandidatesFromRecord(user),
+      ...getRoleCandidatesFromRecord(data),
+      ...getRoleCandidatesFromRecord(rootUser),
+      ...getRoleCandidatesFromRecord(root),
+    ];
+    const inferredRole = inferRoleFromText(
+      user.bio,
+      user.description,
+      user.about,
+      user.position,
+      user.title,
+      user.jobTitle,
+      data.bio,
+      data.description,
+      data.about,
+      data.position,
+      data.title,
+      data.jobTitle,
+      rootUser.bio,
+      rootUser.description,
+      rootUser.about,
+      rootUser.position,
+      rootUser.title,
+      rootUser.jobTitle,
+      root.bio,
+      root.description,
+      root.about,
+      root.position,
+      root.title,
+      root.jobTitle,
+    );
+
+    const profileSummary = {
+      avatarUrl: getAvatarUrlFromRecords(user, data, rootUser, root),
+      role: pickStrongestRole(roles, inferredRole),
+    };
+
+    if (!profileSummary.role || !profileSummary.avatarUrl) {
+      const searchSummary = await getSearchUserSummaryFromApi(authorId, authorName);
+
+      return {
+        avatarUrl: profileSummary.avatarUrl || searchSummary.avatarUrl,
+        role: profileSummary.role || searchSummary.role,
+      };
+    }
+
+    return profileSummary;
+  } catch {
+    return getSearchUserSummaryFromApi(authorId, authorName);
+  }
+};
+
 const hydrateAuthorProfiles = async (posts: Post[]) => {
-  const uniqueAuthorIds = Array.from(
-    new Set(
-      posts
-        .map((post) => post.author.id)
-        .filter((authorId): authorId is number | string => typeof authorId === 'number' || typeof authorId === 'string'),
-    ),
-  );
+  const authorsById = new Map<string, { id: number | string; name: string }>();
+
+  posts.forEach((post) => {
+    const authorId = post.author.id;
+
+    if (typeof authorId === 'number' || typeof authorId === 'string') {
+      authorsById.set(String(authorId), {
+        id: authorId,
+        name: post.author.name,
+      });
+    }
+  });
   const profileEntries = await Promise.all(
-    uniqueAuthorIds.map(async (authorId) => [String(authorId), await getProfileSummaryFromApi(authorId)] as const),
+    Array.from(authorsById.values()).map(async (author) => [
+      String(author.id),
+      await getProfileSummaryFromApi(author.id, author.name),
+    ] as const),
   );
   const profilesByAuthorId = new Map(profileEntries);
 

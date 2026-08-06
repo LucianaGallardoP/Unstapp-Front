@@ -3,6 +3,12 @@ import type { ProfileEditValues, ProfileResponseDTO, ProfileStatsDTO } from '../
 import type { Post, PostAuthorRole, PostCategory } from '../../feed/types/post.types';
 import { postService } from '../../feed/services/postService';
 import { normalizeRoleKey } from '../../../utils/roleLabels';
+import {
+  getAvatarUrlFromRecords,
+  getRoleCandidatesFromRecord,
+  inferRoleFromText,
+  normalizeRoleLabel,
+} from '../../../utils/apiRoleMapping';
 
 type ApiRecord = Record<string, unknown>;
 
@@ -125,15 +131,7 @@ export const MOCK_PROFILE_STATS: ProfileStatsDTO = {
 
 
 const normalizeProfilePostRole = (role?: string): PostAuthorRole => {
-  const roleKey = normalizeRoleKey(role);
-
-  if (roleKey === 'admin') return 'Administrativo';
-  if (roleKey === 'teacher') return 'Docente';
-  if (roleKey === 'bar') return 'Bar';
-  if (roleKey === 'library') return 'Biblioteca';
-  if (roleKey === 'copyCenter') return 'Fotocopiadora';
-
-  return 'Alumno';
+  return normalizeRoleLabel(role);
 };
 
 const inferRoleFromProfileText = (...values: unknown[]) => {
@@ -173,6 +171,87 @@ const normalizeProfilePostCategory = (role: PostAuthorRole): PostCategory => {
   return 'alumno';
 };
 
+const normalizeComparableText = (value: string) =>
+  value
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/\s+/g, ' ')
+    .trim();
+
+const unwrapSearchUsers = (payload: unknown): unknown[] => {
+  if (Array.isArray(payload)) return payload;
+  if (!payload || typeof payload !== 'object') return [];
+
+  const root = asRecord(payload);
+  const data = asRecord(root.data ?? root.value ?? root.result ?? root.results ?? root);
+  const candidates = [
+    data.users,
+    data.usuarios,
+    data.people,
+    data.personas,
+    root.users,
+    root.usuarios,
+    root.people,
+    root.personas,
+  ];
+
+  for (const candidate of candidates) {
+    if (Array.isArray(candidate)) return candidate;
+  }
+
+  return [];
+};
+
+const getSearchProfileSummaryFromApi = async (profileId: number | string, profileName: string) => {
+  if (!profileName) {
+    return {};
+  }
+
+  try {
+    const response = await apiClient.get<unknown>('/search', {
+      params: { term: profileName },
+      headers: getAuthHeaders(),
+    });
+    const normalizedProfileName = normalizeComparableText(profileName);
+    const users = unwrapSearchUsers(response.data)
+      .map(asRecord)
+      .filter((user) => Object.keys(user).length > 0);
+    const matchedUser = users.find((user) => {
+      const userId = user.id ?? user.Id ?? user.userId ?? user.UserId ?? user.profileId ?? user.ProfileId;
+      const userName =
+        asString(user.fullName) ||
+        asString(user.FullName) ||
+        asString(user.name) ||
+        asString(user.Name) ||
+        asString(user.userName) ||
+        asString(user.UserName) ||
+        asString(user.username) ||
+        asString(user.Username) ||
+        asString(user.displayName);
+
+      return (
+        (userId !== undefined && String(userId) === String(profileId)) ||
+        normalizeComparableText(userName) === normalizedProfileName
+      );
+    });
+
+    if (!matchedUser) {
+      return {};
+    }
+
+    const roles = getRoleCandidatesFromRecord(matchedUser);
+
+    return {
+      avatarUrl: getAvatarUrlFromRecords(matchedUser),
+      role: pickPrimaryRole(roles),
+      roles: roles.length ? roles : undefined,
+    };
+  } catch {
+    return {};
+  }
+};
+
 const mapPostFromApi = (apiPost: unknown, fallbackAuthor: { id: number; name: string; avatarUrl?: string; role?: string }): Post => {
   const post = asRecord(apiPost);
   const authorRole = normalizeProfilePostRole(fallbackAuthor.role);
@@ -205,11 +284,11 @@ const mapProfileFromApi = (
   isOwnProfile: boolean,
 ): ProfileViewData => {
   const root = asRecord(apiProfile);
-  const data = asRecord(root.data ?? root.value ?? root.profile ?? root);
-  const user = asRecord(data.user ?? data.profile ?? data.person ?? data);
-  const rootUser = asRecord(root.user ?? root.profile ?? root.person);
-  const posts = data.posts ?? data.publications ?? data.userPosts;
-  const apiPostsCount = data.postsCount ?? user.postsCount ?? root.postsCount ?? rootUser.postsCount ?? data.publicationsCount;
+  const data = asRecord(root.data ?? root.Data ?? root.value ?? root.Value ?? root.profile ?? root.Profile ?? root);
+  const user = asRecord(data.user ?? data.User ?? data.profile ?? data.Profile ?? data.person ?? data.Person ?? data);
+  const rootUser = asRecord(root.user ?? root.User ?? root.profile ?? root.Profile ?? root.person ?? root.Person);
+  const posts = data.posts ?? data.Posts ?? data.publications ?? data.Publications ?? data.userPosts ?? data.UserPosts;
+  const apiPostsCount = data.postsCount ?? data.PostsCount ?? user.postsCount ?? user.PostsCount ?? root.postsCount ?? root.PostsCount ?? rootUser.postsCount ?? rootUser.PostsCount ?? data.publicationsCount ?? data.PublicationsCount;
   const careers = [
     ...asStringList(user.careers),
     ...asStringList(user.career),
@@ -241,6 +320,10 @@ const mapProfileFromApi = (
     ...asNumberList(root.carrera),
   ].filter((careerId, index, allCareerIds) => allCareerIds.indexOf(careerId) === index);
   const roles = [
+    ...getRoleCandidatesFromRecord(user),
+    ...getRoleCandidatesFromRecord(rootUser),
+    ...getRoleCandidatesFromRecord(data),
+    ...getRoleCandidatesFromRecord(root),
     ...asStringList(user.roles),
     ...asStringList(user.role),
     ...asStringList(user.roleName),
@@ -272,31 +355,68 @@ const mapProfileFromApi = (
   ];
   const fullName =
     asString(user.fullName) ||
+    asString(user.FullName) ||
     asString(user.name) ||
+    asString(user.Name) ||
     asString(user.username) ||
+    asString(user.Username) ||
     asString(rootUser.fullName) ||
+    asString(rootUser.FullName) ||
     asString(rootUser.name) ||
+    asString(rootUser.Name) ||
     asString(rootUser.username) ||
+    asString(rootUser.Username) ||
     asString(root.fullName) ||
+    asString(root.FullName) ||
     asString(root.name) ||
+    asString(root.Name) ||
     asString(root.username) ||
+    asString(root.Username) ||
     fallbackProfile.fullName;
-  const inferredRole = inferRoleFromProfileText(
-    fullName,
-    user.bio,
-    user.description,
-    rootUser.bio,
-    rootUser.description,
-    data.bio,
-    data.description,
-    root.bio,
-    root.description,
-  );
+  const inferredRole =
+    inferRoleFromText(
+      fullName,
+      user.bio,
+      user.description,
+      user.about,
+      user.position,
+      user.title,
+      user.jobTitle,
+      rootUser.bio,
+      rootUser.description,
+      rootUser.about,
+      rootUser.position,
+      rootUser.title,
+      rootUser.jobTitle,
+      data.bio,
+      data.description,
+      data.about,
+      data.position,
+      data.title,
+      data.jobTitle,
+      root.bio,
+      root.description,
+      root.about,
+      root.position,
+      root.title,
+      root.jobTitle,
+    ) ||
+    inferRoleFromProfileText(
+      fullName,
+      user.bio,
+      user.description,
+      rootUser.bio,
+      rootUser.description,
+      data.bio,
+      data.description,
+      root.bio,
+      root.description,
+    );
   const primaryRole = pickPrimaryRole(roles, inferredRole);
 
   return {
     profile: {
-      userId: asNumber(user.userId ?? user.id ?? rootUser.userId ?? rootUser.id ?? root.userId ?? root.id, fallbackProfile.userId),
+      userId: asNumber(user.userId ?? user.UserId ?? user.id ?? user.Id ?? rootUser.userId ?? rootUser.UserId ?? rootUser.id ?? rootUser.Id ?? root.userId ?? root.UserId ?? root.id ?? root.Id, fallbackProfile.userId),
       fullName,
       careers,
       careerIds,
@@ -304,6 +424,7 @@ const mapProfileFromApi = (
       roles: roles.length ? roles : undefined,
       bio: asString(user.bio) || asString(user.description) || undefined,
       avatarUrl:
+        getAvatarUrlFromRecords(user, data, rootUser, root) ||
         asString(user.avatarUrl) ||
         asString(user.profileImageUrl) ||
         asString(user.photoUrl) ||
@@ -359,6 +480,17 @@ export const profileService = {
     const fallbackProfile = isOwnProfile ? MOCK_PROFILE_DETAILS : MOCK_PUBLIC_PROFILE_DETAILS;
 
     const mappedData = mapProfileFromApi(response.data, fallbackProfile, isOwnProfile);
+
+    if (!mappedData.profile.role || !mappedData.profile.avatarUrl) {
+      const searchSummary = await getSearchProfileSummaryFromApi(mappedData.profile.userId, mappedData.profile.fullName);
+
+      mappedData.profile = {
+        ...mappedData.profile,
+        avatarUrl: mappedData.profile.avatarUrl || searchSummary.avatarUrl,
+        role: mappedData.profile.role || searchSummary.role,
+        roles: mappedData.profile.roles?.length ? mappedData.profile.roles : searchSummary.roles,
+      };
+    }
 
     // Si el endpoint de perfil no devolvió posts, los traemos del feed general y los filtramos
     if (!mappedData.posts || mappedData.posts.length === 0) {
