@@ -345,6 +345,27 @@ type ScheduleQueryParams = {
   year?: string | number;
 };
 
+const FALLBACK_CAREERS: CareerDto[] = [
+  { id: 1, name: 'Tec. en Desarrollo y Calidad de Software' },
+  { id: 2, name: 'Ingeniería Ambiental' },
+  { id: 3, name: 'Ingeniería Industrial' },
+  { id: 4, name: 'Ingeniería en Informática' },
+  { id: 5, name: 'Licenciatura en Terapia Ocupacional' },
+  { id: 6, name: 'Licenciatura en Psicología' },
+  { id: 7, name: 'Ingeniería en Inteligencia Artificial' },
+  { id: 8, name: 'Licenciatura en Diseño de Interiores' },
+  { id: 9, name: 'Medicina' },
+  { id: 10, name: 'Licenciatura en Diseño Gráfico' },
+  { id: 11, name: 'Licenciatura en Gastronomía' },
+  { id: 12, name: 'Licenciatura en Diseño Multimedial' },
+  { id: 13, name: 'Bioingeniería' },
+  { id: 14, name: 'Licenciatura en Kinesiología y Fisiatría' },
+  { id: 15, name: 'Licenciatura en Nutrición' },
+  { id: 16, name: 'Licenciatura en Diagnóstico por Imágenes' },
+  { id: 17, name: 'Contador Público' },
+  { id: 18, name: 'Licenciatura en Administración de Empresas' },
+];
+
 const getSchedulePrimaryParams = (params?: ScheduleQueryParams): ScheduleQueryParams | undefined => {
   return params;
 };
@@ -390,11 +411,23 @@ export const scheduleService = {
   },
 
   getCareers: async (): Promise<CareerDto[]> => {
-    const response = await apiClient.get<unknown>('/Carreras', {
-      headers: getAuthHeaders(),
-    });
+    try {
+      const response = await apiClient.get<unknown>('/Carreras', {
+        headers: getAuthHeaders(),
+      });
 
-    return unwrapArray(response.data).map(mapCareerFromApi).filter((career) => career.id > 0);
+      const careers = unwrapArray(response.data).map(mapCareerFromApi).filter((career) => career.id > 0);
+
+      return careers.length > 0 ? careers : FALLBACK_CAREERS;
+    } catch (error: any) {
+      const status = error?.response?.status;
+
+      if (status === 401 || status === 403) {
+        return FALLBACK_CAREERS;
+      }
+
+      throw error;
+    }
   },
 
   getSchedules: async (params?: ScheduleQueryParams): Promise<ScheduleDto[]> => {

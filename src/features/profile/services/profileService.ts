@@ -171,6 +171,11 @@ const normalizeProfilePostCategory = (role: PostAuthorRole): PostCategory => {
   return 'alumno';
 };
 
+const getRoleFromProfilePosts = (posts: Post[]) =>
+  posts
+    .map((post) => post.author.role)
+    .find((role) => normalizeRoleKey(role) !== 'student');
+
 const normalizeComparableText = (value: string) =>
   value
     .normalize('NFD')
@@ -500,6 +505,15 @@ export const profileService = {
         mappedData.posts = allPosts.filter(post => String(post.author.id) === String(profileId));
       } catch (err) {
         console.warn('No se pudieron obtener los posts del feed general:', err);
+      }
+    }
+
+    if (!mappedData.profile.role) {
+      const roleFromPosts = getRoleFromProfilePosts(mappedData.posts);
+
+      if (roleFromPosts) {
+        mappedData.profile.role = roleFromPosts;
+        mappedData.profile.roles = [roleFromPosts];
       }
     }
 
