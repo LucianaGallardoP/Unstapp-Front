@@ -33,6 +33,29 @@ const asNumber = (value: unknown, fallback = 0) =>
       ? Number(value)
       : fallback;
 
+const asNumberList = (value: unknown): number[] => {
+  if (Array.isArray(value)) {
+    return value.flatMap(asNumberList);
+  }
+
+  const numericValue = asNumber(value, Number.NaN);
+
+  if (Number.isFinite(numericValue)) {
+    return [numericValue];
+  }
+
+  const record = asRecord(value);
+  const nestedValue = asNumber(
+    record.id ??
+    record.careerId ??
+    record.carreraId ??
+    record.value,
+    Number.NaN,
+  );
+
+  return Number.isFinite(nestedValue) ? [nestedValue] : [];
+};
+
 const asBoolean = (value: unknown, fallback = false) =>
   typeof value === 'boolean' ? value : fallback;
 
@@ -195,6 +218,28 @@ const mapProfileFromApi = (
     ...asStringList(rootUser.career),
     ...asStringList(rootUser.carrera),
   ];
+  const careerIds = [
+    ...asNumberList(user.careerIds),
+    ...asNumberList(user.carrerasIds),
+    ...asNumberList(user.careers),
+    ...asNumberList(user.career),
+    ...asNumberList(user.carrera),
+    ...asNumberList(data.careerIds),
+    ...asNumberList(data.carrerasIds),
+    ...asNumberList(data.careers),
+    ...asNumberList(data.career),
+    ...asNumberList(data.carrera),
+    ...asNumberList(rootUser.careerIds),
+    ...asNumberList(rootUser.carrerasIds),
+    ...asNumberList(rootUser.careers),
+    ...asNumberList(rootUser.career),
+    ...asNumberList(rootUser.carrera),
+    ...asNumberList(root.careerIds),
+    ...asNumberList(root.carrerasIds),
+    ...asNumberList(root.careers),
+    ...asNumberList(root.career),
+    ...asNumberList(root.carrera),
+  ].filter((careerId, index, allCareerIds) => allCareerIds.indexOf(careerId) === index);
   const roles = [
     ...asStringList(user.roles),
     ...asStringList(user.role),
@@ -254,6 +299,7 @@ const mapProfileFromApi = (
       userId: asNumber(user.userId ?? user.id ?? rootUser.userId ?? rootUser.id ?? root.userId ?? root.id, fallbackProfile.userId),
       fullName,
       careers,
+      careerIds,
       role: primaryRole,
       roles: roles.length ? roles : undefined,
       bio: asString(user.bio) || asString(user.description) || undefined,

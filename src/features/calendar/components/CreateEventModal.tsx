@@ -1,13 +1,15 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Loader2, X } from 'lucide-react';
 import { useLanguage } from '../../../store/languageContext';
 import { useCareers } from '../../schedule/hooks/useCareers';
+import { profileService } from '../../profile/services/profileService';
 import { EventTypeDropdown } from './EventTypeDropdown';
 import type {
   CalendarEventType,
   CreateCalendarEventPayload,
 } from '../types/calendar.types';
 import { normalizeRoleKey } from '../../../utils/roleLabels';
+import { getCareerIdsByNames } from '../../../utils/careerMatching';
 
 interface CreateEventModalProps {
   selectedDate: Date;
@@ -102,9 +104,56 @@ export const CreateEventModal: React.FC<CreateEventModalProps> = ({
   const [type, setType] = useState<CalendarEventType>(isTeacher ? 2 : 3);
   const [time, setTime] = useState('08:00');
   const [selectedCareerId, setSelectedCareerId] = useState('');
+  const [assignedCareerIds, setAssignedCareerIds] = useState<number[]>([]);
+  const [assignedCareerNames, setAssignedCareerNames] = useState<string[]>([]);
+  const [assignedCareersLoading, setAssignedCareersLoading] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
+  const assignedCareerIdsFromNames = getCareerIdsByNames(careers, assignedCareerNames);
+  const teacherFallbackCareerIds = assignedCareerIds.length > 0 ? assignedCareerIds : assignedCareerIdsFromNames;
+  const isResolvingTeacherCareerFallback =
+    isTeacher &&
+    !selectedCareerId &&
+    (careersLoading || assignedCareersLoading);
 
-  const canSubmit = title.trim().length > 0 && time.trim().length > 0 && !isSubmitting;
+  const canSubmit = title.trim().length > 0 && time.trim().length > 0 && !isSubmitting && !isResolvingTeacherCareerFallback;
+
+  useEffect(() => {
+    if (!isTeacher) {
+      setAssignedCareerIds([]);
+      setAssignedCareerNames([]);
+      setAssignedCareersLoading(false);
+      return;
+    }
+
+    const currentUserId = localStorage.getItem('unstapp_user_id');
+
+    if (!currentUserId) {
+      return;
+    }
+
+    let isMounted = true;
+    setAssignedCareersLoading(true);
+
+    profileService.getById(currentUserId, true)
+      .then(({ profile }) => {
+        if (!isMounted) {
+          return;
+        }
+
+        setAssignedCareerIds(profile.careerIds ?? []);
+        setAssignedCareerNames(profile.careers ?? []);
+      })
+      .catch(() => undefined)
+      .finally(() => {
+        if (isMounted) {
+          setAssignedCareersLoading(false);
+        }
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [isTeacher]);
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -118,7 +167,9 @@ export const CreateEventModal: React.FC<CreateEventModalProps> = ({
     const eventType = isTeacher ? 2 : type;
     const selectedCareerIds = selectedCareerId
       ? [Number(selectedCareerId)]
-      : careers.map((career) => Number(career.id)).filter(Number.isFinite);
+      : isTeacher
+        ? teacherFallbackCareerIds
+        : careers.map((career) => Number(career.id)).filter(Number.isFinite);
 
     setFormError(null);
 
@@ -190,7 +241,11 @@ export const CreateEventModal: React.FC<CreateEventModalProps> = ({
             className="rounded-full border border-[#1f4e99] bg-transparent px-4 py-2 text-[13px] font-medium text-gray-700 focus:outline-none focus:ring-1 focus:ring-[#1f4e99]"
           >
             <option value="">
-              {careersLoading ? t('schedule.loadingCareers') : t('calendar.allCareers')}
+              {careersLoading || assignedCareersLoading
+                ? t('schedule.loadingCareers')
+                : isTeacher
+                  ? t('calendar.assignedCareers')
+                  : t('calendar.allCareers')}
             </option>
             {careers.map((career) => (
               <option key={career.id} value={career.id}>

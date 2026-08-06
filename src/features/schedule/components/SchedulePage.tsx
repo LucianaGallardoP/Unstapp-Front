@@ -86,8 +86,7 @@ export const SchedulePage = () => {
         ? t('schedule.defaultCareer')
         : studentContext.career,
   };
-  const studentYearFilter = getYearValue(displayStudentContext.year);
-  const activeYearFilter = selectedYearFilter || studentYearFilter || '1';
+  const activeYearFilter = selectedYearFilter || getYearValue(displayStudentContext.year) || '1';
   const handleEdit = async (values: CreateScheduleClassInput) => {
     if (!editingClass) return;
 
@@ -174,25 +173,17 @@ export const SchedulePage = () => {
               <ul className="grid grid-cols-6 gap-2">
                 {['1', '2', '3', '4', '5', '6'].map((year) => {
                   const isActive = activeYearFilter === year;
-                  const isStudentOwnYear = currentUserRoleKey === 'student' && studentYearFilter === year;
-
                   return (
                     <li key={year}>
                       <button
                         type="button"
                         onClick={() => setSelectedYearFilter(year)}
-                        className={`relative h-8 w-full rounded-full text-[10px] font-black transition-colors ${
+                        className={`h-8 w-full rounded-full text-[10px] font-black transition-colors ${
                           isActive
                             ? 'bg-[#1E4E9D] text-white shadow-[0_8px_18px_rgba(30,78,157,0.24)]'
                             : 'bg-white text-[#526174] hover:bg-[#EFF6FF] hover:text-[#1E4E9D]'
-                        } ${
-                          isStudentOwnYear
-                            ? 'after:absolute after:right-2 after:top-1.5 after:h-1.5 after:w-1.5 after:rounded-full after:bg-[#FF751F] after:ring-2 after:ring-white'
-                            : ''
                         }`}
                         aria-pressed={isActive}
-                        aria-label={isStudentOwnYear ? `${year}°, ${t('schedule.myYear')}` : `${year}°`}
-                        title={isStudentOwnYear ? t('schedule.myYear') : undefined}
                       >
                         {year}°
                       </button>

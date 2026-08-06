@@ -7,6 +7,7 @@ import { useLanguage } from '../../../store/languageContext';
 import { useCareers } from '../../schedule/hooks/useCareers';
 import type { CreatePostOptions } from '../types/post.types';
 import { normalizeRoleKey } from '../../../utils/roleLabels';
+import { getCareerIdsByNames } from '../../../utils/careerMatching';
 
 interface CreatePostModalProps {
   isOpen: boolean;
@@ -35,11 +36,22 @@ export const CreatePostModal = ({ isOpen, onClose, onPublish }: CreatePostModalP
   const [isPublishing, setIsPublishing] = useState(false);
   const [publishError, setPublishError] = useState<string | null>(null);
   const [profileAvatarUrl, setProfileAvatarUrl] = useState(() => localStorage.getItem('unstapp_user_avatar_url'));
+  const [assignedCareerIds, setAssignedCareerIds] = useState<number[]>([]);
+  const [assignedCareerNames, setAssignedCareerNames] = useState<string[]>([]);
+  const [assignedCareersLoading, setAssignedCareersLoading] = useState(false);
   const trimmedContent = content.trim();
   const isVideo = selectedFile?.type.startsWith('video/');
   const currentUserRoles = getCurrentUserRoles();
-  const canCreateImportantPost = ['admin', 'teacher'].includes(normalizeRoleKey(currentUserRoles.join(' ')));
+  const currentUserRoleKey = normalizeRoleKey(currentUserRoles.join(' '));
+  const canCreateImportantPost = ['admin', 'teacher'].includes(currentUserRoleKey);
   const { careers, loading: careersLoading } = useCareers(isOpen && canCreateImportantPost);
+  const assignedCareerIdsFromNames = getCareerIdsByNames(careers, assignedCareerNames);
+  const teacherFallbackCareerIds = assignedCareerIds.length > 0 ? assignedCareerIds : assignedCareerIdsFromNames;
+  const isResolvingTeacherCareerFallback =
+    isImportant &&
+    currentUserRoleKey === 'teacher' &&
+    selectedCareerIds.length === 0 &&
+    (careersLoading || assignedCareersLoading);
   const currentUserAvatarUrl = profileAvatarUrl || localStorage.getItem('unstapp_user_avatar_url');
   const currentUserName = localStorage.getItem('unstapp_user_name') || 'Usuario actual';
   const currentUserRole = (() => {
@@ -55,13 +67,7 @@ export const CreatePostModal = ({ isOpen, onClose, onPublish }: CreatePostModalP
   // Carga la foto real del usuario si la sesion local no la tiene todavia.
   useEffect(() => {
     if (!isOpen) {
-      return;
-    }
-
-    const storedAvatarUrl = localStorage.getItem('unstapp_user_avatar_url');
-
-    if (storedAvatarUrl) {
-      setProfileAvatarUrl(storedAvatarUrl);
+      setAssignedCareersLoading(false);
       return;
     }
 
@@ -72,17 +78,30 @@ export const CreatePostModal = ({ isOpen, onClose, onPublish }: CreatePostModalP
     }
 
     let isMounted = true;
+    setAssignedCareersLoading(true);
 
     profileService.getById(currentUserId, true)
       .then(({ profile }) => {
-        if (!isMounted || !profile.avatarUrl) {
+        if (!isMounted) {
           return;
         }
 
-        localStorage.setItem('unstapp_user_avatar_url', profile.avatarUrl);
-        setProfileAvatarUrl(profile.avatarUrl);
+        setAssignedCareerIds(profile.careerIds ?? []);
+        setAssignedCareerNames(profile.careers ?? []);
+
+        if (profile.avatarUrl) {
+          localStorage.setItem('unstapp_user_avatar_url', profile.avatarUrl);
+          setProfileAvatarUrl(profile.avatarUrl);
+        } else {
+          setProfileAvatarUrl(localStorage.getItem('unstapp_user_avatar_url'));
+        }
       })
-      .catch(() => undefined);
+      .catch(() => undefined)
+      .finally(() => {
+        if (isMounted) {
+          setAssignedCareersLoading(false);
+        }
+      });
 
     return () => {
       isMounted = false;
@@ -139,16 +158,24 @@ export const CreatePostModal = ({ isOpen, onClose, onPublish }: CreatePostModalP
   };
 
   const handleSubmit = async () => {
-    if ((!trimmedContent && !selectedFile) || isPublishing) {
+    if ((!trimmedContent && !selectedFile) || isPublishing || isResolvingTeacherCareerFallback) {
       return;
     }
 
     try {
       setIsPublishing(true);
       setPublishError(null);
+      const targetCareerIds = isImportant
+        ? selectedCareerIds.length > 0
+          ? selectedCareerIds
+          : currentUserRoleKey === 'teacher'
+            ? teacherFallbackCareerIds
+            : []
+        : [];
+
       await onPublish(trimmedContent, selectedFile ?? undefined, {
         isImportant,
-        careerIds: isImportant ? selectedCareerIds : [],
+        careerIds: targetCareerIds,
       });
       setContent('');
       setIsImportant(false);
@@ -269,11 +296,15 @@ export const CreatePostModal = ({ isOpen, onClose, onPublish }: CreatePostModalP
             {isImportant && (
               <div className="mt-3">
                 <p className="text-[11px] font-bold text-[#526174]">
-                  {selectedCareerIds.length > 0 ? t('createPost.selectedCareers') : t('createPost.allCareersNotice')}
+                  {selectedCareerIds.length > 0
+                    ? t('createPost.selectedCareers')
+                    : currentUserRoleKey === 'teacher'
+                      ? t('createPost.assignedCareersNotice')
+                      : t('createPost.allCareersNotice')}
                 </p>
 
                 <div className="mt-2 flex max-h-32 flex-col gap-2 overflow-y-auto pr-1">
-                  {careersLoading && (
+                  {(careersLoading || assignedCareersLoading) && (
                     <p className="text-[11px] font-bold text-[#526174]">
                       {t('schedule.loadingCareers')}
                     </p>
@@ -326,7 +357,7 @@ export const CreatePostModal = ({ isOpen, onClose, onPublish }: CreatePostModalP
           <button
             type="button"
             onClick={handleSubmit}
-            disabled={(!trimmedContent && !selectedFile) || isPublishing}
+            disabled={(!trimmedContent && !selectedFile) || isPublishing || isResolvingTeacherCareerFallback}
             className="flex h-9 min-w-0 flex-1 items-center justify-center gap-2 rounded-full bg-[#1E4E9D] px-5 text-[13px] font-black uppercase text-white transition-colors hover:bg-[#155DFC] disabled:cursor-not-allowed disabled:bg-gray-200 disabled:text-gray-400 min-[360px]:max-w-[174px] md:h-11 md:max-w-[240px] md:text-[14px]"
           >
             {isPublishing && <LoaderCircle size={16} className="animate-spin" />}
