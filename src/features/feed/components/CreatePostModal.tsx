@@ -7,7 +7,7 @@ import { useLanguage } from '../../../store/languageContext';
 import { useCareers } from '../../schedule/hooks/useCareers';
 import type { CreatePostOptions } from '../types/post.types';
 import { normalizeRoleKey } from '../../../utils/roleLabels';
-import { getCareerIdsByNames } from '../../../utils/careerMatching';
+import { getAssignedCareers, getCareerIdsByNames } from '../../../utils/careerMatching';
 
 interface CreatePostModalProps {
   isOpen: boolean;
@@ -45,6 +45,8 @@ export const CreatePostModal = ({ isOpen, onClose, onPublish }: CreatePostModalP
   const currentUserRoleKey = normalizeRoleKey(currentUserRoles.join(' '));
   const canCreateImportantPost = ['admin', 'teacher'].includes(currentUserRoleKey);
   const { careers, loading: careersLoading } = useCareers(isOpen && canCreateImportantPost);
+  const assignedCareers = getAssignedCareers(careers, assignedCareerIds, assignedCareerNames);
+  const visibleCareers = currentUserRoleKey === 'teacher' ? assignedCareers : careers;
   const assignedCareerIdsFromNames = getCareerIdsByNames(careers, assignedCareerNames);
   const teacherFallbackCareerIds = assignedCareerIds.length > 0 ? assignedCareerIds : assignedCareerIdsFromNames;
   const isResolvingTeacherCareerFallback =
@@ -321,7 +323,7 @@ export const CreatePostModal = ({ isOpen, onClose, onPublish }: CreatePostModalP
                     </p>
                   )}
 
-                  {!careersLoading && careers.map((career) => {
+                  {!careersLoading && visibleCareers.map((career) => {
                     const isSelected = selectedCareerIds.some((id) => String(id) === String(career.id));
 
                     return (

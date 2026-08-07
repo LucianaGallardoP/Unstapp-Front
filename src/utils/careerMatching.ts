@@ -24,3 +24,25 @@ export const getCareerIdsByNames = (careers: CareerDto[], assignedCareerNames: s
     .map((career) => career.id)
     .filter((careerId) => Number.isFinite(careerId));
 };
+
+export const getAssignedCareers = (
+  careers: CareerDto[],
+  assignedCareerIds: Array<number | string>,
+  assignedCareerNames: string[],
+) => {
+  const assignedIds = new Set(assignedCareerIds.map(String));
+  const assignedNames = new Set(
+    assignedCareerNames
+      .map(normalizeCareerName)
+      .filter(Boolean),
+  );
+
+  if (assignedIds.size === 0 && assignedNames.size === 0) {
+    return [];
+  }
+
+  return careers.filter((career) => (
+    assignedIds.has(String(career.id)) ||
+    assignedNames.has(normalizeCareerName(career.name))
+  ));
+};

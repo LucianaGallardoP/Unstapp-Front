@@ -9,7 +9,7 @@ import type {
   CreateCalendarEventPayload,
 } from '../types/calendar.types';
 import { normalizeRoleKey } from '../../../utils/roleLabels';
-import { getCareerIdsByNames } from '../../../utils/careerMatching';
+import { getAssignedCareers, getCareerIdsByNames } from '../../../utils/careerMatching';
 
 interface CreateEventModalProps {
   selectedDate: Date;
@@ -108,6 +108,8 @@ export const CreateEventModal: React.FC<CreateEventModalProps> = ({
   const [assignedCareerNames, setAssignedCareerNames] = useState<string[]>([]);
   const [assignedCareersLoading, setAssignedCareersLoading] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
+  const assignedCareers = getAssignedCareers(careers, assignedCareerIds, assignedCareerNames);
+  const visibleCareers = isTeacher ? assignedCareers : careers;
   const assignedCareerIdsFromNames = getCareerIdsByNames(careers, assignedCareerNames);
   const teacherFallbackCareerIds = assignedCareerIds.length > 0 ? assignedCareerIds : assignedCareerIdsFromNames;
   const isResolvingTeacherCareerFallback =
@@ -248,7 +250,7 @@ export const CreateEventModal: React.FC<CreateEventModalProps> = ({
                   ? t('calendar.assignedCareers')
                   : t('calendar.allCareers')}
             </option>
-            {careers.map((career) => (
+            {visibleCareers.map((career) => (
               <option key={career.id} value={career.id}>
                 {career.name}
               </option>
