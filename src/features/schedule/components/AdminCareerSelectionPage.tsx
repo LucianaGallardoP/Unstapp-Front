@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { ChevronRight, Upload } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { BottomNavigation } from '../../../components/common/BottomNavigation';
@@ -6,6 +6,9 @@ import { TopBar } from '../../../components/common/TopBar';
 import { useCareers } from '../hooks/useCareers';
 import { useLanguage } from '../../../store/languageContext';
 import { ImportScheduleModal } from './ImportScheduleModal';
+import { normalizeRoleKey } from '../../../utils/roleLabels';
+import { getAssignedCareers } from '../../../utils/careerMatching';
+import { profileService } from '../../profile/services/profileService';
 
 const DEFAULT_COLOR = '#1E4E9D';
 
@@ -17,11 +20,66 @@ const formatCareerYear = (year: string | undefined, yearLabel: string) => {
   return /^\d+$/.test(trimmedYear) ? `${yearLabel} ${trimmedYear}` : trimmedYear;
 };
 
+const getCurrentUserRoleKey = () => {
+  try {
+    const roles = JSON.parse(localStorage.getItem('unstapp_user_roles') ?? '[]');
+
+    return normalizeRoleKey(Array.isArray(roles) ? roles.join(' ') : String(roles ?? ''));
+  } catch {
+    return 'student';
+  }
+};
+
 export const AdminCareerSelectionPage = () => {
   const navigate = useNavigate();
   const { careers, loading, error, refresh } = useCareers();
   const { t } = useLanguage();
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
+  const [assignedCareerIds, setAssignedCareerIds] = useState<number[]>([]);
+  const [assignedCareerNames, setAssignedCareerNames] = useState<string[]>([]);
+  const [assignedCareersLoading, setAssignedCareersLoading] = useState(false);
+  const currentUserRoleKey = getCurrentUserRoleKey();
+  const isTeacher = currentUserRoleKey === 'teacher';
+  const visibleCareers = useMemo(
+    () => isTeacher ? getAssignedCareers(careers, assignedCareerIds, assignedCareerNames) : careers,
+    [assignedCareerIds, assignedCareerNames, careers, isTeacher],
+  );
+
+  useEffect(() => {
+    if (!isTeacher) {
+      setAssignedCareerIds([]);
+      setAssignedCareerNames([]);
+      setAssignedCareersLoading(false);
+      return;
+    }
+
+    const currentUserId = localStorage.getItem('unstapp_user_id');
+
+    if (!currentUserId) {
+      return;
+    }
+
+    let isMounted = true;
+    setAssignedCareersLoading(true);
+
+    profileService.getById(currentUserId, true)
+      .then(({ profile }) => {
+        if (!isMounted) return;
+
+        setAssignedCareerIds(profile.careerIds ?? []);
+        setAssignedCareerNames(profile.careers ?? []);
+      })
+      .catch(() => undefined)
+      .finally(() => {
+        if (isMounted) {
+          setAssignedCareersLoading(false);
+        }
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [isTeacher]);
 
   return (
     <div className="min-h-screen bg-white pb-20 text-gray-900 md:bg-gray-50">
@@ -33,13 +91,15 @@ export const AdminCareerSelectionPage = () => {
             <h1 className="text-[10px] font-black uppercase tracking-wide text-[#526174]">
               {t('schedule.facultyCareers')}
             </h1>
-            <button
-              onClick={() => setIsImportModalOpen(true)}
-              className="flex items-center gap-1 rounded-full bg-white px-3 py-1.5 text-[10px] font-black uppercase text-[#1E4E9D] shadow-sm transition-colors hover:bg-[#EFF6FF] border border-[#D8E0EE]"
-            >
-              <Upload size={14} />
-              Importar Excel
-            </button>
+            {!isTeacher && (
+              <button
+                onClick={() => setIsImportModalOpen(true)}
+                className="flex items-center gap-1 rounded-full bg-white px-3 py-1.5 text-[10px] font-black uppercase text-[#1E4E9D] shadow-sm transition-colors hover:bg-[#EFF6FF] border border-[#D8E0EE]"
+              >
+                <Upload size={14} />
+                Importar Excel
+              </button>
+            )}
           </header>
 
           {isImportModalOpen && (
@@ -51,7 +111,7 @@ export const AdminCareerSelectionPage = () => {
             />
           )}
 
-          {loading && (
+          {(loading || assignedCareersLoading) && (
             <p className="text-center text-[12px] font-bold text-[#526174] py-10">
               {t('schedule.loadingCareers')}
             </p>
@@ -63,14 +123,14 @@ export const AdminCareerSelectionPage = () => {
             </div>
           )}
 
-          {!loading && !error && careers.length === 0 && (
+          {!loading && !assignedCareersLoading && !error && visibleCareers.length === 0 && (
             <p className="text-center text-[12px] font-bold text-[#526174] py-10">
               {t('schedule.emptyCareers')}
             </p>
           )}
 
           <div className="flex flex-col gap-4">
-            {careers.map((career) => {
+            {!loading && !assignedCareersLoading && visibleCareers.map((career) => {
               const careerYear = formatCareerYear(career.year, t('schedule.yearBadgeLabel'));
 
               return (

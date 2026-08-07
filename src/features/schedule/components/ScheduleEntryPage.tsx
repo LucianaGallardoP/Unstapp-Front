@@ -1,16 +1,19 @@
-﻿import { AdminCareerSelectionPage } from './AdminCareerSelectionPage';
+import { normalizeRoleKey } from '../../../utils/roleLabels';
+import { AdminCareerSelectionPage } from './AdminCareerSelectionPage';
 import { SchedulePage } from './SchedulePage';
 
-const getIsCurrentUserAdmin = () => {
+const getCurrentUserRoleKey = () => {
   try {
     const roles = JSON.parse(localStorage.getItem('unstapp_user_roles') ?? '[]');
 
-    return Array.isArray(roles) && roles.some((role) => String(role).toLowerCase().includes('admin'));
+    return normalizeRoleKey(Array.isArray(roles) ? roles.join(' ') : String(roles ?? ''));
   } catch {
-    return false;
+    return 'student';
   }
 };
 
 export const ScheduleEntryPage = () => {
-  return getIsCurrentUserAdmin() ? <AdminCareerSelectionPage /> : <SchedulePage />;
+  const currentUserRoleKey = getCurrentUserRoleKey();
+
+  return ['admin', 'teacher'].includes(currentUserRoleKey) ? <AdminCareerSelectionPage /> : <SchedulePage />;
 };

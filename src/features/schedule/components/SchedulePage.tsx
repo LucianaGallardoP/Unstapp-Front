@@ -41,6 +41,7 @@ export const SchedulePage = () => {
   const navigate = useNavigate();
   const currentUserRoleKey = getCurrentUserRoleKey();
   const isCurrentUserAdmin = currentUserRoleKey === 'admin';
+  const canReturnToCareerList = ['admin', 'teacher'].includes(currentUserRoleKey);
   const shouldShowYearFilters = ['admin', 'teacher', 'student'].includes(currentUserRoleKey);
   const {
     studentContext,
@@ -106,7 +107,7 @@ export const SchedulePage = () => {
 
       <main className="mx-auto flex w-full max-w-[430px] flex-col px-3 py-4 sm:max-w-[560px] sm:px-5 md:max-w-2xl md:py-6 lg:max-w-3xl">
         <section className="mx-auto w-full max-w-[430px] sm:max-w-[560px] md:max-w-[600px]">
-          {isCurrentUserAdmin && careerId && (
+          {canReturnToCareerList && careerId && (
             <button
               type="button"
               onClick={() => navigate('/horario')}
