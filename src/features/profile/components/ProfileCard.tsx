@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { type SyntheticEvent, useEffect, useMemo, useState } from 'react';
 import { CheckCircle2 } from 'lucide-react';
 import type { ProfileResponseDTO, ProfileStatsDTO } from '../types/profile.dtos';
 import { ImageLightbox } from '../../../components/common/ImageLightbox';
@@ -85,6 +85,14 @@ export const ProfileCard = ({
   const roleLabel = rawRole ? translateRole(rawRole, t) : null;
   const showVerified = shouldShowVerifiedForRole(rawRole);
 
+  const openProfileImage = (imageUrl?: string | null) => (event: SyntheticEvent) => {
+    if (!imageUrl) return;
+
+    event.preventDefault();
+    event.stopPropagation();
+    setSelectedImageUrl(imageUrl);
+  };
+
   useEffect(() => {
     setIsFollowing(profile.isFollowing);
     setFollowersCount(stats.followers);
@@ -160,8 +168,9 @@ export const ProfileCard = ({
         {profile.coverUrl && (
           <button
             type="button"
-            onClick={() => setSelectedImageUrl(profile.coverUrl ?? null)}
-            className="h-full w-full cursor-zoom-in"
+            onClick={openProfileImage(profile.coverUrl)}
+            onTouchEnd={openProfileImage(profile.coverUrl)}
+            className="h-full w-full cursor-zoom-in touch-manipulation"
             aria-label="Ver portada del perfil"
           >
             <img
@@ -178,8 +187,9 @@ export const ProfileCard = ({
           {profile.avatarUrl ? (
             <button
               type="button"
-              onClick={() => setSelectedImageUrl(profile.avatarUrl ?? null)}
-              className="cursor-zoom-in rounded-[15px]"
+              onClick={openProfileImage(profile.avatarUrl)}
+              onTouchEnd={openProfileImage(profile.avatarUrl)}
+              className="cursor-zoom-in rounded-[15px] touch-manipulation"
               aria-label={`Ver foto de perfil de ${profile.fullName}`}
             >
               <RoleAvatar

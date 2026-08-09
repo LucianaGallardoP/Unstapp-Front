@@ -21,7 +21,7 @@ export const ImageLightbox = ({ imageUrl, alt, closeLabel, onClose }: ImageLight
 
   return createPortal(
     <div
-      className="fixed inset-0 z-[100] flex touch-none items-center justify-center overflow-hidden bg-black/95 px-3 py-16"
+      className="fixed inset-0 z-[100] flex h-dvh touch-none items-center justify-center overflow-hidden overscroll-contain bg-black/95 px-3 py-16"
       role="dialog"
       aria-modal="true"
       aria-label={alt}
