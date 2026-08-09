@@ -175,7 +175,7 @@ export const RegisterForm = ({ onLoginClick }: RegisterFormProps) => {
             type="button" 
             fullWidth 
             className="hover:bg-[#122b54] py-3.5 mt-4" 
-            onClick={() => navigate(isPasswordReset ? '/login' : '/feed')}
+            onClick={() => navigate('/login', { replace: true })}
           > 
             <span className="flex items-center justify-center gap-2 w-full text-[16px]">
               {isPasswordReset ? t('login.submit') : t('auth.start')}
